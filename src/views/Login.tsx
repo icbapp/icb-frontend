@@ -79,6 +79,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const adminStore = useSelector((state: RootState) => state.admin)
+console.log("adminStore",adminStore);
 
   const [loading, setLoading] = useState(false)
   const [bgUrl, setBgUrl] = useState<string>('')
@@ -119,7 +120,8 @@ const Login = ({ mode }: { mode: Mode }) => {
     const formData = new FormData();
     formData.append('username', data.username);
     formData.append('password', data.password);
-    formData.append('tenant_id', adminStore?.tenant_id || '');
+    // formData.append('tenant_id', adminStore?.tenant_id || '');
+    formData.append('tenant_id', "myschool" || '');
 
     api.post(`${endPointApi.login}`, formData, {
       headers: {
