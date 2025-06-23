@@ -10,6 +10,22 @@ import { useDispatch } from 'react-redux';
 import { getLocalizedUrl } from '@/utils/i18n'
 import type { Locale } from '@configs/i18n'
 
+interface AdminData {
+    accent_color: string;
+    background_image: string;
+    d_logo: string;
+    domain: string;
+    f_logo: string;
+    l_logo: string;
+    name: string;
+    primary_color: string;
+    school_id: number;
+    secondary_color: string;
+    tenant_id: string;
+    username: string;
+    id: string;
+}
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const dispatch = useDispatch();
     const [hostname, setHostname] = useState<string>('');
@@ -33,18 +49,32 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             formData.append('type', hostname);
             const response = await axios.post(`/api/school`, formData) as AxiosResponse<SchoolResponse>;
             const data = response.data.data;
-
-            if (response.data.success) {
-                dispatch(setAdminInfo(data))
+            const adminData: AdminData = {
+            d_logo: "https://masteradmin.icbapp.site/uploads/shopnos/logo/dark_1750142396_blog-2.jpg",
+            f_logo: "https://masteradmin.icbapp.site/uploads/shopnos/logo/favicon_1750142396_info-14-600x778.jpg",
+            l_logo: "https://masteradmin.icbapp.site/uploads/shopnos/logo/light_1750142396_info-9.jpg",
+            background_image: "https://masteradmin.icbapp.site/uploads/shopnos/favicon_1750142396_info-22.jpg",
+            primary_color: '#433d3d',
+            secondary_color: '#000000',
+            accent_color: '#000000',
+            tenant_id: 'shopnos',
+            school_id: 8,
+            name: 'demo',
+            username: 'shopnos',
+            domain: 'shopnos.icbapp',
+            id: ''
+            };
+            // if (response.data.success) {
+                dispatch(setAdminInfo(adminData))
                 setAdminData({
                     name: data?.name || '',
                     favicon: data?.f_logo || '/favicon.ico'
                 })
-            } else {
-                setAdminData({ name: '', favicon: '/favicon.ico' })
-                router.replace(getLocalizedUrl("/401-not-authorized", locale as Locale))
+            // } else {
+            //     setAdminData({ name: '', favicon: '/favicon.ico' })
+            //     router.replace(getLocalizedUrl("/login", locale as Locale))
 
-            }
+            // }
         } catch (err) {
             dispatch(resetAdminInfo())
             console.error('Failed to load school data:', err)
