@@ -185,13 +185,13 @@ const RoleFormPage = () => {
 
         if ((loginStore?.super_admin as unknown as boolean) !== true) {
           try {
-            // const res = await api.post('get-role-permissions', formData, {
-            //   headers: {
-            //     'Content-Type': 'multipart/form-data',
-            //   },
-            // });
-            // dispatch(setSidebarPermissionInfo(res.data));
-            // dispatch(setUserPermissionInfo(res.data));
+            const res = await api.post('get-role-permissions', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            });
+            dispatch(setSidebarPermissionInfo(res.data));
+            dispatch(setUserPermissionInfo(res.data));
           } catch (err: any) {
             console.error('Permission error:', err?.response || err);
             toast.error('Failed to fetch permissions.');
