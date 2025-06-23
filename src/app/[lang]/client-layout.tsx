@@ -50,18 +50,18 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             const response = await axios.post(`/api/school`, formData) as AxiosResponse<SchoolResponse>;
             const data = response.data.data;
             const adminData: AdminData = {
-            d_logo: "https://masteradmin.icbapp.site/uploads/shopnos/logo/dark_1750142396_blog-2.jpg",
-            f_logo: "https://masteradmin.icbapp.site/uploads/shopnos/logo/favicon_1750142396_info-14-600x778.jpg",
-            l_logo: "https://masteradmin.icbapp.site/uploads/shopnos/logo/light_1750142396_info-9.jpg",
-            background_image: "https://masteradmin.icbapp.site/uploads/shopnos/favicon_1750142396_info-22.jpg",
+            d_logo: "https://masteradmin.icbapp.site/uploads//logo/dark_1750223468_light_1749633297_Group_2__1_.png",
+            f_logo: "https://masteradmin.icbapp.site/uploads//logo/favicon_1750223468_favicon_1750091713_685047b488bcf_download.jpg",
+            l_logo: "https://masteradmin.icbapp.site/uploads//logo/light_1750223468_light_1749633297_Group_2__1_.png",
+            background_image: "https://masteradmin.icbapp.site/uploads//background.png",
             primary_color: '#433d3d',
             secondary_color: '#000000',
             accent_color: '#000000',
-            tenant_id: 'shopnos',
-            school_id: 8,
-            name: 'demo',
-            username: 'shopnos',
-            domain: 'shopnos.icbapp',
+            tenant_id: 'myschool',
+            school_id: 11,
+            name: 'My School',
+            username: 'myschool',
+            domain: 'myschool.icbapp',
             id: ''
             };
             // if (response.data.success) {

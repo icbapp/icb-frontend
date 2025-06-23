@@ -175,12 +175,12 @@ const RoleFormPage = () => {
         formData.append('user_id', loginStore.id);
 
         try {
-          const res = await api.post('get-role-permissions', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-          dispatch(setSidebarPermissionInfo(res.data));
+          // const res = await api.post('get-role-permissions', formData, {
+          //   headers: {
+          //     'Content-Type': 'multipart/form-data',
+          //   },
+          // });
+          // dispatch(setSidebarPermissionInfo(res.data));
           // dispatch(setUserPermissionInfo(res.data));
         } catch (err: any) {
           console.error('Permission error:', err?.response || err);
