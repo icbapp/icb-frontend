@@ -16,11 +16,11 @@ export const decrypt = (ciphertext: string): string => {
 export const saveToken = (token: string) => {
   // const encrypted = encrypt(token)
 
-  sessionStorage.setItem('auth_token', token)
+  localStorage.setItem('auth_token', token)
 }
 
 export const getToken = (): string | null => {
-  const encrypted = sessionStorage.getItem('auth_token')
+  const encrypted = localStorage.getItem('auth_token')
 
 
   // return encrypted ? decrypt(encrypted) : null
@@ -28,5 +28,5 @@ export const getToken = (): string | null => {
 }
 
 export const clearToken = () => {
-  sessionStorage.removeItem('auth_token')
+  localStorage.removeItem('auth_token')
 }

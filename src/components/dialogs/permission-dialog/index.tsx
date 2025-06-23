@@ -17,7 +17,7 @@ import {
 } from '@mui/material'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from '@/redux-store'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import { useParams, useRouter } from 'next/navigation'
 import { addPermission, updatePermission } from '@/redux-store/slices/permission'
 import Loader from '@/components/Loader'
@@ -113,7 +113,7 @@ const PermissionDialog = ({ open, setOpen, data, id }: PermissionDialogProps) =>
   const dispatch = useDispatch<AppDispatch>()
   const router = useRouter()
   const { lang: locale } = useParams()
-    const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
 
 
   const storedSchool = localStorage.getItem('school')
@@ -144,7 +144,7 @@ const PermissionDialog = ({ open, setOpen, data, id }: PermissionDialogProps) =>
       }
 
       try {
-      setLoading(true)
+        setLoading(true)
 
         const response = await api.post('/permissions', payload)
 
@@ -156,12 +156,12 @@ const PermissionDialog = ({ open, setOpen, data, id }: PermissionDialogProps) =>
         }
       } catch (error: any) {
         const message = error.response?.data?.message || 'API Error'
-toast.error(message ?? "something went wrong, please try again later.")
+        toast.error(message ?? "something went wrong, please try again later.")
       }
-        finally {
-      setLoading(false)
+      finally {
+        setLoading(false)
 
-    }
+      }
     }
 
     handleClose()
@@ -169,7 +169,7 @@ toast.error(message ?? "something went wrong, please try again later.")
 
   return (
     <Dialog open={open} onClose={handleClose} closeAfterTransition={false}>
-            {loading && <Loader />}
+      {loading && <Loader />}
 
       <DialogTitle variant='h4' className='flex flex-col gap-2 text-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
         {data ? 'Edit Permission' : 'Add New Permission'}

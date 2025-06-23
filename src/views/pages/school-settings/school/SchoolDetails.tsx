@@ -19,7 +19,7 @@ import Chip from '@mui/material/Chip'
 import type { SelectChangeEvent } from '@mui/material/Select'
 import { useParams, useRouter } from 'next/navigation'
 
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 import { getLocalizedUrl } from '@/utils/i18n'
 import type { Locale } from '@configs/i18n'
@@ -111,7 +111,7 @@ const SchoolDetails = () => {
         setRolesList(response.data.data)
       } catch (err) {
         console.error('Error fetching Roles:', err)
-     toast.error(err instanceof Error ? err.message : 'Failed to fetch roles')
+        toast.error(err instanceof Error ? err.message : 'Failed to fetch roles')
       }
       finally {
         setLoading(false)

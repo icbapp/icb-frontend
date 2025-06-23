@@ -18,11 +18,13 @@ import Loader from '@/components/Loader'
 import { RootState } from '@/redux-store'
 // import { setCountries } from '@/redux-store/slices/countryAndState'
 import { resetSchoolInfoSlice, setSchoolInfoSlice } from '@/redux-store/slices/schoolInfo'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import { SchoolInfo } from '@/views/interface/schoolInfo.interface'
 import { Autocomplete, AutocompleteChangeReason, Box } from '@mui/material'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+import { getLocalizedUrl } from '@/utils/i18n'
+import { Locale } from '@/configs/i18n'
 
 interface Country {
   code: string
@@ -42,6 +44,8 @@ type StateOption = {
 const languageData = ['English', 'Arabic', 'French', 'German', 'Portuguese']
 
 const SchoolAccountDetails = () => {
+  const router = useRouter()
+  const { lang: locale } = useParams()
 
   const countryAndState = useSelector((state: RootState) => state.countryAndState)
   const selectedUser = useSelector((state: RootState) => state.schoolInfo)
@@ -92,24 +96,37 @@ const SchoolAccountDetails = () => {
   const fetchProfileData = async () => {
     try {
       setLoading(true);
-      const formData = new FormData()
-      formData.append('id', adminStore.school_id.toString() || '')
-      const response = await api.post('get-school', formData)
 
+      const formData = new FormData();
+      formData.append('id', adminStore.school_id?.toString() || '');
 
-      if (response.data?.success === true) {
-        setSchoolInfoSlice(response.data.data)
-        setFormData(response.data.data)
-        setSelectedCountry(response.data.data.country_id)
-        setSelectedState(response.data.data.state_id)
+      const response = await api.post('get-school', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data?.success) {
+        const data = response.data.data;
+        setSchoolInfoSlice(data);
+        setFormData(data);
+        setSelectedCountry(data.country_id);
+        setSelectedState(data.state_id);
+      } else {
+        console.warn('API responded with success: false');
+        resetSchoolInfoSlice();
       }
+
     } catch (error) {
-      resetSchoolInfoSlice()
-      console.error('Error fetching profile data:', error)
+      setLoading(false);
+      resetSchoolInfoSlice();
+      return null
+
     } finally {
       setLoading(false);
     }
-  }
+  };
+
 
   useEffect(() => {
     fetchCountryData()
@@ -159,27 +176,36 @@ const SchoolAccountDetails = () => {
     try {
       setLoading(true)
       const formdata = new FormData()
-      formdata.append('full_name', data.name)
-      formdata.append('username', data.username)
-      formdata.append('email', data.email)
-      // formdata.append('password', data.)
-      // formdata.append('password_confirmation', data.streetName)
+      formdata.append('id', adminStore.school_id.toString() || '')
       formdata.append('phone', String(data.phone))
-      formdata.append('ABNNUmber', String(data.abn_number))
+      formdata.append('name', data.name)
+      // formdata.append('username', data.username)
       formdata.append('contact_person_name', data.contact_person_name || '')
+      formdata.append('contact_person_email', data.contact_person_email || '')
+      formdata.append('abn_number', String(data.abn_number))
       formdata.append('street_number', data.street_number || '')
       formdata.append('street_name', data.street_name || '')
+      formdata.append('suburb', data.suburb || '')
+      formdata.append('d_logo', dLogoFile || '')
+      formdata.append('l_logo', lLogoFile || '')
+      formdata.append('f_logo', fLogoFile || '')
+      formdata.append('background_image', backgroundFile || '')
       formdata.append('country_id', selectedCountry?.id ? String(selectedCountry.id) : '')
       formdata.append('state_id', selectedState?.id ? String(selectedState.id) : '')
-      formdata.append('suburb', data.suburb || '')
+      formdata.append('primary_color', data.primary_color || '')
+      formdata.append('secondary_color', data.secondary_color || '')
+      formdata.append('accent_color', data.accent_color || '')
+
+
       formdata.append('school_id', adminStore.school_id.toString() || '')
       formdata.append('tenant_id', adminStore.tenant_id.toString() || '')
-      formdata.append('id', adminStore.school_id.toString() || '')
+
 
       const response = await api.post('edit-school', formdata, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       if (response.data.success) {
+        router.push(getLocalizedUrl('/dashboards/academy/', locale as Locale));
         toast.success(response?.data?.message)
       }
     } catch (error: any) {
@@ -222,7 +248,7 @@ const SchoolAccountDetails = () => {
                 value={formData.username || ''}
                 placeholder='User Name'
                 onChange={e => handleFormChange('name', e.target.value)}
-                disabled
+                InputProps={{ readOnly: true }}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -268,7 +294,7 @@ const SchoolAccountDetails = () => {
                 fullWidth
                 label='ABN Number'
                 value={formData.abn_number}
-                placeholder='+1 (234) 567-8901'
+                placeholder='00 000 000 000'
                 onChange={e => handleFormChange('abn_number', e.target.value)}
               />
             </Grid>
@@ -398,8 +424,7 @@ const SchoolAccountDetails = () => {
                     </Box>
                   </Box>
                   <img
-                    height={100}
-                    width={100}
+                    width={200}
                     className='rounded'
                     src={getImageSrc(dLogoSrc)}
                     alt='Dark Logo'
@@ -455,12 +480,17 @@ const SchoolAccountDetails = () => {
                       minWidth: 120,
                     }}
                   >
-                    {lLogoSrc ? lLogoSrc.split("/").pop() : 'No file chosen'}
+                    {lLogoSrc
+                      ? (() => {
+                        const name = lLogoSrc.split("/").pop() || ''
+                        const [base, ext] = name.split(/\.(?=[^\.]+$)/) // Split at last dot
+                        return base.length > 5 ? `${base.slice(0, 10)}...${ext ? '.' + ext : ''}` : name
+                      })()
+                      : 'No file chosen'}
                   </Box>
                 </Box>
                 <img
-                  height={100}
-                  width={100}
+                  width={200}
                   className='rounded'
                   src={getImageSrc(lLogoSrc)}
                   alt='Light Logo'
@@ -514,12 +544,18 @@ const SchoolAccountDetails = () => {
                       minWidth: 120,
                     }}
                   >
-                    {fLogoSrc ? fLogoSrc.split("/").pop() : 'No file chosen'}
+                    {fLogoSrc
+                      ? (() => {
+                        const name = fLogoSrc.split("/").pop() || ''
+                        const [base, ext] = name.split(/\.(?=[^\.]+$)/) // Split at last dot
+                        return base.length > 5 ? `${base.slice(0, 10)}...${ext ? '.' + ext : ''}` : name
+                      })()
+                      : 'No file chosen'}
                   </Box>
                 </Box>
                 <img
-                  height={100}
-                  width={100}
+                  // height={100}
+                  width={70}
                   className='rounded'
                   src={getImageSrc(fLogoSrc)}
                   alt='Favicon Logo'
@@ -575,11 +611,16 @@ const SchoolAccountDetails = () => {
                       minWidth: 120,
                     }}
                   >
-                    {backgroundSrc ? backgroundSrc.split("/").pop() : 'No file chosen'}
+                    {backgroundSrc
+                      ? (() => {
+                        const name = backgroundSrc.split("/").pop() || ''
+                        const [base, ext] = name.split(/\.(?=[^\.]+$)/) // Split at last dot
+                        return base.length > 5 ? `${base.slice(0, 10)}...${ext ? '.' + ext : ''}` : name
+                      })()
+                      : 'No file chosen'}
                   </Box>
                 </Box>
                 <img
-                  height={100}
                   width={100}
                   className='rounded'
                   src={getImageSrc(backgroundSrc)}
@@ -596,7 +637,7 @@ const SchoolAccountDetails = () => {
         <CardContent>
           <Grid container spacing={5}>
             <Grid size={{ xs: 1, sm: 4 }}>
-              primary
+              Primary:
               <TextField
                 fullWidth
                 type="color"
@@ -607,7 +648,7 @@ const SchoolAccountDetails = () => {
               />
             </Grid>
             <Grid size={{ xs: 4, sm: 4 }}>
-              secondary
+              Secondary:
 
               <TextField
                 fullWidth
@@ -618,7 +659,7 @@ const SchoolAccountDetails = () => {
               />
             </Grid>
             <Grid size={{ xs: 4, sm: 4 }}>
-              Accent
+              Accent:
 
               <TextField
                 className='p-0'

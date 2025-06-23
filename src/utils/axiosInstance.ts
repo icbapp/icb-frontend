@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const api = axios.create({
+const apiAdminInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://masteradmin.icbapp.site/api',
   headers: {
     'Content-Type': 'application/json'
@@ -8,8 +8,8 @@ const api = axios.create({
 })
 
 // Optional: Add token automatically if available
-api.interceptors.request.use(config => {
-  const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null
+apiAdminInstance.interceptors.request.use(config => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -19,7 +19,46 @@ api.interceptors.request.use(config => {
   return config
 })
 
-export default api
+export const api = apiAdminInstance;
+
+
+// let apiAdminInstance = axios.create({
+//   baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://masteradmin.icbapp.site/api',
+// });
+// apiAdminInstance.interceptors.request.use(
+//   async config => {
+//     const token = localStorage.getItem('auth_token');
+//     // const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+//     if (token) {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     }
+//     config.headers['ngrok-skip-browser-warning'] = 'true'
+//     return config;
+//   },
+//   error => Promise.reject(error)
+// );
+
+// apiAdminInstance.interceptors.response.use(
+//   function (response) {
+//     return response;
+//   },
+//   error => {
+//     const { response } = error;
+//     console.log("throw", response);
+//     // if (response.status === 401) {
+//     //   localStorage.removeItem('auth_token');
+//     //   window.location.href = '/login';
+//     // }
+//     if (response.status === 500 || 401) {
+//       localStorage.removeItem('auth_token');
+//       window.location.href = '/login';
+//     }
+//     return Promise.reject(error);
+//   }
+// );
+
+
+// export const api = apiAdminInstance;
 
 
 

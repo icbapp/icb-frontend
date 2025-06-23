@@ -27,17 +27,6 @@ const SchoolSettings = ({ tabContentList }: { tabContentList: { [key: string]: R
   const handleChange = (event: SyntheticEvent, value: string) => {
     setActiveTab(value)
   }
-  useEffect(() => {
-    setLoading(true)
-    const timeout = setTimeout(() => {
-      setLoading(false)
-    }, 2000)
-
-    // Optional: Clear timeout on unmount
-    return () => clearTimeout(timeout)
-  }, [])
-
-
 
   return (
 
@@ -48,18 +37,19 @@ const SchoolSettings = ({ tabContentList }: { tabContentList: { [key: string]: R
           <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
             <Tab label='Edit School' icon={<i className='ri-group-line' />} iconPosition='start' value='account' />
             <Tab label='Security' icon={<i className='ri-lock-2-line' />} iconPosition='start' value='security' />
-            {/* <Tab
-              label='Billing & Plans'
-              icon={<i className='ri-bookmark-line' />}
+            <Tab
+              label='Email'
+              icon={<i className="ri-mail-line" />}
               iconPosition='start'
-              value='billing-plans'
-            /> */}
+              value='email'
+            />
             <Tab
               label='Notifications'
               icon={<i className='ri-notification-4-line' />}
               iconPosition='start'
               value='notifications'
             />
+            <Tab label='Sms' icon={<i className='ri-message-line' />} iconPosition='start' value='sms' />
             <Tab label='Connections' icon={<i className='ri-link-m' />} iconPosition='start' value='connections' />
           </CustomTabList>
         </Grid>

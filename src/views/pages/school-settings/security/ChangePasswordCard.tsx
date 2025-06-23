@@ -15,7 +15,7 @@ import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import { toast } from 'react-toastify'
 import { useSelector } from 'react-redux'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import { RootState } from '@/redux-store'
 import Loader from '@/components/Loader'
 
@@ -175,7 +175,7 @@ const ChangePasswordCard = () => {
               </div>
             </Grid>
             <Grid size={{ xs: 12 }} className='flex gap-4 pbs-6'>
-<Button variant='contained' onClick={onSubmit}>Save Changes</Button>
+              <Button variant='contained' onClick={onSubmit}>Save Changes</Button>
               <Button variant='outlined' type='reset' color='secondary'>
                 Reset
               </Button>

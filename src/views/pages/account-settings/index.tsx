@@ -14,10 +14,13 @@ import TabPanel from '@mui/lab/TabPanel'
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
 import Loader from '@/components/Loader'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/redux-store'
 
 
 const AccountSettings = ({ tabContentList }: { tabContentList: { [key: string]: ReactElement } }) => {
   // States
+  const loginStore = useSelector((state: RootState) => state.login)
 
   const [activeTab, setActiveTab] = useState('account')
   const [loading, setLoading] = useState(false)
@@ -43,7 +46,7 @@ const AccountSettings = ({ tabContentList }: { tabContentList: { [key: string]: 
       <Grid container spacing={6}>
         <Grid size={{ xs: 12 }}>
           <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
-            <Tab label='Edit School' icon={<i className='ri-group-line' />} iconPosition='start' value='account' />
+            <Tab label={'Edit Profile'} icon={<i className='ri-group-line' />} iconPosition='start' value='account' />
             {/* <Tab label='Security' icon={<i className='ri-lock-2-line' />} iconPosition='start' value='security' /> */}
             {/* <Tab
               label='Billing & Plans'

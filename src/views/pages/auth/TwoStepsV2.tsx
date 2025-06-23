@@ -17,7 +17,7 @@ import type { Locale } from '@configs/i18n'
 import { useSettings } from '@core/hooks/useSettings'
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { getLocalizedUrl } from '@/utils/i18n'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 
 import Link from '@components/Link'
@@ -56,11 +56,8 @@ const TwoStepsV2 = ({ mode }: { mode: Mode }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-
-
-
-  const email = searchParams.get('userId') || ''
-
+  // const userId = searchParams.get('userId') || ''
+  const userId = atob(decodeURIComponent(searchParams.get('Id') || ''));
 
   const logo = '/images/apps/ecommerce/product-25.png'
 
@@ -83,7 +80,7 @@ const TwoStepsV2 = ({ mode }: { mode: Mode }) => {
       setLoading(true)
 
       const formData = new FormData()
-formData.append("user_id" , adminStore.school_id.toString() || '')
+      formData.append("user_id", userId || '')
       formData.append('otp', data.otp)
       formData.append('school_id', adminStore.school_id.toString() || '')
       formData.append('tenant_id', adminStore.tenant_id || '')
@@ -93,26 +90,27 @@ formData.append("user_id" , adminStore.school_id.toString() || '')
           'Content-Type': 'multipart/form-data'
         }
       })
+      console.log("response", response.data);
 
-      if (response.data?.status === true) {
-        router.replace(getLocalizedUrl('/reset-password', locale as Locale))
+      if (response.data?.status === 200) {
+        toast.success(response.data?.message || 'OTP verified successfully')
+        router.replace(getLocalizedUrl('/reset-password?userId', locale as Locale))
+        const redirectURL = searchParams.get('redirectTo') ?? `/reset-password?userId=${encodeURIComponent(userId)}`
+        router.replace(getLocalizedUrl(redirectURL, locale as Locale))
       }
     } catch (error: any) {
       const errors = error.response?.data?.errors
       if (errors && typeof errors === 'object') {
         const messages = Object.values(errors).flat()
         setErrorState({ message: messages as string[] })
-        toast.error( 'Something went wrong. Please try again.')    
 
       } else {
         setErrorState({ message: ['Something went wrong. Please try again.'] })
-        toast.error('Something went wrong. Please try again.')
-
       }
+      toast.error(error?.response.data.message)
     }
     finally {
       setLoading(false)
-
     }
   }
 
@@ -123,17 +121,13 @@ formData.append("user_id" , adminStore.school_id.toString() || '')
   }, [adminStore])
 
   const resendOTP = async () => {
-
+    setValue('otp', '');
     try {
       setLoading(true)
 
       const formData = new FormData()
 
       formData.append('username', adminStore.username || '')
-      formData.append('phone', "1234567899")
-      if (email) {
-        formData.append('user_id', email);
-      }
       formData.append('school_id', adminStore.school_id.toString() || '')
       formData.append('tenant_id', adminStore.tenant_id || '')
 
@@ -142,21 +136,19 @@ formData.append("user_id" , adminStore.school_id.toString() || '')
           'Content-Type': 'multipart/form-data'
         }
       })
-
+      if (response.data?.status === 200) {
+        toast.success(response.data?.message || 'OTP sent successfully')
+      }
 
     } catch (error: any) {
-      const errors = error.response?.data?.errors
+      const errors = error.response?.data?.message
       if (errors && typeof errors === 'object') {
         const messages = Object.values(errors).flat()
         setErrorState({ message: messages as string[] })
-        // alert(errorState)
-
       } else {
         setErrorState({ message: ['Something went wrong. Please try again.'] })
-        // alert(errorState)
-
       }
-
+      toast.error(errors)
     }
     finally {
       setLoading(false)
@@ -220,7 +212,7 @@ formData.append("user_id" , adminStore.school_id.toString() || '')
               We sent a verification code to your Email. Enter the code from the email in the field below.
             </Typography>
             <Typography className='font-medium capitalize' color='text.primary'>
-              {email}
+              {/* {userId} */}
             </Typography>
           </div>
 
@@ -253,7 +245,7 @@ formData.append("user_id" , adminStore.school_id.toString() || '')
 
             <div className='flex justify-center items-center flex-wrap gap-2'>
               <Typography>Didn&#39;t get the code?</Typography>
-              <Typography color='primary.main' onClick={resendOTP}>
+              <Typography className='cursor-pointer' color='primary.main' onClick={resendOTP}>
                 Resend
               </Typography>
             </div>

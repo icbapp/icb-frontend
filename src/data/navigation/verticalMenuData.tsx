@@ -266,6 +266,10 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             href: '/pages/account-settings'
           },
           {
+            label: dictionary['navigation'].accountSettingsData,
+            href: '/pages/account-setting-data'
+          },
+          {
             label: dictionary['navigation'].faq,
             href: '/pages/faq'
           },

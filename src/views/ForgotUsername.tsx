@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import classnames from 'classnames'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 
 import {
@@ -56,18 +56,16 @@ const ForgotUsername = ({ mode }: { mode: Mode }) => {
 
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
 
-  const { register, handleSubmit,  formState: { errors } } = useForm<FormData>()
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>()
   const [loading, setLoading] = useState(false)
   const [bgUrl, setBgUrl] = useState<string>('')
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
+
     try {
       setLoading(true)
-
       const formData = new FormData()
-
       formData.append('username', adminStore.username || '')
-      formData.append('phone', '1234567899')
       formData.append('email', data.email)
       formData.append('school_id', adminStore.school_id.toString() || '')
       formData.append('tenant_id', adminStore.tenant_id || '')
@@ -79,22 +77,15 @@ const ForgotUsername = ({ mode }: { mode: Mode }) => {
       })
 
       if (response.data?.success === true) {
-toast.success(response.data?.message || 'Username sent to your email successfully.')
-        // Optionally, redirect or show success message
+        toast.success(response.data?.message)
+        setLoading(false)
+        router.replace(getLocalizedUrl('/login', locale as Locale))
       }
+
     } catch (error: any) {
-      const errors = error.response?.data?.errors
-      if (errors && typeof errors === 'object') {
-        const messages = Object.values(errors).flat()
-        setErrorState({ message: messages as string[] })
-        alert(errorState)
-
-      } else {
-        setErrorState({ message: ['Something went wrong. Please try again.'] })
-        alert(errorState)
-
-      }
-
+      toast.error(error?.response?.data?.message)
+      setErrorState({ message: ['Something went wrong. Please try again.'] })
+      setLoading(false)
     }
     finally {
       setLoading(false)
@@ -108,12 +99,9 @@ toast.success(response.data?.message || 'Username sent to your email successfull
     }
   }, [adminStore])
 
-  if (loading) return <Loader />
-
-
   return (
-
     <div className='flex bs-full justify-center'>
+      {(loading) && <Loader />}
 
       <div
         style={{
@@ -132,7 +120,6 @@ toast.success(response.data?.message || 'Username sent to your email successfull
         )}
       >
 
-        {/* <img src={authBackground} className='absolute bottom-[4%] z-[-1] is-full max-md:hidden' /> */}
       </div>
 
       <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
@@ -161,7 +148,7 @@ toast.success(response.data?.message || 'Username sent to your email successfull
               label='Email'
               {...register('email', { required: 'Email is required' })}
               error={!!errorState || !!errors.email}
-                           helperText={errors.email?.message || errorState?.message?.[0]}
+              helperText={errors.email?.message || errorState?.message?.[0]}
             />
             {/* <TextField
               autoFocus

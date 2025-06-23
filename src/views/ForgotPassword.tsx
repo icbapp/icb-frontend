@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import classnames from 'classnames'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 
 import {
@@ -65,7 +65,7 @@ const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
   useEffect(() => {
     let timer: NodeJS.Timeout
     if (cooldown > 0) {
-      timer = setTimeout(() => setCooldown(prev => prev - 1), 1000)
+      timer = setTimeout(() => setCooldown(prev => prev - 1), 500)
     }
     return () => clearTimeout(timer)
   }, [cooldown])
@@ -77,8 +77,6 @@ const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
       const formData = new FormData()
 
       formData.append('username', data.userName)
-      formData.append('phone', '1234567899') // Placeholder value
-      formData.append('email', data.email)
       formData.append('school_id', adminStore.school_id.toString() || '')
       formData.append('tenant_id', adminStore.tenant_id || '')
 
@@ -88,26 +86,26 @@ const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
         }
       })
 
-
       // if (response.data?.success === true) {
       //   const redirectURL = searchParams.get('redirectTo') ?? `/otp?email=${encodeURIComponent(data.email)}`
       //   router.replace(getLocalizedUrl(redirectURL, locale as Locale))
       // }
 
       if (response.data?.success === true) {
-        const redirectURL = searchParams.get('redirectTo') ?? `/otp?userId=${encodeURIComponent(data.userName)}`
+        const redirectURL = searchParams.get('redirectTo') ?? `/otp?Id=${encodeURIComponent(btoa(response.data.user_id))}`
         router.replace(getLocalizedUrl(redirectURL, locale as Locale))
         toast.success(response.data.message || 'OTP sent successfully')
       }
     } catch (error: any) {
       setCooldown(30)
-      const errors = error.response?.data?.errors
+      const errors = error.response?.data?.message
       if (errors && typeof errors === 'object') {
         const messages = Object.values(errors).flat()
         setErrorState({ message: messages as string[] })
       } else {
         setErrorState({ message: ['Something went wrong. Please try again.'] })
       }
+      toast.error(errors)
     } finally {
       setLoading(false)
     }
@@ -119,10 +117,11 @@ const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
     }
   }, [adminStore])
 
-  if (loading) return <Loader />
 
   return (
     <div className='flex bs-full justify-center'>
+      {loading && <Loader />}
+
       <div
         style={{
           width: '100vw',

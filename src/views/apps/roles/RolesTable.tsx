@@ -1,24 +1,19 @@
 'use client'
 
 import '@tanstack/table-core'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
-
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import swal from 'sweetalert';
 import {
   Card,
   CardContent,
   Button,
   TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Chip,
   Typography,
-  Checkbox,
   IconButton,
-  TablePagination
+  TablePagination,
+  Skeleton
 } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import type { TextFieldProps } from '@mui/material/TextField'
@@ -41,18 +36,18 @@ import type { RankingInfo } from '@tanstack/match-sorter-utils'
 import type { ThemeColor } from '@core/types'
 import type { UsersType } from '@/types/apps/userTypes'
 import type { Locale } from '@configs/i18n'
-import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
 import { getInitials } from '@/utils/getInitials'
 import { getLocalizedUrl } from '@/utils/i18n'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import tableStyles from '@core/styles/table.module.css'
 import { useSettings } from '@core/hooks/useSettings'
 import { RoleType } from '@/types/apps/roleType'
 import Loader from '@/components/Loader'
 import { toast } from 'react-toastify'
-import { useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
+import { saveToken } from '@/utils/tokenManager'
+import { useSelector } from 'react-redux'
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -74,21 +69,7 @@ interface Permissions {
   sub_menus: SubMenus[]
 }
 
-
-
 type UsersTypeWithAction = RoleType & { action?: string }
-type UserRoleType = { [key: string]: { icon: string; color: string } }
-type UserStatusType = { [key: string]: ThemeColor }
-type RawUser = {
-  id: number
-  name: string
-
-  username: string
-  roles: { name: string }[]
-  status: number
-  permissions: Permissions[]
-}
-
 
 const Icon = styled('i')({})
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -113,25 +94,14 @@ const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...prop
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
 }
 
-const userRoleObj: UserRoleType = {
-  admin: { icon: 'ri-vip-crown-line', color: 'error' },
-  author: { icon: 'ri-computer-line', color: 'warning' },
-  editor: { icon: 'ri-edit-box-line', color: 'info' },
-  maintainer: { icon: 'ri-pie-chart-2-line', color: 'success' },
-  subscriber: { icon: 'ri-user-3-line', color: 'primary' }
-}
-
-const userStatusObj: UserStatusType = {
-  active: 'success',
-  pending: 'warning',
-  inactive: 'secondary'
-}
-
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
 const RolesTable = () => {
   const permissions = useSelector((state: RootState) => state.sidebarPermission)
-  console.log("permissions===", permissions);
+  const loginStore = useSelector((state: RootState) => state.login);
+  const userPermissionStore = useSelector((state: RootState) => state.userPermission);
+
+  const searchParams = useSearchParams()
 
   const [role, setRole] = useState<UsersType['role']>('')
   const [rowSelection, setRowSelection] = useState({})
@@ -143,45 +113,80 @@ const RolesTable = () => {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { lang: locale } = useParams()
-
+  const hasRefreshedToken = useRef(false);
   const hasPermission = (menuName: string, subMenuName: string) => {
     const menus = (permissions as any).menus;
     const menu = menus?.find((m: any) => m.menu_name === menuName && m.checked);
     return menu?.sub_menus?.some((sub: any) => sub.name === subMenuName && sub.checked);
   };
 
-  useEffect(() => {
-    setLoading(true)
-    const timeout = setTimeout(() => {
-      setLoading(false)
-    }, 2000)
+  const showAddRoleButton = (permissions as any)?.menus?.some(
+    (menu: any) =>
+      menu.menu_name === 'roles' &&
+      menu.checked &&
+      menu.sub_menus?.some((sub: any) => sub.name === 'roles-add' && sub.checked)
+  );
 
-    // Optional: Clear timeout on unmount
-    return () => clearTimeout(timeout)
-  }, [])
+  const showEditRoleButton = (permissions as any)?.menus?.some(
+    (menu: any) =>
+      menu.menu_name === 'roles' &&
+      menu.checked &&
+      menu.sub_menus?.some((sub: any) => sub.name === 'roles-edit' && sub.checked)
+  );
+  const showDeleteRoleButton = (permissions as any)?.menus?.some(
+    (menu: any) =>
+      menu.menu_name === 'roles' &&
+      menu.checked &&
+      menu.sub_menus?.some((sub: any) => sub.name === 'roles-delete' && sub.checked)
+  );
 
   const handleDeleteRole = async (roleId: number) => {
-    try {
-      setLoading(true)
+    swal({
+      title: "Are you sure?",
+      text: "Are you sure that you want to delete this role?",
+      icon: "warning",
+      buttons: {
+        cancel: {
+          text: "No",
+          visible: true,
+          closeModal: true,
+        },
+        confirm: {
+          text: "Yes",
+          closeModal: false, // keep popup open until API finishes
+        },
+      },
+      dangerMode: true,
+    }).then(async (willDelete) => {
+      if (willDelete) {
+        try {
+          setLoading(true);
 
-      const response = await api.delete(`roles-destroy/${roleId}`)
-      if (response.data.success === true) {
-        setData(data.filter(user => Number(user.id) !== roleId))
-        setFilteredData(filteredData.filter(user => Number(user.id) !== roleId))
-        toast.success(response.data.message)
+          const response = await api.delete(`roles-destroy/${roleId}`);
+
+          if (response.data.success === 200) {
+            setData(prev => prev.filter(user => Number(user.id) !== roleId));
+            setFilteredData(prev => prev.filter(user => Number(user.id) !== roleId));
+            toast.success(response.data.message);
+          } else {
+            toast.error(response.data.message || 'Failed to delete role');
+          }
+          setLoading(false);
+
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || 'Error deleting role');
+          console.error('Error deleting role:', error);
+
+        } finally {
+          setLoading(false);
+          if (swal && typeof swal.close === 'function') {
+            swal.close(); // Close the popup manually
+          }
+        }
+      } else {
+        console.log("User canceled.");
       }
-
-
-    } catch (error: any) {
-
-      toast.error(error?.response?.data?.message || 'Failed to delete role')
-
-      console.error('Error deleting role:', error)
-      // alert(error.response.data.message || error)
-    }
-    finally {
-      setLoading(false)
-    }
+    });
   }
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(() => [
@@ -218,31 +223,6 @@ const RolesTable = () => {
       )
     }),
 
-    // columnHelper.accessor('permissions', {
-    //   header: 'Permissions',
-    //   cell: ({ row }) => (
-    //     <div className='flex flex-row gap-1'>
-    //       {row.original.permissions.length > 0 ? (
-    //         row.original.permissions.map((perm: Permissions, index: number) => (
-    //           <div key={index} className='flex items-center gap-2'>
-    //             <Typography variant='body2' color='text.primary' className='font-medium'>{perm.menu_name}{index < row.original.permissions.length - 1 && ','}</Typography>
-    //             {/* {perm.sub_menus.length > 0 && (
-    //               <Chip
-    //                 label={`${perm.sub_menus.length} sub-menus`}
-    //                 size='small'
-    //                 color='primary'
-    //                 variant='outlined'
-    //               />
-    //             )} */}
-    //           </div>
-    //         ))
-    //       ) : (
-    //         <Typography variant='body2' color='text.secondary'>No permissions</Typography>
-    //       )}
-    //     </div>
-    //   )
-    // }),
-
     columnHelper.accessor('action', {
       header: 'Actions',
       enableSorting: false,
@@ -250,29 +230,38 @@ const RolesTable = () => {
         <div className='flex items-center gap-0.5'>
           {/* {row.original.title?.toLowerCase() !== 'super admin' && ( */}
           <>
-            {hasPermission('user-management', 'user-management-delete') && (
-              <IconButton size='small' onClick={() => {
-                handleDeleteRole(Number(row.original.id))
-              }}>
+
+            {showEditRoleButton &&
+              <IconButton
+                size='small'
+                disabled={['Super Admin', 'default', 'Default'].includes(row.original.title)}
+                onClick={() => {
+                  localStorage.setItem('editRoleData', JSON.stringify(row.original));;
+                  const redirectURL = searchParams.get('redirectTo') ?? `/apps/roles/add-role?role_id=${encodeURIComponent(row.original.id)}`
+                  router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+                }}
+              >
+                <i className='ri-edit-box-line text-textSecondary' />
+              </IconButton>
+            }
+
+            {showDeleteRoleButton && (
+              <IconButton size='small'
+                disabled={['super admin', 'default'].includes(row.original.title?.toLowerCase())}
+                onClick={() => {
+                  handleDeleteRole(Number(row.original.id))
+                }}>
                 <i className='ri-delete-bin-7-line text-textSecondary' />
               </IconButton>
             )}
 
-            {hasPermission('user-management', 'user-management-edit') && (
-              <IconButton size='small' onClick={() => {
-                localStorage.setItem('editRoleData', JSON.stringify(row.original))
-                router.replace(getLocalizedUrl('/apps/roles/add-role', locale as Locale))
-              }}>
-                <i className='ri-edit-box-line text-textSecondary' />
-              </IconButton>
-            )}
           </>
           {/* )} */}
         </div>
       )
 
     })
-  ], [data, filteredData, permissions])
+  ], [data, filteredData, userPermissionStore])
 
   const table = useReactTable({
     data: filteredData,
@@ -297,13 +286,10 @@ const RolesTable = () => {
     avatar ? <CustomAvatar src={avatar} size={34} /> : <CustomAvatar>{getInitials(fullName)}</CustomAvatar>
 
 
-
   useEffect(() => {
     const fetchUsers = async () => {
-
       try {
         setLoading(true)
-
         const response = await api.get('roles')
         const users = response.data.data.map((user: {
           id: number;
@@ -321,7 +307,6 @@ const RolesTable = () => {
           currentPlan: 'enterprise'
         }))
 
-
         const uniqueRoles: string[] = Array.from(
           new Set(
             users.map((user: { role: any }) => user.role).filter((role: string | any[]): role is string => typeof role === 'string' && role.length > 0)
@@ -329,13 +314,43 @@ const RolesTable = () => {
         )
         setAvailableRoles(uniqueRoles)
         setData(users)
+        // dispatch(setSidebarPermissionInfo(users))
         setFilteredData(users)
+        setLoading(false)
+
+        const formData = new FormData();
+        // formData.append('role_id', permissions.selectedRole.id);
+        // formData.append('tenant_id', loginStore.tenant_id);
+        // formData.append('school_id', loginStore.school_id);
+        // formData.append('user_id', loginStore.id);
+
+        // try {
+        //   const res = await api.post('get-role-permissions', formData, {
+        //     headers: {
+        //       'Content-Type': 'multipart/form-data',
+        //     },
+        //   });
+        //   dispatch(setSidebarPermissionInfo(res.data));
+        //   // dispatch(setUserPermissionInfo(res.data));
+        // } catch (err: any) {
+        //   console.error('Permission error:', err?.response || err);
+        //   toast.error('Failed to fetch permissions.');
+        // }
+        if (response.data.status === 200 && !hasRefreshedToken.current) {
+          hasRefreshedToken.current = true;
+          try {
+            const res = await api.post('auth/refresh');
+            saveToken(res.data.access_token);
+          } catch (err) {
+            console.error('Token refresh error:', err);
+          }
+        }
+
       } catch (err) {
         console.error('Error fetching users:', err)
       }
       finally {
         setLoading(false)
-
       }
     }
     fetchUsers()
@@ -345,7 +360,7 @@ const RolesTable = () => {
 
   return (
     <Card>
-      {loading && <Loader />}
+      {/* {loading && <Loader />} */}
 
       <CardContent className='flex justify-between flex-col items-start sm:flex-row sm:items-center max-sm:gap-4'>
         {/* <Button variant='outlined' color='secondary' startIcon={<i className='ri-upload-2-line' />} className='max-sm:is-full'>Export</Button> */}
@@ -356,32 +371,16 @@ const RolesTable = () => {
             onChange={value => setGlobalFilter(String(value))}
             placeholder='Search User'
           />
-          <FormControl size='small' className='max-sm:is-full'>
-            <InputLabel id='roles-app-role-select-label'>Select Role</InputLabel>
-            <Select
-              value={role}
-              onChange={e => setRole(e.target.value)}
-              label='Select Role'
-              id='roles-app-role-select'
-              labelId='roles-app-role-select-label'
-              className='min-is-[150px]'
-            >
-              <MenuItem value=''>All Roles</MenuItem>
-              {availableRoles.map(role => (
-                <MenuItem key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</MenuItem>
-              ))}
-            </Select>
-
-          </FormControl>
-
         </div>
-        {hasPermission('user-management', 'user-management-add') && (
+        {loading ? (
+          <Skeleton variant='rectangular' height={40} width={120} className='mb-2 rounded-md' />
+        ) : showAddRoleButton && (
           <Button
             variant='contained'
             size='medium'
             onClick={() => {
               localStorage.removeItem('editRoleData');
-              router.replace(getLocalizedUrl('/apps/roles/add-role', locale as Locale))
+              router.replace(getLocalizedUrl('/apps/roles/add-role', locale as Locale));
             }}
           >
             Add Role
@@ -414,16 +413,25 @@ const RolesTable = () => {
           </thead>
           <tbody>
             {table.getFilteredRowModel().rows.length === 0 ? (
-              <tr><td colSpan={table.getVisibleFlatColumns().length} className='text-center'>No data available</td></tr>
+              <tr>
+                <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
+                  No data available
+                </td>
+              </tr>
             ) : (
-              table.getRowModel().rows.slice(0, table.getState().pagination.pageSize).map(row => (
-                <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                  ))}
-                </tr>
-              ))
+              table.getRowModel().rows
+                .slice(0, table.getState().pagination.pageSize)
+                .map((row) => (
+                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))
             )}
+
           </tbody>
         </table>
       </div>
@@ -439,6 +447,7 @@ const RolesTable = () => {
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
     </Card>
+
   )
 }
 

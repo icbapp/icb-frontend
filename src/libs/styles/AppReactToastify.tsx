@@ -111,7 +111,9 @@ const AppReactToastify = (props: Props) => {
 
   return (
     <ToastifyWrapper {...boxProps}>
-      <ToastContainer rtl={direction === 'rtl'} position={position} {...rest} />
+      {typeof window !== 'undefined' && (
+        <ToastContainer rtl={direction === 'rtl'} position={position} {...rest} />
+      )}
     </ToastifyWrapper>
   )
 }

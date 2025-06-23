@@ -85,6 +85,11 @@ const defaultSuggestions: DefaultSuggestionsType[] = [
         icon: 'ri-settings-4-line'
       },
       {
+        label: 'Account Settings',
+        href: '/pages/account-setting-data',
+        icon: 'ri-settings-4-line'
+      },
+      {
         label: 'Pricing',
         href: '/pages/pricing',
         icon: 'ri-money-dollar-circle-line'

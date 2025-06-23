@@ -7,6 +7,10 @@ export interface EndPointApi {
     changePassword: string;
     verifyEmail: string;
     getRole: string;
+
+    //School-settings
+    //Email
+    postEmailSetting: string
 }
 
 // Define and export the API endpoint object
@@ -19,6 +23,11 @@ const endPointApi: EndPointApi = {
     changePassword: 'auth/change-password',
     verifyEmail: 'auth/verify-email',
     getRole: 'role-get',
+
+
+    //School-settings
+    //Email
+    postEmailSetting: 'email-setting',
 };
 
 export default endPointApi;

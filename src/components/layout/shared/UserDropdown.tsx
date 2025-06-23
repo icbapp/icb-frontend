@@ -31,6 +31,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
 import { clearUserPermissionInfo } from '@/redux-store/slices/userPermission'
 import { clearSidebarPermission } from '@/redux-store/slices/sidebarPermission'
+import { setUserSelectedRoleClearInfo } from '@/redux-store/slices/userSelectedRole'
 
 // Styled badge dot
 const BadgeContentSpan = styled('span')({
@@ -74,14 +75,15 @@ const UserDropdown = () => {
   }
 
   const handleUserLogout = () => {
-    sessionStorage.removeItem('auth_token')
+    localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
     localStorage.clear()
-    sessionStorage.clear()
+    localStorage.clear()
     clearToken()
     router.replace(getLocalizedUrl('/login', locale as Locale))
     dispatch(clearUserPermissionInfo());
     dispatch(clearSidebarPermission())
+    dispatch(setUserSelectedRoleClearInfo())
   }
 
   // Set user info and preload dropdown on first render

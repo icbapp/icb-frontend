@@ -82,8 +82,10 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
 
   return (
     <div className='flex items-center  '>
-      {adminStore?.l_logo && <img className='w-[190px] h-[60px] object-contain'
-        src={adminStore?.l_logo} />}
+      {adminStore?.l_logo &&
+        <img className='w-[190px] h-[60px] object-contain'
+          src={adminStore?.l_logo} />
+      }
 
       {/* <LogoText
         color={color}

@@ -21,7 +21,7 @@ import {
 import { addRoleToDB } from '@/redux-store/slices/role'
 import type { RoleType } from '@/types/apps/roleType'
 import tableStyles from '@core/styles/table.module.css'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import { useParams, useRouter } from 'next/navigation'
 import { getLocalizedUrl } from '@/utils/i18n'
 import type { Locale } from '@configs/i18n'
@@ -105,7 +105,7 @@ const RoleDialog = ({ open, setOpen, item, title }: RoleDialogProps) => {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    
+
     e.preventDefault()
 
     const id = item?.id ?? (roleStore.length + 1).toString()
@@ -119,8 +119,8 @@ const RoleDialog = ({ open, setOpen, item, title }: RoleDialogProps) => {
     // }
 
     try {
-      if(loading) return;
-        setLoading(true)
+      if (loading) return;
+      setLoading(true)
 
       // const resultAction = await dispatch(addRoleToDB(newRole))
 
@@ -149,15 +149,15 @@ const RoleDialog = ({ open, setOpen, item, title }: RoleDialogProps) => {
         setErrorState({ message: messages as string[] })
 
 
-    toast.error( "something went wrong, please try again later.")
-        
+        toast.error("something went wrong, please try again later.")
+
       } else {
         setErrorState({ message: ['Something went wrong. Please try again.'] })
-    toast.error( "something went wrong, please try again later.")
+        toast.error("something went wrong, please try again later.")
 
       }
     }
-     finally {
+    finally {
       setLoading(false)
 
     }
@@ -175,7 +175,7 @@ const RoleDialog = ({ open, setOpen, item, title }: RoleDialogProps) => {
   return (
     <Dialog fullWidth maxWidth='md' scroll='body' open={open} onClose={handleClose}>
       {loading && <Loader />}
-      
+
       <DialogTitle variant='h4' className='flex flex-col gap-2 text-center'>
         {title ? 'Edit Role' : 'Add Role'}
         <Typography component='span'>Set Role Permissions</Typography>

@@ -24,7 +24,7 @@ import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
 
 import { getLocalizedUrl } from '@/utils/i18n'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 import { toast } from 'react-toastify'
 
@@ -72,7 +72,7 @@ const ResetPasswordV2 = ({ mode }: { mode: Mode }) => {
     }
 
     try {
-              setLoading(true)
+      setLoading(true)
 
       const formData = new FormData()
 
@@ -89,23 +89,23 @@ const ResetPasswordV2 = ({ mode }: { mode: Mode }) => {
       })
 
       if (response.data?.status === true) {
-        router.replace(getLocalizedUrl('/login', locale as Locale))
+        // router.replace(getLocalizedUrl('/login', locale as Locale))
       }
     } catch (error: any) {
       const errors = error.response?.data?.errors
       if (errors && typeof errors === 'object') {
         const messages = Object.values(errors).flat()
         setErrorState({ message: messages as string[] })
-                // alert(errorState)
-               
+        // alert(errorState)
+
 
       } else {
         setErrorState({ message: ['Something went wrong. Please try again.'] })
-                alert(errorState)
+        alert(errorState)
 
       }
     }
-     finally {
+    finally {
       setLoading(false)
 
     }
@@ -113,7 +113,7 @@ const ResetPasswordV2 = ({ mode }: { mode: Mode }) => {
 
   return (
     <div className='flex bs-full justify-center'>
-            {loading && <Loader />}
+      {loading && <Loader />}
 
       <div
         className={classnames(

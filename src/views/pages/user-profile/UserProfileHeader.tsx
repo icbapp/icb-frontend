@@ -9,7 +9,7 @@ import Button from '@mui/material/Button'
 import type { ProfileHeaderType } from '@/types/pages/profileTypes'
 import { useEffect, useState } from 'react'
 import Loader from '@/components/Loader'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 
 const UserProfileHeader = ({ data }: { data?: ProfileHeaderType }) => {
   const [loading, setLoading] = useState(false)
@@ -38,7 +38,7 @@ const UserProfileHeader = ({ data }: { data?: ProfileHeaderType }) => {
       const users = response.data.data.data
       // console.log('Fetched users:', users[1]);
       console.log('Fetched users:', response.data.data.data[2]);
-      
+
       setUserData(users[2])
     } catch (err) {
       console.error('Error fetching users:', err)

@@ -114,6 +114,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
   const pathName = usePathname()
   const { settings, updateSettings, resetSettings, isSettingsChanged } = useSettings()
   const isSystemDark = useMedia('(prefers-color-scheme: dark)', false)
+  console.log("settings", settings);
 
   // Vars
   let breakpointValue: CustomizerProps['breakpoint']
@@ -170,7 +171,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
 
     setIsMenuOpen(false)
   }
-
+  const primaryColor = "#000000"
   return (
     !breakpointReached && (
       <div
@@ -215,7 +216,10 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                       className={classnames(styles.primaryColorWrapper, {
                         [styles.active]: settings.primaryColor === item.main
                       })}
-                      onClick={() => handleChange('primaryColor', item.main)}
+                      onClick={(e) => {
+                        window.location.reload()
+                        handleChange('primaryColor', item.main)
+                      }}
                     >
                       <div className={styles.primaryColor} style={{ backgroundColor: item.main }} />
                     </div>
@@ -484,8 +488,8 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
               )} */}
             </div>
           </div>
-        </ScrollWrapper>
-      </div>
+        </ScrollWrapper >
+      </div >
     )
   )
 }

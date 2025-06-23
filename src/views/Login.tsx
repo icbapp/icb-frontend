@@ -14,7 +14,6 @@ import TextField from '@mui/material/TextField'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 import Button from '@mui/material/Button'
-
 // Third-party Imports
 
 import { Controller, useForm } from 'react-hook-form'
@@ -23,10 +22,6 @@ import { object, minLength, string, pipe, nonEmpty } from 'valibot'
 import type { SubmitHandler } from 'react-hook-form'
 import type { InferInput } from 'valibot'
 import classnames from 'classnames'
-import axios from 'axios'
-
-
-import api from '@/utils/axiosInstance'
 
 import Loader from '@/components/Loader'
 
@@ -51,10 +46,11 @@ import { RootState } from '@/redux-store'
 import { Checkbox, FormControlLabel } from '@mui/material'
 import { toast } from 'react-toastify'
 import { setLoginInfo } from '@/redux-store/slices/login'
-import { clearUserPermissionInfo, setUserPermissionInfo } from '@/redux-store/slices/userPermission'
+import { setUserPermissionInfo } from '@/redux-store/slices/userPermission'
 import { clearSidebarPermission } from '@/redux-store/slices/sidebarPermission'
 import endPointApi from '@/utils/endPointApi'
 import showMsg from '@/utils/showMsg'
+import { api } from '@/utils/axiosInstance'
 
 
 type ErrorType = {
@@ -119,40 +115,50 @@ const Login = ({ mode }: { mode: Mode }) => {
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
 
-    try {
-      // setLoading(true);
-      const formData = new FormData();
-      formData.append('username', data.username);
-      formData.append('password', data.password);
-      formData.append('tenant_id', adminStore?.tenant_id || '');
+    // setLoading(true);
+    const formData = new FormData();
+    formData.append('username', data.username);
+    formData.append('password', data.password);
+    formData.append('tenant_id', adminStore?.tenant_id || '');
 
-      const response = await api.post(`${endPointApi.login}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+    api.post(`${endPointApi.login}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+      .then(async (response) => {
+        if (response.data.status === 200 && response.data.message === 'Login Success') {
+          saveToken(response.data.access_token);
+          toast.success(`${showMsg.login}`);
+          dispatch(setLoginInfo(response.data.data));
+
+          const redirectURL = searchParams.get('redirectTo') ?? '/dashboards/academy';
+          router.replace(getLocalizedUrl(redirectURL, locale as Locale));
+
+          // Fetch permission after login
+          if (response.data.data.username !== response.data.data.tenant_id) {
+            const rolesResponse = await api.get(`${endPointApi.getRole}?id=${response.data.data.id}`);
+            dispatch(setUserPermissionInfo(rolesResponse.data.roles));
+          }
+        } else {
+          const message = response?.data?.message || 'Login failed';
+          toast.error(message);
+        }
+      })
+      .catch((error) => {
+        const message = error?.response?.data?.message || 'Username or Password is incorrect';
+        if (error?.response?.status === 404) {
+          toast.error(message);
+        } else if (error?.response?.status === 400) {
+          toast.error(message);
+        } else {
+          toast.error('Something went wrong. Please try again.');
+        }
+      })
+      .finally(() => {
+        setLoading(false);
       });
 
-      saveToken(response.data.access_token);
-      // dispatch(clearUserPermissionInfo());
-      // dispatch(clearSidebarPermission())
-      dispatch(setLoginInfo(response.data.data));
-      const redirectURL = searchParams.get('redirectTo') ?? '/dashboards/academy';
-      router.replace(getLocalizedUrl(redirectURL, locale as Locale));
-
-      // Fetch permission first, THEN redirect
-      if (response.data.data.username !== response.data.data.tenant_id) {
-        const rolesResponse = await api.get(`${endPointApi.getRole}?id=${response.data.data.id}`);
-        dispatch(setUserPermissionInfo(rolesResponse.data.roles));
-      }
-      setTimeout(() => {
-        toast.success(`${showMsg.login}`);
-      }, 500);
-    } catch (error: any) {
-      const message = error?.response?.data?.error || 'UserName or Password is failed';
-      setErrorState({ message: [message] });
-    } finally {
-      setLoading(false);
-    }
   }
 
   useEffect(() => {
@@ -161,11 +167,11 @@ const Login = ({ mode }: { mode: Mode }) => {
     }
   }, [adminStore])
 
-  if (loading) return <Loader />;
 
   return (
     <div className='flex bs-full justify-center'
     >
+      {loading && <Loader />}
       <div
         style={{
           width: '100vw',
@@ -238,7 +244,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                               alignItems: 'center',
                               height: '100%',
                               backgroundColor: 'var(--mui-palette-primary-main)',
-                              color: '#fff',
+                              color: '#fff !important',
                               fontWeight: 600,
                               padding: '15px 12px',
                               borderTopRightRadius: '8px',
@@ -311,7 +317,6 @@ const Login = ({ mode }: { mode: Mode }) => {
             <Button disabled={loading} fullWidth variant='contained' type='submit'>
               Log In
             </Button>
-
 
             <div className="flex justify-between items-center flex-wrap gap-2">
               <Typography

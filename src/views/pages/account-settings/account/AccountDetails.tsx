@@ -19,7 +19,7 @@ import Chip from '@mui/material/Chip'
 import type { SelectChangeEvent } from '@mui/material/Select'
 import { useParams, useRouter } from 'next/navigation'
 
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 import { getLocalizedUrl } from '@/utils/i18n'
 import type { Locale } from '@configs/i18n'
@@ -28,12 +28,11 @@ import { RootState } from '@/redux-store'
 import { toast } from 'react-toastify'
 
 type Data = {
-  fullName: string
   full_name: string
   username: string
   email: string
   organization: string
-  contact: number | string
+  phone: number | string
   password: string
   confirm: string
   image: string
@@ -48,12 +47,11 @@ type RoleOption = {
 
 // Vars
 const initialData: Data = {
-  fullName: '',
   full_name: '',
   username: '',
   email: '',
   organization: '',
-  contact: '',
+  phone: '',
   password: '',
   confirm: '',
   image: '',
@@ -81,8 +79,6 @@ const AccountDetails = () => {
   const router = useRouter()
   const adminStore = useSelector((state: RootState) => state.admin)
 
-  console.log("formData", formData);
-
   useEffect(() => {
     if (formData?.role) {
       const selectedIds = formData?.role?.map((r: any) => r.id);
@@ -108,7 +104,6 @@ const AccountDetails = () => {
         const response = await api.get('roles')
         const roles: RoleOption[] = response.data.lenght > 0 && response.data.map((r: any) => ({ id: r.id, name: r.name }))
 
-        console.log('response', response)
         setRolesList(response.data.data)
       } catch (err) {
         console.error('Error fetching Roles:', err)
@@ -164,64 +159,65 @@ const AccountDetails = () => {
       setLoading(true)
 
       const formdata = new FormData()
-      formdata.append('image', fileInput)
-
-      formdata.append('full_name', data.fullName)
-      formdata.append('username', data.username)
-      formdata.append('email', data.email)
-      formdata.append('password', data.password)
-      formdata.append('password_confirmation', data.confirm)
-      formdata.append('phone', String(data.contact))
-      formdata.append('school_id', adminStore.school_id.toString() || '')
-      formdata.append('tenant_id', adminStore.tenant_id.toString() || '')
       formdata.append('id', selectedUser.id || 0)
 
-
+      formdata.append('full_name', data.full_name)
+      formdata.append('username', data.username)
+      formdata.append('email', data.email)
+      formdata.append('phone', String(data.phone))
+      formdata.append('school_id', adminStore.school_id.toString() || '')
+      formdata.append('tenant_id', adminStore.tenant_id.toString() || '')
+      formdata.append('password', data.password ? data.password : '')
+      formdata.append('password_confirmation', data.confirm ? data.confirm : '')
+      // formdata.append('image', fileInput)
 
       role.forEach((id, index) => {
         formdata.append(`role_ids[${index}]`, String(id))
       })
 
-      const response = await api.post('user-add', formdata, {
+      const response = await api.post('profile-edit', formdata, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-
-      if (response.data?.success === true) {
-        try {
-          const assignRoleData = {
-            user_id: selectedUser.id,
-            role_ids: role,
-            tenant_id: adminStore.tenant_id.toString() || '',
-            school_id: adminStore?.school_id.toString() || '',
-          }
-          await api.post('/assign-role', assignRoleData, {
-            headers: { 'Content-Type': 'application/json' }
-          })
-
-          if (response.data?.success === true) {
-            toast.success('User updated successfully')
-          }
-        } catch (assignError) {
-          console.error('Error assigning role:', assignError);
-          alert(assignError)
-
-        }
-        finally {
-          setLoading(false)
-        }
-        setRole([])
-        setImageFile(null)
-        setFormData(initialData as Data)
-        router.replace(getLocalizedUrl('/apps/user/list/', locale as Locale))
-
-      } else {
-        toast.error('User update failed')
-
-
+      if (response.status === 200) {
+        router.push(getLocalizedUrl('/dashboards/academy/', locale as Locale));
+        toast.success('Profile updated successfully')
       }
-      setRole([])
-      setImageFile(null)
-      setFormData(initialData as Data)
+      // if (response.data?.success === true) {
+      // try {
+      //   const assignRoleData = {
+      //     user_id: selectedUser.id,
+      //     role_ids: role,
+      //     tenant_id: adminStore.tenant_id.toString() || '',
+      //     school_id: adminStore?.school_id.toString() || '',
+      //   }
+      //   await api.post('/assign-role', assignRoleData, {
+      //     headers: { 'Content-Type': 'application/json' }
+      //   })
+
+      //   if (response.data?.success === true) {
+      //     toast.success('User updated successfully')
+      //   }
+      // } catch (assignError) {
+      //   console.error('Error assigning role:', assignError);
+      //   alert(assignError)
+
+      // }
+      // finally {
+      //   setLoading(false)
+      // }
+      // setRole([])
+      // setImageFile(null)
+      // setFormData(initialData as Data)
+      // router.replace(getLocalizedUrl('/apps/user/list/', locale as Locale))
+
+      // } else {
+      //   toast.error('User update failed')
+
+
+      // }
+      // setRole([])
+      // setImageFile(null)
+      // setFormData(initialData as Data)
     } catch (error: any) {
       const message =
         error.response?.data?.message ||
@@ -236,6 +232,20 @@ const AccountDetails = () => {
 
     }
   }
+
+  const getProfile = async () => {
+    try {
+      const response = await api.post('auth/me')
+      setFormData(response.data.data)
+    } catch (err) {
+      return null
+    }
+  }
+
+
+  useEffect(() => {
+    getProfile()
+  }, [])
 
   return (
     <Card>
@@ -278,14 +288,14 @@ const AccountDetails = () => {
               <TextField
                 fullWidth
                 label='Full Name'
-                value={formData.fullName || formData.full_name || ''}
+                value={formData.full_name}
                 placeholder='John Doe'
-                onChange={e => handleFormChange('fullName', e.target.value)}
+                onChange={e => handleFormChange('full_name', e.target.value)}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                disabled
+                InputProps={{ readOnly: true }}
                 fullWidth
                 label='Username'
                 value={formData.username}
@@ -307,9 +317,9 @@ const AccountDetails = () => {
               <TextField
                 fullWidth
                 label='Contact'
-                value={formData.contact}
+                value={formData.phone}
                 placeholder='+1 (234) 567-8901'
-                onChange={e => handleFormChange('contact', e.target.value)}
+                onChange={e => handleFormChange('phone', e.target.value)}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -331,7 +341,7 @@ const AccountDetails = () => {
               />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
+            {/* <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>Select Role</InputLabel>
                 <Select
@@ -371,18 +381,20 @@ const AccountDetails = () => {
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
+            </Grid> */}
 
             <Grid size={{ xs: 12 }} className='flex gap-4 flex-wrap pbs-6'>
-              <Button variant='contained' type='submit' disabled={!isValid}>
+              <Button variant='contained' type='submit'>
 
                 Save Changes
               </Button>
               <Button variant='outlined' type='reset' color='secondary' onClick={() => {
-                setFormData(initialData);
-                setRole([]);
+                // setFormData(initialData);
+                // setRole([]);
+                const url = getLocalizedUrl('/dashboards/academy/', locale as Locale);
+                router.push(url);
               }}>
-                Reset
+                Cancel
               </Button>
             </Grid>
           </Grid>
@@ -393,3 +405,7 @@ const AccountDetails = () => {
 }
 
 export default AccountDetails
+function getProfile() {
+  throw new Error('Function not implemented.')
+}
+

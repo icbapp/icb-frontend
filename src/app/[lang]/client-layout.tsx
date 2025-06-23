@@ -19,7 +19,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     const router = useRouter()
     const { lang: locale } = useParams()
 
-
     useEffect(() => {
         if (typeof window === 'undefined' || !window.location) return;
         const host = window.location.hostname;
@@ -83,10 +82,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     }, [adminData, pathname])
 
 
-    if (loading) return <Loader />
     return (
         <>
-
+            {loading && <Loader />}
             {children}
         </>
     )

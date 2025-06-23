@@ -29,10 +29,11 @@ import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
-import api from '@/utils/axiosInstance'
+import { api } from '@/utils/axiosInstance'
 import { useEffect, useState } from 'react'
 import { setSidebarPermissionInfo } from '@/redux-store/slices/sidebarPermission'
 import Loader from '@/components/Loader'
+import { Skeleton } from '@mui/material'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/verticalMenuData'
@@ -67,6 +68,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const params = useParams()
   const dispatch = useDispatch();
   // Vars
+
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
   const { lang: locale } = params
 
@@ -96,12 +98,19 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   //   }
   // }
 
-  // useEffect(() => {
-  //   fetchRolePermissionData();
-  // }, [])
+  useEffect(() => {
+    setLoading(true);
+
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [permissions]);
 
   useEffect(() => {
     if (loginStore?.super_admin) {
+
       setLoading(true);
       const formData = new FormData();
       formData.append('role_id', String(0));
@@ -124,7 +133,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           setLoading(false);
         });
     }
-  }, []);
+  }, [loginStore?.super_admin]);
 
 
   return (
@@ -141,7 +150,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           onScrollY: container => scrollMenu(container, true)
         })}
     >
-      {loading && <Loader />}
+      {/* {loading && <Loader />} */}
 
       {/* Incase you also want to scroll NavHeader to scroll with Vertical Menu, remove NavHeader from above and paste it below this comment */}
       {/* Vertical Menu */}
@@ -155,85 +164,114 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         {/* If not super admin, use `hasMenuPermission` */}
         {!loginStore.super_admin && (
           <>
-            {hasMenuPermission('dashboard') && (
-              <MenuItem
-                href={`/${locale}/dashboards/academy`}
-                icon={<i className='ri-home-smile-line' />}
-                exactMatch={false}
-                activeUrl='/dashboards/academy'
-              >
-                {dictionary['navigation'].dashboards}
-              </MenuItem>
-            )}
+            {loading ? (
+              <>
+                <Skeleton variant='rectangular' height={40} className='mb-2 rounded-md' />
+                <Skeleton variant='rectangular' height={40} className='mb-2 rounded-md' />
+                <Skeleton variant='rectangular' height={40} className='mb-2 rounded-md' />
+              </>
+            ) : (
+              <>
+                {hasMenuPermission('dashboard') && (
+                  <MenuItem
+                    href={`/${locale}/dashboards/academy`}
+                    icon={<i className='ri-home-smile-line' />}
+                    exactMatch={false}
+                    activeUrl='/dashboards/academy'
+                  >
+                    {dictionary['navigation'].dashboards}
+                  </MenuItem>
+                )}
 
-            {hasMenuPermission('user-management') && (
-              <MenuItem
-                href={`/${locale}/apps/user/list`}
-                icon={<i className='ri-user-line' />}
-              >
-                {dictionary['navigation'].user}
-              </MenuItem>
-            )}
+                {hasMenuPermission('user-management') && (
+                  <MenuItem
+                    href={`/${locale}/apps/user/list`}
+                    icon={<i className='ri-user-line' />}
+                    exactMatch={false}
+                    activeUrl='/apps/user/list'
+                  >
+                    {dictionary['navigation'].user}
+                  </MenuItem>
+                )}
 
-            {hasMenuPermission('roles') && (
-              <MenuItem
-                href={`/${locale}/apps/roles`}
-                icon={<i className='ri-lock-2-line' />}
-              >
-                {dictionary['navigation'].roles}
-              </MenuItem>
+                {hasMenuPermission('roles') && (
+                  <MenuItem
+                    href={`/${locale}/apps/roles`}
+                    icon={<i className='ri-lock-2-line' />}
+                    exactMatch={false}
+                    activeUrl='/apps/roles'
+                  >
+                    {dictionary['navigation'].roles}
+                  </MenuItem>
+                )}
+              </>
             )}
           </>
         )}
+
 
         {/* If super admin, use permissionData */}
-        {loginStore.super_admin && (
-          <>
-            {permissionData
-              .filter((p: any) => p.checked)
-              .map((item: any) => {
-                switch (item.menu_name) {
-                  case 'dashboard':
-                    return (
-                      <MenuItem
-                        key={item.menu_id}
-                        href={`/${locale}/dashboards/academy`}
-                        icon={<i className='ri-home-smile-line' />}
-                        exactMatch={false}
-                        activeUrl='/dashboards/academy'
-                      >
-                        {dictionary['navigation'].dashboards}
-                      </MenuItem>
-                    );
+        {loginStore.super_admin ? (
+          permissionData && permissionData.length > 0 ? (
+            <>
+              {permissionData
+                .filter((p: any) => p.checked)
+                .map((item: any) => {
+                  switch (item.menu_name) {
+                    case 'dashboard':
+                      return (
+                        <MenuItem
+                          key={item.menu_id}
+                          href={`/${locale}/dashboards/academy`}
+                          icon={<i className='ri-home-smile-line' />}
+                          exactMatch={false}
+                          activeUrl='/dashboards/academy'
+                        >
+                          {dictionary['navigation'].dashboards}
+                        </MenuItem>
+                      )
 
-                  case 'user-management':
-                    return (
-                      <MenuItem
-                        key={item.menu_id}
-                        href={`/${locale}/apps/user/list`}
-                        icon={<i className='ri-user-line' />}
-                      >
-                        {dictionary['navigation'].user}
-                      </MenuItem>
-                    );
+                    case 'user-management':
+                      return (
+                        <MenuItem
+                          key={item.menu_id}
+                          href={`/${locale}/apps/user/list`}
+                          icon={<i className='ri-user-line' />}
+                          exactMatch={false}
+                          activeUrl='/apps/user/list'
+                        >
+                          {dictionary['navigation'].user}
+                        </MenuItem>
+                      )
 
-                  case 'roles':
-                    return (
-                      <MenuItem
-                        key={item.menu_id}
-                        href={`/${locale}/apps/roles`}
-                        icon={<i className='ri-lock-2-line' />}
-                      >
-                        {dictionary['navigation'].roles}
-                      </MenuItem>
-                    );
+                    case 'roles':
+                      return (
+                        <MenuItem
+                          key={item.menu_id}
+                          href={`/${locale}/apps/roles`}
+                          icon={<i className='ri-lock-2-line' />}
+                          exactMatch={false}
+                          activeUrl='/apps/roles'
+                        >
+                          {dictionary['navigation'].roles}
+                        </MenuItem>
+                      )
 
-                  default:
-                    return null;
-                }
-              })}
-          </>
-        )}
+                    default:
+                      return null
+                  }
+                })}
+            </>
+          ) : (
+            // Show skeletons if data is still loading
+            <>
+              <Skeleton variant='rectangular' height={40} className='mb-2 rounded-md' />
+              <Skeleton variant='rectangular' height={40} className='mb-2 rounded-md' />
+              <Skeleton variant='rectangular' height={40} className='mb-2 rounded-md' />
+            </>
+          )
+        ) : null}
+
 
 
 

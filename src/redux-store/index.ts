@@ -55,6 +55,7 @@ import countryAndStateReducer from '@/redux-store/slices/countryAndState'
 import loginReducer from '@/redux-store/slices/login'
 import userPermissionReducer from '@/redux-store/slices/userPermission'
 import sidebarPermissionReducer from '@/redux-store/slices/sidebarPermission'
+import userSelectedRoleSlice from '@/redux-store/slices/userSelectedRole'
 
 // Combine all reducers
 const rootReducer = combineReducers({
@@ -70,13 +71,14 @@ const rootReducer = combineReducers({
   login: loginReducer,
   userPermission: userPermissionReducer,
   sidebarPermission: sidebarPermissionReducer,
+  userSelectedRole: userSelectedRoleSlice,
 })
 
 // Persist config
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['login', 'userPermission', 'sidebarPermission'], // only persist the `login` slice
+  whitelist: ['admin', 'login', 'userPermission', 'sidebarPermission', 'userSelectedRole'], // only persist the `login` slice
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

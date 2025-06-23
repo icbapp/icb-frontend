@@ -123,6 +123,7 @@ const WelcomeCard = () => {
 
   const [loading, setLoading] = useState(false)
   const adminStore = useSelector((state: RootState) => state.admin)
+  const loginStore = useSelector((state: RootState) => state.login)
 
   // useEffect(() => {
   //   setLoading(true)
@@ -227,7 +228,7 @@ const WelcomeCard = () => {
   }
 
   return (<>
-    {loading && <Loader />}
+    {/* {loading && <Loader />} */}
 
     <div className="rounded-xl shadow-md">
 
@@ -240,7 +241,7 @@ const WelcomeCard = () => {
               Welcome back,
             </Typography>
             <Typography variant="h4" className="font-bold ml-1" color="text.primary">
-              {adminStore?.username ?? 'User'} 👋🏻
+              {loginStore?.username ?? 'User'} 👋🏻
             </Typography>
           </div>
 
