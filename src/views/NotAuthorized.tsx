@@ -27,7 +27,7 @@ const NotAuthorized = ({ mode }: { mode: Mode }) => {
           <Typography className='text-8xl font-medium' color='text.primary'>
             401
           </Typography>
-          <Typography variant='h4'>Enter valid domain!</Typography>
+          <Typography variant='h4'>Enter valid domain! demo</Typography>
           <Typography>
             or You don&#39;t have permission to access this page. Go Home!
           </Typography>
