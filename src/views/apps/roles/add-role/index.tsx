@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/redux-store'
 import {
@@ -48,6 +48,7 @@ const RoleFormPage = () => {
     roleName?: string;
     permissions?: string;
   }>({})
+  const hasRefreshedToken = useRef(false);
 
   const [loading, setLoading] = useState(false)
   const adminStore = useSelector((state: RootState) => state.admin)
@@ -157,7 +158,15 @@ const RoleFormPage = () => {
 
     try {
       setLoading(true);
-
+      // if (!hasRefreshedToken.current) {
+      //   hasRefreshedToken.current = true;
+      //   try {
+      //     const res = await api.post('auth/refresh');
+      //     saveToken(res.data.access_token);
+      //   } catch (err) {
+      //     console.error('Token refresh error:', err);
+      //   }
+      // }
       const response = await api.post('/roles', payload);
 
       if (response.data.success) {
@@ -174,17 +183,19 @@ const RoleFormPage = () => {
         formData.append('school_id', loginStore.school_id);
         formData.append('user_id', loginStore.id);
 
-        try {
-          // const res = await api.post('get-role-permissions', formData, {
-          //   headers: {
-          //     'Content-Type': 'multipart/form-data',
-          //   },
-          // });
-          // dispatch(setSidebarPermissionInfo(res.data));
-          // dispatch(setUserPermissionInfo(res.data));
-        } catch (err: any) {
-          console.error('Permission error:', err?.response || err);
-          toast.error('Failed to fetch permissions.');
+        if ((loginStore?.super_admin as unknown as boolean) !== true) {
+          try {
+            // const res = await api.post('get-role-permissions', formData, {
+            //   headers: {
+            //     'Content-Type': 'multipart/form-data',
+            //   },
+            // });
+            // dispatch(setSidebarPermissionInfo(res.data));
+            // dispatch(setUserPermissionInfo(res.data));
+          } catch (err: any) {
+            console.error('Permission error:', err?.response || err);
+            toast.error('Failed to fetch permissions.');
+          }
         }
       } else {
         toast.error(response.data.message || 'Something went wrong.');
@@ -247,7 +258,7 @@ const RoleFormPage = () => {
 
               {validationErrors.permissions && (
                 <Typography color='error' className='mb-2'>
-                  {validationErrors.permissions}
+                  <p style={{ color: 'red' }}>{validationErrors.permissions}</p>
                 </Typography>
               )}
 
