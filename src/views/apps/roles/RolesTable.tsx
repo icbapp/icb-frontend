@@ -140,55 +140,6 @@ const RolesTable = () => {
       menu.sub_menus?.some((sub: any) => sub.name === 'roles-delete' && sub.checked)
   );
 
-  const handleDeleteRole = async (roleId: number) => {
-    swal({
-      title: "Are you sure?",
-      text: "Are you sure that you want to delete this role?",
-      icon: "warning",
-      buttons: {
-        cancel: {
-          text: "No",
-          visible: true,
-          closeModal: true,
-        },
-        confirm: {
-          text: "Yes",
-          closeModal: false, // keep popup open until API finishes
-        },
-      },
-      dangerMode: true,
-    }).then(async (willDelete) => {
-      if (willDelete) {
-        try {
-          setLoading(true);
-
-          const response = await api.delete(`roles-destroy/${roleId}`);
-
-          if (response.data.success === 200) {
-            setData(prev => prev.filter(user => Number(user.id) !== roleId));
-            setFilteredData(prev => prev.filter(user => Number(user.id) !== roleId));
-            toast.success(response.data.message);
-          } else {
-            toast.error(response.data.message || 'Failed to delete role');
-          }
-          setLoading(false);
-
-        } catch (error: any) {
-          toast.error(error?.response?.data?.message || 'Error deleting role');
-          console.error('Error deleting role:', error);
-
-        } finally {
-          setLoading(false);
-          if (swal && typeof swal.close === 'function') {
-            swal.close(); // Close the popup manually
-          }
-        }
-      } else {
-        console.log("User canceled.");
-      }
-    });
-  }
-
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(() => [
     // {
     //   id: 'select',
@@ -228,35 +179,27 @@ const RolesTable = () => {
       enableSorting: false,
       cell: ({ row }) => (
         <div className='flex items-center gap-0.5'>
-          {/* {row.original.title?.toLowerCase() !== 'super admin' && ( */}
-          <>
+          {showEditRoleButton &&
+            <IconButton
+              size='small'
+              disabled={['Super Admin', 'default', 'Default'].includes(row.original.title)}
+              onClick={() => {
+                localStorage.setItem('editRoleData', JSON.stringify(row.original));;
+                const redirectURL = searchParams.get('redirectTo') ?? `/apps/roles/add-role?role_id=${encodeURIComponent(row.original.id)}`
+                router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+              }}
+            >
+              <i className='ri-edit-box-line text-textSecondary' />
+            </IconButton>
+          }
 
-            {showEditRoleButton &&
-              <IconButton
-                size='small'
-                disabled={['Super Admin', 'default', 'Default'].includes(row.original.title)}
-                onClick={() => {
-                  localStorage.setItem('editRoleData', JSON.stringify(row.original));;
-                  const redirectURL = searchParams.get('redirectTo') ?? `/apps/roles/add-role?role_id=${encodeURIComponent(row.original.id)}`
-                  router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-                }}
-              >
-                <i className='ri-edit-box-line text-textSecondary' />
-              </IconButton>
-            }
-
-            {showDeleteRoleButton && (
-              <IconButton size='small'
-                disabled={['super admin', 'default'].includes(row.original.title?.toLowerCase())}
-                onClick={() => {
-                  handleDeleteRole(Number(row.original.id))
-                }}>
-                <i className='ri-delete-bin-7-line text-textSecondary' />
-              </IconButton>
-            )}
-
-          </>
-          {/* )} */}
+          {showDeleteRoleButton && (
+            <IconButton size='small'
+              disabled={['super admin', 'default'].includes(row.original.title?.toLowerCase())}
+              onClick={() => handleDeleteRole(row.original.id, 0)}>
+              <i className='ri-delete-bin-7-line text-textSecondary' />
+            </IconButton>
+          )}
         </div>
       )
 
@@ -285,78 +228,116 @@ const RolesTable = () => {
   const getAvatar = ({ avatar, fullName }: Pick<UsersType, 'avatar' | 'fullName'>) =>
     avatar ? <CustomAvatar src={avatar} size={34} /> : <CustomAvatar>{getInitials(fullName)}</CustomAvatar>
 
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get('roles')
+
+      const users = response.data.data.map((user: {
+        id: number;
+        name: string;
+        permissions: Permissions[];
+        roles: { name: string }[];
+      }) => ({
+        id: user.id,
+        title: user.name ?? 'No Title',
+        permissions: user.permissions ?? [],
+        role: user.roles?.[0]?.name ?? '',   // 🟢 ADD THIS LINE
+        company: 'N/A',
+        country: 'N/A',
+        contact: '',
+        currentPlan: 'enterprise',
+      }))
+
+      const uniqueRoles: string[] = Array.from(
+        new Set(
+          users.map((user: { role: any }) => user.role).filter((role: string | any[]): role is string => typeof role === 'string' && role.length > 0)
+        )
+      )
+      setAvailableRoles(uniqueRoles)
+      setData(users)
+      // dispatch(setSidebarPermissionInfo(users))
+      setFilteredData(users)
+      setLoading(false)
+
+      if (response.data.status === 200 && !hasRefreshedToken.current) {
+        hasRefreshedToken.current = true;
+        try {
+          const res = await api.post('auth/refresh');
+          saveToken(res.data.access_token);
+        } catch (err) {
+          console.error('Token refresh error:', err);
+        }
+      }
+
+    } catch (err) {
+      console.error('Error fetching users:', err)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true)
-        const response = await api.get('roles')
-        const users = response.data.data.map((user: {
-          id: number;
-          name: string;
-          permissions: Permissions[];
-          roles: { name: string }[];
-        }) => ({
-          id: user.id,
-          title: user.name ?? 'No Title',
-          permissions: user.permissions ?? [],
-          role: user.roles?.[0]?.name ?? '',   // 🟢 ADD THIS LINE
-          company: 'N/A',
-          country: 'N/A',
-          contact: '',
-          currentPlan: 'enterprise'
-        }))
-
-        const uniqueRoles: string[] = Array.from(
-          new Set(
-            users.map((user: { role: any }) => user.role).filter((role: string | any[]): role is string => typeof role === 'string' && role.length > 0)
-          )
-        )
-        setAvailableRoles(uniqueRoles)
-        setData(users)
-        // dispatch(setSidebarPermissionInfo(users))
-        setFilteredData(users)
-        setLoading(false)
-
-        const formData = new FormData();
-        // formData.append('role_id', permissions.selectedRole.id);
-        // formData.append('tenant_id', loginStore.tenant_id);
-        // formData.append('school_id', loginStore.school_id);
-        // formData.append('user_id', loginStore.id);
-
-        // try {
-        //   const res = await api.post('get-role-permissions', formData, {
-        //     headers: {
-        //       'Content-Type': 'multipart/form-data',
-        //     },
-        //   });
-        //   dispatch(setSidebarPermissionInfo(res.data));
-        //   // dispatch(setUserPermissionInfo(res.data));
-        // } catch (err: any) {
-        //   console.error('Permission error:', err?.response || err);
-        //   toast.error('Failed to fetch permissions.');
-        // }
-        if (response.data.status === 200 && !hasRefreshedToken.current) {
-          hasRefreshedToken.current = true;
-          try {
-            const res = await api.post('auth/refresh');
-            saveToken(res.data.access_token);
-          } catch (err) {
-            console.error('Token refresh error:', err);
-          }
-        }
-
-      } catch (err) {
-        console.error('Error fetching users:', err)
-      }
-      finally {
-        setLoading(false)
-      }
-    }
     fetchUsers()
   }, [])
 
+  const handleDeleteRole = async (roleId: number, status: boolean) => {
+    swal({
+      title: "Are you sure?",
+      text: "Are you sure that you want to delete this role?",
+      icon: "warning",
+      buttons: {
+        cancel: {
+          text: "No",
+          visible: true,
+          closeModal: true,
+        },
+        confirm: {
+          text: "Yes",
+          closeModal: false, // keep popup open until API finishes
+        },
+      },
+      dangerMode: true,
+    }).then(async (willDelete) => {
+      if (willDelete) {
+        try {
+          setLoading(true);
+          const body = {
+            role_id: roleId,
+            tenant_id: loginStore.tenant_id,
+            school_id: loginStore.school_id,
+            status: status
+          }
+          const response = await api.post(`roles-status-update`, body);
 
+          if (response.data.status == 200) {
+            setData(prev => prev.filter(user => Number(user.id) !== roleId));
+            setFilteredData(prev => prev.filter(user => Number(user.id) !== roleId));
+            toast.success(response.data.message);
+            fetchUsers()
+          }
+          else {
+            toast.error(response.data.message);
+          }
+          setLoading(false);
+
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || 'Error deleting role');
+          console.error('Error deleting role:', error);
+
+        } finally {
+          setLoading(false);
+          if (swal && typeof swal.close === 'function') {
+            swal.close(); // Close the popup manually
+          }
+          fetchUsers()
+        }
+      } else {
+        console.log("User canceled.");
+      }
+    });
+  }
 
   return (
     <Card>
