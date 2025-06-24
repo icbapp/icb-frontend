@@ -26,7 +26,7 @@ COPY src/assets ./src/assets
 COPY tailwind.config.ts postcss.config.mjs tsconfig.json ./
 
 # Install dependencies with frozen lockfile for reproducibility
-RUN pnpm install --frozen-lockfile
+# RUN pnpm install --frozen-lockfile
 
 # Install additional required packages that might be missing from documentation
 RUN pnpm add \
