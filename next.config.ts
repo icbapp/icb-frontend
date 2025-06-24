@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'https://masteradmin.icbapp.site/api/:path*', // Proxy to backend
+        destination: 'https://petrolpe.com/api/:path*', // Proxy to backend
       },
     ]
   },

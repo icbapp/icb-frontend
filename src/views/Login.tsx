@@ -111,7 +111,6 @@ console.log("adminStore",adminStore);
 
   const authBackground = useImageVariant(mode, lightImg, darkImg)
 
-
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
@@ -120,8 +119,8 @@ console.log("adminStore",adminStore);
     const formData = new FormData();
     formData.append('username', data.username);
     formData.append('password', data.password);
-    // formData.append('tenant_id', adminStore?.tenant_id || '');
-    formData.append('tenant_id', "myschool" || '');
+    formData.append('tenant_id', adminStore?.tenant_id || '');
+    // formData.append('tenant_id', "myschool" || '');
 
     api.post(`${endPointApi.login}`, formData, {
       headers: {
@@ -129,7 +128,7 @@ console.log("adminStore",adminStore);
       },
     })
       .then(async (response) => {
-        if (response.data.status === 200 && response.data.message === 'Login Success') {
+        // if (response.data.status === 200 && response.data.message === 'Login Success') {
           saveToken(response.data.access_token);
           toast.success(`${showMsg.login}`);
           dispatch(setLoginInfo(response.data.data));
@@ -142,10 +141,10 @@ console.log("adminStore",adminStore);
             const rolesResponse = await api.get(`${endPointApi.getRole}?id=${response.data.data.id}`);
             dispatch(setUserPermissionInfo(rolesResponse.data.roles));
           }
-        } else {
-          const message = response?.data?.message || 'Login failed';
-          toast.error(message);
-        }
+        // } else {
+        //   const message = response?.data?.message || 'Login failed';
+        //   toast.error(message);
+        // }
       })
       .catch((error) => {
         const message = error?.response?.data?.message || 'Username or Password is incorrect';

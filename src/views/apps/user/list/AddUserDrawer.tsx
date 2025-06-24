@@ -137,7 +137,11 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
   const fetchRoles = async () => {
     try {
       const response = await api.get('roles')
-      const roles: RoleOption[] = response.data.data.map((r: any) => ({ id: r.id, name: r.name }))
+
+      // const roles: RoleOption[] = response.data.data.map((r: any) => ({ id: r.id, name: r.name }))
+      const roles: RoleOption[] = response.data.data
+      .filter((r: any) => r.name !== 'default' && r.name !== 'Super Admin') // Remove default and Super Admin
+      .map((r: any) => ({ id: r.id, name: r.name }));
       setRolesList(roles)
     } catch (err) {
       return null

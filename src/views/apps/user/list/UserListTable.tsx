@@ -66,6 +66,7 @@ import Loader from '@/components/Loader'
 import { tree } from 'next/dist/build/templates/app-page';
 import swal from 'sweetalert';
 import { toast } from 'react-toastify';
+import { Tooltip } from '@mui/material';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -171,7 +172,14 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const permissions = useSelector((state: RootState) => state.sidebarPermission)
   const adminStore = useSelector((state: RootState) => state.admin)
+const [statuConnected, setStatusConnected] = useState(0);
 
+ useEffect(() => {
+    api.get('/ms-auth-token/school-token-valide')
+    .then((response) => {
+      setStatusConnected(response.data.satus);
+    })
+  }, []);
   const hasPermission = (menuName: string, subMenuName: string) => {
     const menus = (permissions as any).menus;
     const menu = menus?.find((m: any) => m.menu_name === menuName && m.checked);
@@ -336,7 +344,6 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-
   const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName'>) => {
     const { avatar, fullName } = params
 
@@ -468,6 +475,24 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     });
   };
 
+  const SyncMicrosoftUser = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('auth/microsoft/fetch-users/11/myschool');
+      // auth/microsoft/fetch-users/{schoolId}/{tenantId}
+      console.log("response********", response);
+      if (response.data.message === "Users synced successfully.") {
+        toast.success("Users synced successfully");
+      //    setTotalRows(response.data) // get total from API if exists
+      // setData(users)
+        fetchUsers();
+      } 
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred while syncing users");
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <>
       {loading && <Loader />}
@@ -537,6 +562,13 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 Add New User
               </Button>
             )}
+            {statuConnected === 1 && 
+              <Tooltip title="Pull user from microsoft azure or microsoft entra" arrow>
+                <Button variant='contained' className='max-sm:is-full' onClick={() =>SyncMicrosoftUser()}>
+                  Sync with Microsoft
+                </Button>
+              </Tooltip>
+}
           </div>
         </div>
         <div className='overflow-x-auto'>

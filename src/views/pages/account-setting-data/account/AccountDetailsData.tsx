@@ -98,7 +98,6 @@ const AccountDetailsData = () => {
             const selectedIds = formData?.role?.map((r: any) => r.id);
             setRole(selectedIds);
         }
-
     }, []);
 
     useEffect(() => {
@@ -106,9 +105,11 @@ const AccountDetailsData = () => {
             try {
                 setLoading(true)
                 const response = await api.get('roles')
-                const roles: RoleOption[] = response.data.lenght > 0 && response.data.map((r: any) => ({ id: r.id, name: r.name }))
-
-                setRolesList(response.data.data)
+                // const roles: RoleOption[] = response.data.lenght > 0 && response.data.map((r: any) => ({ id: r.id, name: r.name }))
+                const roles: RoleOption[] = response.data.data
+                .filter((r: any) => r.name !== 'Super Admin')
+                .map((r: any) => ({ id: r.id, name: r.name }));
+                setRolesList(roles)
             } catch (err) {
                 console.error('Error fetching Roles:', err)
                 toast.error(err instanceof Error ? err.message : 'Failed to fetch roles')
@@ -122,23 +123,6 @@ const AccountDetailsData = () => {
 
     const handleFormChange = (field: keyof Data, value: Data[keyof Data]) => {
         setFormData({ ...formData, [field]: value })
-    }
-
-    const handleFileInputChange = (file: ChangeEvent) => {
-
-        const { files } = file.target as HTMLInputElement
-
-        if (files && files.length !== 0) {
-            const selectedFile = files[0]
-
-            // preview image
-            const reader = new FileReader()
-            reader.onload = () => setImgSrc(reader.result as string)
-            reader.readAsDataURL(selectedFile)
-
-            // store the actual file instead of base64 string
-            setFileInput(selectedFile as any) // ❗ Type assertion since `fileInput` is string
-        }
     }
 
     const storedSchool = localStorage.getItem('user')

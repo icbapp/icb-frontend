@@ -10,7 +10,7 @@ import { useDispatch } from 'react-redux';
 import { getLocalizedUrl } from '@/utils/i18n'
 import type { Locale } from '@configs/i18n'
 
-interface AdminData {
+export interface AdminData {
     accent_color: string;
     background_image: string;
     d_logo: string;
@@ -47,8 +47,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             setLoading(true);
             const formData = new FormData();
             formData.append('type', hostname);
-            const response = await axios.post(`/api/school`, formData) as AxiosResponse<SchoolResponse>;
-            const data = response.data.data;
+            // const response = await axios.post(`/api/school`, formData) as AxiosResponse<SchoolResponse>;
+            // const data = response.data.data;
             const adminData: AdminData = {
             d_logo: "https://masteradmin.icbapp.site/uploads//logo/dark_1750223468_light_1749633297_Group_2__1_.png",
             f_logo: "https://masteradmin.icbapp.site/uploads//logo/favicon_1750223468_favicon_1750091713_685047b488bcf_download.jpg",
@@ -66,10 +66,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             };
             // if (response.data.success) {
                 dispatch(setAdminInfo(adminData))
-                setAdminData({
-                    name: data?.name || '',
-                    favicon: data?.f_logo || '/favicon.ico'
-                })
+                // setAdminData({
+                //     name: data?.name || '',
+                //     favicon: data?.f_logo || '/favicon.ico'
+                // })
             // } else {
             //     setAdminData({ name: '', favicon: '/favicon.ico' })
             //     router.replace(getLocalizedUrl("/login", locale as Locale))
@@ -85,12 +85,16 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         }
     }
 
+    // useEffect(() => {
+    //     if (!hostname) return;
+
+    //     getAdminData();
+    // }, [hostname]);
+
     useEffect(() => {
-        if (!hostname) return;
 
         getAdminData();
-    }, [hostname]);
-
+    }, []);
     useEffect(() => {
         if (!adminData.name && !adminData.favicon) return
 

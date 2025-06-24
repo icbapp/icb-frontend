@@ -1,4 +1,6 @@
+'use client'
 // Next Imports
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
 // MUI Imports
@@ -11,6 +13,9 @@ import Switch from '@mui/material/Switch'
 
 // Component Imports
 import CustomIconButton from '@core/components/mui/IconButton'
+import { api } from '@/utils/axiosInstance'
+import Loader from '@/components/Loader'
+import { toast } from 'react-toastify'
 
 type ConnectedAccountsType = {
   title: string
@@ -63,20 +68,20 @@ const connectedAccountsArr: ConnectedAccountsType[] = [
 
 const socialAccountsArr: SocialAccountsType[] = [
   {
-    title: 'Facebook',
+    title: 'Microsoft',
     isConnected: false,
-    logo: '/images/logos/facebook.png'
+    logo: '/images/logos/Microsoft_logo.png'
   },
   {
     title: 'Twitter',
-    isConnected: true,
+    isConnected: false,
     username: '@Pixinvent',
     logo: '/images/logos/twitter.png',
     href: 'https://twitter.com/pixinvents'
   },
   {
     title: 'Linkedin',
-    isConnected: true,
+    isConnected: false,
     username: '@Pixinvent',
     logo: '/images/logos/linkedin.png',
     href: 'https://www.linkedin.com/in/pixinvent-creative-studio-561a4713b'
@@ -94,10 +99,89 @@ const socialAccountsArr: SocialAccountsType[] = [
 ]
 
 const Connections = () => {
+const [statuConnected, setStatusConnected] = useState(0);
+  const [loading, setLoading] = useState(false)
+
+  const redirectTo = async() =>{
+    const response = await api.get('ms-auth/redirect', {
+      params: {
+        school_id: 11,
+        tenant_id: "myschool"
+      }
+    });
+    // window.open(response.data.redirect_url);
+    window.location.href = response.data.redirect_url;
+  }
+  const deleteTo = async() =>{
+    const response = await api.delete('ms-auth-token/school-token-delete');
+    // window.open(response.data.redirect_url);
+    if(response.data.status == 200) {
+      setStatusConnected(0);
+      toast.success(response.data.message)  
+    }
+  }
+
+
+  const queryParams = window.location.search; // Get the entire query string after '?'
+  const codeStartIndex = queryParams.indexOf('code=') + 5; // Get index after '?code='
+  const encodedCode = queryParams.substring(codeStartIndex); // Get the encoded code string
+
+    // Decode the URL-encoded code string
+  const decodedCode = decodeURIComponent(encodedCode);
+
+    // Remove the unwanted part '?code='
+  const cleanCode = decodedCode.replace('?code=', '');
+
+
+
+    const url = new URL(window.location.href); // Get the current URL
+const params = new URLSearchParams(url.search); // Get query parameters
+
+// // Extract specific query parameters
+const code = params.get('code');
+const state = params.get('state');
+const sessionState = params.get('session_state');
+
+ useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Make the GET request with query parameters
+        const response = await api.get('ms-auth/callback', {
+          params: {
+            code: code,
+            state: state,
+            sessionState: sessionState
+          }
+        });
+
+        if (response.data.message === 'Microsoft token saved successfully.') {
+          setLoading(false);
+          const newUrl = window.location.href.split('?')[0]; // Get the base URL
+          window.history.replaceState({}, '', newUrl);
+        } 
+      } catch (err) {
+        console.error('Error during the API call:', err);
+        setLoading(false);
+      }
+    };
+fetchData()
+  }, [queryParams]); 
+
+  
+  useEffect(() => {
+    api.get('/ms-auth-token/school-token-valide')
+    .then((response) => {
+      setStatusConnected(response.data.satus);
+    })
+  }, [cleanCode]);
+
   return (
     <Card>
+            {loading && <Loader />}
+      
       <Grid container>
-        <Grid size={{ xs: 12, md: 6 }}>
+        {/* <Grid size={{ xs: 12, md: 6 }}>
           <CardHeader
             title='Connected Accounts'
             subheader='Display content from your connected accounts on your site'
@@ -118,7 +202,7 @@ const Connections = () => {
               </div>
             ))}
           </CardContent>
-        </Grid>
+        </Grid> */}
         <Grid size={{ xs: 12, md: 6 }}>
           <CardHeader title='Social Accounts' subheader='Display content from social accounts on your site' />
           <CardContent className='flex flex-col gap-4'>
@@ -130,19 +214,27 @@ const Connections = () => {
                     <Typography className='font-medium' color='text.primary'>
                       {item.title}
                     </Typography>
-                    {item.isConnected ? (
+                    {item.title === 'Microsoft' && statuConnected == 1 ? (
                       <Typography color='primary.main' component={Link} href={item.href || '/'} target='_blank'>
-                        {item.username}
+                        {/* {item.username} */}
+                        Connected
                       </Typography>
                     ) : (
                       <Typography variant='body2'>Not Connected</Typography>
                     )}
                   </div>
                 </div>
-                <CustomIconButton variant='outlined' color={item.isConnected ? 'error' : 'secondary'}>
-                  <i className={item.isConnected ? 'ri-delete-bin-line' : 'ri-link'} />
+                 <CustomIconButton
+                  variant='outlined'
+                  color={item.title === 'Microsoft' && statuConnected == 1 ? 'error' : 'secondary'}
+                  disabled={item.title !== 'Microsoft' && !item.isConnected} // Disable all except Microsoft when not connected
+                >
+                  <i
+                    className={item.title === 'Microsoft' && statuConnected == 1 ? 'ri-delete-bin-line' : 'ri-link'}
+                    onClick={item.title === 'Microsoft' && !item.isConnected && statuConnected !== 1 ? redirectTo : deleteTo}
+                  />
                 </CustomIconButton>
-              </div>
+              </div> 
             ))}
           </CardContent>
         </Grid>
