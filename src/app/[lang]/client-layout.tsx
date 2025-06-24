@@ -50,10 +50,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             // const response = await axios.post(`/api/school`, formData) as AxiosResponse<SchoolResponse>;
             // const data = response.data.data;
             const adminData: AdminData = {
-            d_logo: "https://masteradmin.icbapp.site/uploads//logo/dark_1750223468_light_1749633297_Group_2__1_.png",
-            f_logo: "https://masteradmin.icbapp.site/uploads//logo/favicon_1750223468_favicon_1750091713_685047b488bcf_download.jpg",
-            l_logo: "https://masteradmin.icbapp.site/uploads//logo/light_1750223468_light_1749633297_Group_2__1_.png",
-            background_image: "https://masteradmin.icbapp.site/uploads//background.png",
+            d_logo: "https://petrolpe.com/uploads/myschool/logo/dark_1750770795_light_1749633297_Group_2.png",
+            f_logo: "https://petrolpe.com/uploads/myschool/logo/favicon_1750770626_favicon_1750091713_685047b488bcf_download.jpg",
+            l_logo: "https://petrolpe.com/uploads/myschool/logo/dark_1750770795_light_1749633297_Group_2.png",
+            background_image: "https://petrolpe.com/uploads//background.png",
             primary_color: '#433d3d',
             secondary_color: '#000000',
             accent_color: '#000000',
