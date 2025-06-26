@@ -173,6 +173,37 @@ const RolesTable = () => {
         </div>
       )
     }),
+    columnHelper.accessor('title', {
+      header: 'User Count',
+      cell: ({ row }) => {
+        const count = row.original.user_count;
+
+        if (count === 0) return null;
+
+        const maxVisible = 3; // Show max 3 avatars
+        const visibleCount = Math.min(count, maxVisible);
+        const extraCount = count - visibleCount;
+
+        return (
+          <div className="flex items-center">
+            {Array.from({ length: visibleCount }).map((_, i) => (
+              <img
+                key={i}
+                alt={`User ${i + 1}`}
+                src={`/images/avatars/${i + 1}.png`}
+                className={`w-8 h-8 rounded-full border-2 border-white ${i > 0 ? '-ml-2' : ''}`}
+              />
+            ))}
+            {extraCount > 0 && (
+              <div className="-ml-2 w-8 h-8 rounded-full bg-gray-200 text-gray-700 text-sm font-medium flex items-center justify-center border-2 border-white">
+                +{extraCount}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+    }),
 
     columnHelper.accessor('action', {
       header: 'Actions',
@@ -238,6 +269,7 @@ const RolesTable = () => {
         name: string;
         permissions: Permissions[];
         roles: { name: string }[];
+        user_count: number;
       }) => ({
         id: user.id,
         title: user.name ?? 'No Title',
@@ -247,6 +279,7 @@ const RolesTable = () => {
         country: 'N/A',
         contact: '',
         currentPlan: 'enterprise',
+        user_count: user.user_count ?? 0,
       }))
 
       const uniqueRoles: string[] = Array.from(
