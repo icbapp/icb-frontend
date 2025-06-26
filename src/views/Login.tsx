@@ -28,6 +28,7 @@ import Loader from '@/components/Loader'
 // Type Imports
 import type { Mode } from '@core/types'
 import type { Locale } from '@/configs/i18n'
+import axios from 'axios'
 
 // Component Imports
 // import Logo from '@components/layout/shared/Logo'
@@ -51,6 +52,8 @@ import { clearSidebarPermission } from '@/redux-store/slices/sidebarPermission'
 import endPointApi from '@/utils/endPointApi'
 import showMsg from '@/utils/showMsg'
 import { api } from '@/utils/axiosInstance'
+import themeConfig from '@/configs/themeConfig'
+import { setAdminInfo } from '@/redux-store/slices/admin'
 
 
 type ErrorType = {
@@ -79,7 +82,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const adminStore = useSelector((state: RootState) => state.admin)
-console.log("adminStore",adminStore);
+console.log("adminStore666",adminStore);
 
   const [loading, setLoading] = useState(false)
   const [bgUrl, setBgUrl] = useState<string>('')
@@ -96,6 +99,20 @@ console.log("adminStore",adminStore);
   const searchParams = useSearchParams()
   const { lang: locale } = useParams()
   const { settings } = useSettings()
+  const [shouldRender, setShouldRender] = useState(false)
+
+    useEffect(() => {
+    const token = localStorage.getItem('auth_token')
+
+    if (token) {
+      const homeUrl = getLocalizedUrl('dashboards/academy/', locale as Locale)
+      router.replace(homeUrl)
+    } else {
+      setShouldRender(true)
+    }
+  }, [])
+
+  // if (!shouldRender) return null
 
   const {
     control,
@@ -168,6 +185,20 @@ console.log("adminStore",adminStore);
     }
   }, [adminStore])
 
+    const firstApiCall = async () => {
+      const formData = new FormData();
+      
+      formData.append('type', 'myschool');
+      // const response = await axios.post(`https://petrolpe.com/api/`,formData)
+      const response = await axios.post(`/api/school`, formData);
+      if(response.data.status === 200) {
+        dispatch(setAdminInfo(response.data.data))
+      }
+    }
+
+    useEffect(() => {
+        firstApiCall();
+    }, []);
 
   return (
     <div className='flex bs-full justify-center'
@@ -266,6 +297,9 @@ console.log("adminStore",adminStore);
                     },
                     '& input': {
                       pl: 0 // ✅ Removes padding from actual input field
+                    },
+                    '& .mui-4d4ugy-MuiInputAdornment-root':{
+                      color: '#fff'
                     }
                   }}
                   error={!!errors.username || !!errorState}
