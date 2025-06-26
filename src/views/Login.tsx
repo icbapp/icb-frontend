@@ -300,6 +300,9 @@ console.log("adminStore666",adminStore);
                     },
                     '& .mui-4d4ugy-MuiInputAdornment-root':{
                       color: '#fff'
+                    },
+                    '& .mui-pfniu1':{
+                      color: '#fff'
                     }
                   }}
                   error={!!errors.username || !!errorState}
