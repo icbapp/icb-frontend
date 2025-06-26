@@ -162,6 +162,7 @@ const sessionState = params.get('session_state');
           setLoading(false);
           const newUrl = window.location.href.split('?')[0]; // Get the base URL
           window.history.replaceState({}, '', newUrl);
+          toast.success(response.data.message);
         } 
       } catch (err) {
         console.error('Error during the API call:', err);
