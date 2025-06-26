@@ -44,7 +44,7 @@ const AcademyDashboard = async () => {
       <Grid size={{ xs: 12 }}>
         <WelcomeCard />
       </Grid>
-      {/* <Grid size={{ xs: 12, md: 8 }}>
+      <Grid size={{ xs: 12, md: 8 }}>
         <InterestedTopics />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -59,7 +59,7 @@ const AcademyDashboard = async () => {
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <AssignmentProgress />
       </Grid>
-      <Grid size={{ xs: 12 }}>
+      {/* <Grid size={{ xs: 12 }}>
         <CourseTable courseData={data?.courses} />
       </Grid> */}
     </Grid>

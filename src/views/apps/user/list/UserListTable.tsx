@@ -66,7 +66,7 @@ import Loader from '@/components/Loader'
 import { tree } from 'next/dist/build/templates/app-page';
 import swal from 'sweetalert';
 import { toast } from 'react-toastify';
-import { Tooltip } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, Tooltip } from '@mui/material';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -91,20 +91,18 @@ type UserStatusType = {
   [key: string]: ThemeColor
 }
 
-interface UserDataPermission {
-  menus: {
-    menu_name: string;
-    checked: boolean;
-  }[];
-  // other properties...
-}
-
 type UserCount = {
   active_count: number;
   inactive_count: number;
   [key: string]: any; // add more properties if needed
 };
 
+// interface OptionMenuItemType {
+//   text: string;
+//   icon?: string;
+//   // ...other properties...
+//   onClick?: () => void; // Add this line
+// }
 // Styled Components
 const Icon = styled('i')({})
 
@@ -150,14 +148,6 @@ const DebouncedInput = ({
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
 }
 
-// Vars
-const userRoleObj: UserRoleType = {
-  admin: { icon: 'ri-vip-crown-line', color: 'error' },
-  author: { icon: 'ri-computer-line', color: 'warning' },
-  editor: { icon: 'ri-edit-box-line', color: 'info' },
-  maintainer: { icon: 'ri-pie-chart-2-line', color: 'success' },
-  subscriber: { icon: 'ri-user-3-line', color: 'primary' }
-}
 
 const userStatusObj: UserStatusType = {
   active: 'success',
@@ -172,13 +162,13 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const permissions = useSelector((state: RootState) => state.sidebarPermission)
   const adminStore = useSelector((state: RootState) => state.admin)
-const [statuConnected, setStatusConnected] = useState(0);
+  const [statuConnected, setStatusConnected] = useState(0);
 
- useEffect(() => {
+  useEffect(() => {
     api.get('/ms-auth-token/school-token-valide')
-    .then((response) => {
-      setStatusConnected(response.data.satus);
-    })
+      .then((response) => {
+        setStatusConnected(response.data.satus);
+      })
   }, []);
   const hasPermission = (menuName: string, subMenuName: string) => {
     const menus = (permissions as any).menus;
@@ -199,12 +189,58 @@ const [statuConnected, setStatusConnected] = useState(0);
     page: 0,
     perPage: 10
   })
-
+  const [open, setOpen] = useState(false)
+  const [selectedUserIds, setSelectedUserIds] = useState<(string | number)[]>([]);
+  
+const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1'); 
   // Hooks
   const { lang: locale } = useParams()
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
+      {
+        id: 'select',
+        header: ({ table }) => {
+          const allVisibleIds = table.getFilteredRowModel().rows.map(row => row.original.id);
+          const allSelected = allVisibleIds.length > 0 && allVisibleIds.every(id => selectedUserIds.includes(id));
+          const someSelected = allVisibleIds.some(id => selectedUserIds.includes(id));
+
+          return (
+            <Checkbox
+              checked={allSelected}
+              indeterminate={!allSelected && someSelected}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setSelectedUserIds(prev =>
+                  checked
+                    ? Array.from(new Set([...prev, ...allVisibleIds]))
+                    : prev.filter((id:any) => !allVisibleIds.includes(id))
+                );
+              }}
+            />
+          );
+        },
+        cell: ({ row }) => {
+          const id = row.original.id;
+          const isChecked = selectedUserIds.includes(id);
+
+          return (
+            <Checkbox
+      checked={isChecked}
+      onChange={(e) => {
+        const checked = e.target.checked;
+        setSelectedUserIds(prev => {
+          if (checked) {
+            return Array.from(new Set([...prev, id])); // prevent duplicates
+          } else {
+            return prev.filter(_id => _id !== id);
+          }
+        });
+      }}
+    />
+          );
+        }
+      },
       columnHelper.accessor('fullName', {
         header: 'User',
         cell: ({ row }) => (
@@ -236,6 +272,7 @@ const [statuConnected, setStatusConnected] = useState(0);
               className={classnames('text-[22px]', userRoleObj[row.original.role].icon)}
               sx={{ color: `var(--mui-palette-${userRoleObj[row.original.role].color}-main)` }}
             /> */}
+            <i className="ri-user-3-line mui-qsdg36"></i>
               {roles.length === 0 ? (
                 <Typography className='capitalize' color='text.primary'>
                   {typeof roleData === 'string' ? roleData : '-'}
@@ -312,7 +349,7 @@ const [statuConnected, setStatusConnected] = useState(0);
 
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, permissions]
+    [data, permissions, selectedUserIds]
   )
 
   const table = useReactTable({
@@ -341,7 +378,8 @@ const [statuConnected, setStatusConnected] = useState(0);
     getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues()
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    getRowId: (row) => row.id
   })
 
   const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName'>) => {
@@ -423,7 +461,6 @@ const [statuConnected, setStatusConnected] = useState(0);
   }
 
   const deleteUser = async (id: number, status: string) => {
-
     swal({
       title: "Are you sure?",
       text: "Are you sure that you want to delete this user?",
@@ -457,6 +494,7 @@ const [statuConnected, setStatusConnected] = useState(0);
 
           if (response.data?.status === 200) {
             fetchUsers(); // refresh the list after update
+            setSelectedUserIds([])
           }
 
         } catch (error: any) {
@@ -468,9 +506,10 @@ const [statuConnected, setStatusConnected] = useState(0);
 
           setLoading(false);
           fetchUsers()
+            setSelectedUserIds([])
         }
       } else {
-        console.log("User canceled.");
+          setSelectedUserIds([])
       }
     });
   };
@@ -479,26 +518,66 @@ const [statuConnected, setStatusConnected] = useState(0);
     try {
       setLoading(true);
       const response = await api.get('auth/microsoft/fetch-users/11/myschool');
-      // auth/microsoft/fetch-users/{schoolId}/{tenantId}
-      console.log("response********", response);
-      if (response.data.message === "Users synced successfully.") {
+      if (response.data.status === 200) {
         toast.success("Users synced successfully");
-      //    setTotalRows(response.data) // get total from API if exists
-      // setData(users)
         fetchUsers();
-      } 
+      }
     } catch (error: any) {
       toast.error(error.message || "An error occurred while syncing users");
     } finally {
       setLoading(false);
     }
   }
+
+const activeAllUser = () => {
+   if (selectedUserIds.length === 0) {
+    toast.warning("Please select at least one user.");
+    return;
+  }
+  setPendingStatus('1'); // Set to activate
+  setOpen(true);         // Open confirmation modal
+};
+
+const inActiveAllUser = () => {
+   if (selectedUserIds.length === 0) {
+    toast.warning("Please select at least one user.");
+    return;
+  }
+  setPendingStatus('0'); // Set to deactivate
+  setOpen(true);         // Open confirmation modal
+};
+
+
+const handleConfirmation = () => {
+  const body = {
+    user_ids: selectedUserIds,
+    school_id: adminStore?.school_id?.toString() ?? '',
+    tenant_id: adminStore?.tenant_id?.toString() ?? '',
+    status: pendingStatus
+  };
+  api.post('users/status-toggle-multiple', body)
+    .then((response) => {
+      if (response.data.status === 200) {
+        setOpen(false);
+        toast.success(pendingStatus === '1' ? "Users activated successfully" : "Users deactivated successfully");
+        fetchUsers();
+        setSelectedUserIds([]);
+      }
+    })
+    .catch((error) => {
+      setOpen(false);
+      toast.error(error.response?.data?.message || "An error occurred while updating users");
+    });
+};
+
+
+
   return (
     <>
       {loading && <Loader />}
 
-      <Grid container spacing={6} className='my-5'>
-        <Grid item xs={12} sm={12} md={6} lg={6} component="div">
+      <Grid container spacing={6} className='' sx={{ mt: 0, mb: 5 }}>
+        <Grid item xs={12} sm={12} md={6} lg={6} component="div" className='pt-0'>
           <Card>
             <CardContent className="flex justify-between gap-1 items-center">
               <div className="flex flex-col gap-1 flex-grow">
@@ -519,7 +598,7 @@ const [statuConnected, setStatusConnected] = useState(0);
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={12} md={6} lg={6} component="div">
+        <Grid item xs={12} sm={12} md={6} lg={6} component="div" className='pt-0'>
           <Card>
             <CardContent className="flex justify-between gap-1 items-center">
               <div className="flex flex-col gap-1 flex-grow">
@@ -540,9 +619,7 @@ const [statuConnected, setStatusConnected] = useState(0);
             </CardContent>
           </Card>
         </Grid>
-
       </Grid>
-
 
       <Card>
         <CardHeader title='Filters' className='pbe-4' />
@@ -562,15 +639,31 @@ const [statuConnected, setStatusConnected] = useState(0);
                 Add New User
               </Button>
             )}
-            {statuConnected === 1 && 
+            {statuConnected === 1 &&
               <Tooltip title="Pull user from microsoft azure or microsoft entra" arrow>
-                <Button variant='contained' className='max-sm:is-full' onClick={() =>SyncMicrosoftUser()}>
+                <Button variant='contained' className='max-sm:is-full' onClick={() => SyncMicrosoftUser()}>
                   Sync with Microsoft
                 </Button>
               </Tooltip>
-}
+            }
+            <div className='flex gap-2'>
+              {/* <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
+                Sync with Microsoft
+              </Button> */}
+              {/* <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
+                Sync with Tass
+              </Button> */}
+              <Button variant="contained" className='max-sm:is-full' onClick={() => activeAllUser()}>
+                Active Users
+              </Button>
+              <Button variant="contained" className='max-sm:is-full' onClick={() => inActiveAllUser()}>
+                Inactive Users
+              </Button>
+            </div>
+
           </div>
         </div>
+
         <div className='overflow-x-auto'>
           <table className={tableStyles.table}>
             <thead>
@@ -615,7 +708,12 @@ const [statuConnected, setStatusConnected] = useState(0);
                   .rows.slice(0, table.getState().pagination.pageSize)
                   .map(row => {
                     return (
-                      <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                      <tr key={row.id} onClick={() => {
+                        const id = row.original.id;
+                        setSelectedUserIds(prev =>
+                          prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+                        );
+                      }} className={classnames({ selected: row.getIsSelected() })}>
                         {row.getVisibleCells().map(cell => (
                           <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                         ))}
@@ -652,8 +750,8 @@ const [statuConnected, setStatusConnected] = useState(0);
           }}
         />
 
-
       </Card>
+
       <AddUserDrawer
         open={addUserOpen}
         handleClose={() => setAddUserOpen(!addUserOpen)}
@@ -662,6 +760,35 @@ const [statuConnected, setStatusConnected] = useState(0);
         setData={setData}
         fetchUsers={fetchUsers}
       />
+
+      {open && (
+        <>
+          <Dialog fullWidth maxWidth='xs' open={open} onClose={() => setOpen(false)} closeAfterTransition={false}>
+            <DialogContent className='flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
+              <i className='ri-error-warning-line text-[88px] mbe-6 text-warning' />
+              {/* <Wrapper> */}
+              <Typography variant='h4'>
+                Are you sure {pendingStatus === '1' ? 'Activate' : 'Inactivate'} user?
+              </Typography>
+            </DialogContent>
+            <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
+              <Button variant='contained' onClick={handleConfirmation}>
+                Yes, {pendingStatus === '1' ? 'Activate' : 'Inactivate'} User!
+              </Button>
+              <Button
+                variant='outlined'
+                color='secondary'
+                onClick={() => {
+                  setOpen(false)
+                }}
+              >
+                Cancel
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </>
+      )}
+
     </>
   )
 }

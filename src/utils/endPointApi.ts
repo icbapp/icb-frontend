@@ -8,6 +8,10 @@ export interface EndPointApi {
     verifyEmail: string;
     getRole: string;
 
+    //Theme save
+    themeSettingSave: string;
+    getTheme: string;
+       
     //School-settings
     //Email
     postEmailSetting: string
@@ -24,7 +28,9 @@ const endPointApi: EndPointApi = {
     verifyEmail: 'auth/verify-email',
     getRole: 'role-get',
 
-
+    //Theme save
+    themeSettingSave: 'theme-colors-fonted-add',
+    getTheme: 'theme-colors-fonted-get',
     //School-settings
     //Email
     postEmailSetting: 'email-setting',

@@ -16,6 +16,8 @@ import CustomIconButton from '@core/components/mui/IconButton'
 import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 import { toast } from 'react-toastify'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/redux-store'
 
 type ConnectedAccountsType = {
   title: string
@@ -73,11 +75,10 @@ const socialAccountsArr: SocialAccountsType[] = [
     logo: '/images/logos/Microsoft_logo.png'
   },
   {
-    title: 'Twitter',
     isConnected: false,
     username: '@Pixinvent',
-    logo: '/images/logos/twitter.png',
-    href: 'https://twitter.com/pixinvents'
+    title: 'Google',
+    logo: '/images/logos/google.png',
   },
   {
     title: 'Linkedin',
@@ -99,6 +100,8 @@ const socialAccountsArr: SocialAccountsType[] = [
 ]
 
 const Connections = () => {
+    const loginStore = useSelector((state: RootState) => state.login);
+  
 const [statuConnected, setStatusConnected] = useState(0);
   const [loading, setLoading] = useState(false)
 
@@ -166,7 +169,7 @@ const sessionState = params.get('session_state');
       }
     };
 fetchData()
-  }, [queryParams]); 
+  }, []); 
 
   
   useEffect(() => {
@@ -204,20 +207,20 @@ fetchData()
           </CardContent>
         </Grid> */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <CardHeader title='Social Accounts' subheader='Display content from social accounts on your site' />
+          <CardHeader title='Integration Accounts' subheader='Integration with diffrent account' />
           <CardContent className='flex flex-col gap-4'>
             {socialAccountsArr.map((item, index) => (
               <div key={index} className='flex items-center justify-between gap-4'>
                 <div className='flex flex-grow items-center gap-4'>
-                  <img height={32} width={32} src={item.logo} alt={item.title} />
+                  <img height={32} width={32} className='' src={item.logo} alt={item.title} style={{ opacity: item.title === 'Microsoft' && !item.isConnected  ? 1 : 0.5 }}/>
                   <div className='flex-grow'>
                     <Typography className='font-medium' color='text.primary'>
                       {item.title}
                     </Typography>
                     {item.title === 'Microsoft' && statuConnected == 1 ? (
-                      <Typography color='primary.main' component={Link} href={item.href || '/'} target='_blank'>
+                      <Typography color='primary.main'>
                         {/* {item.username} */}
-                        Connected
+                        {loginStore.microsoft_name}
                       </Typography>
                     ) : (
                       <Typography variant='body2'>Not Connected</Typography>

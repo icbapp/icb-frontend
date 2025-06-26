@@ -30,6 +30,7 @@ export interface Login {
     username: string
     email: string
     super_admin: string
+    microsoft_name: string
 }
 export interface UserLoginPermission {
     id: string

@@ -64,7 +64,6 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
 
   const adminStore = useSelector((state: RootState) => state.admin)
 
-
   useEffect(() => {
     if (layout !== 'collapsed') {
       return
@@ -82,9 +81,9 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
 
   return (
     <div className='flex items-center  '>
-      {adminStore?.l_logo &&
-        <img className='w-[190px] h-[60px] object-contain'
-          src={adminStore?.l_logo} />
+      {adminStore?.f_logo &&
+        <img className='border-2 rounded-full w-[55px] h-[55px]' 
+          src={adminStore?.f_logo} />
       }
 
       {/* <LogoText

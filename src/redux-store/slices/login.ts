@@ -8,7 +8,8 @@ const initialState: Login = {
     school_id: '',
     username: '',
     email: '',
-    super_admin: ''
+    super_admin: '',
+    microsoft_name: '',
 }
 
 const loginSlice = createSlice({
@@ -29,6 +30,7 @@ const loginSlice = createSlice({
             state.username = action.payload.username
             state.email = action.payload.email
             state.super_admin = action.payload.super_admin
+            state.microsoft_name = action.payload.microsoft_name
         },
         resetLoginInfo(state) {
             state = initialState;

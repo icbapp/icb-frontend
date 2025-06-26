@@ -215,9 +215,11 @@ const RoleFormPage = () => {
     router.replace(getLocalizedUrl('/apps/roles', locale as Locale))
   }
 
+  const ACTION_ORDER = ["view", "add", "edit", "delete"];
   return (
     <div>
-      <Card className='my-10'>
+      Role / {roleId !== 0 ? 'Edit Role' : 'Add Role'}
+      <Card className=''>
         <CardContent>
           <Typography variant='h4' className='text-center mb-2'>
             {roleId !== 0 ? 'Edit Role' : 'Add Role'}
@@ -286,7 +288,11 @@ const RoleFormPage = () => {
                                   No submenu
                                 </Typography>
                               ) : (
-                                menu.sub_menus.map((action: any) => (
+                                menu.sub_menus.sort((a:any, b:any) => {
+                                const aKey = lastWord(hyphenRemove(a.action_name)).toLowerCase();
+                                const bKey = lastWord(hyphenRemove(b.action_name)).toLowerCase();
+                                return ACTION_ORDER.indexOf(aKey) - ACTION_ORDER.indexOf(bKey);
+                              }).map((action: any) => (
                                   <FormControlLabel
                                     key={action.id}
                                     control={

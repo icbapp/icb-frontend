@@ -2,7 +2,7 @@
 'use client'
 
 // React Imports
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // Next Imports
 import { usePathname } from 'next/navigation'
@@ -51,6 +51,10 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Style Imports
 import styles from './styles.module.css'
+import { Button } from '@mui/material'
+import endPointApi from '@/utils/endPointApi'
+import { api } from '@/utils/axiosInstance'
+import { toast } from 'react-toastify'
 
 type CustomizerProps = {
   breakpoint?: Breakpoint | 'xxl' | `${number}px` | `${number}rem` | `${number}em`
@@ -114,7 +118,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
   const pathName = usePathname()
   const { settings, updateSettings, resetSettings, isSettingsChanged } = useSettings()
   const isSystemDark = useMedia('(prefers-color-scheme: dark)', false)
-  console.log("settings", settings);
+  // console.log("settings",typeof settings.semiDark);
 
   // Vars
   let breakpointValue: CustomizerProps['breakpoint']
@@ -157,6 +161,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
   const handleChange = (field: keyof Settings | 'direction', value: Settings[keyof Settings] | Direction) => {
     // Update direction state
     if (field === 'direction') {
+      
       setDirection(value as Direction)
     } else {
       // Update settings in cookie
@@ -171,7 +176,61 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
 
     setIsMenuOpen(false)
   }
-  const primaryColor = "#000000"
+  
+  const saveTheame = () => {
+    // Save theme logic here
+    const body = {
+      primaryColor: settings.primaryColor,
+      mode: settings.mode,
+      skin: settings.skin,
+      semiDark: settings.semiDark,
+      layout: settings.layout,
+      // navbarContentWidth: settings.navbarContentWidth,
+      contentWidth: settings.contentWidth,
+      // footerContentWidth: settings.footerContentWidth
+    }
+
+    api.post(`${endPointApi.themeSettingSave}`, body, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }).then((response) => {
+          if( response?.data?.message === 'Colors saved successfully') {
+            getThemeData()
+            toast.success('Colors saved successfully!')
+             window.location.reload();
+          }
+        }).catch((error) => {
+          console.error('Error saving theme:', error);
+        })
+  }
+
+  const getThemeData = () => {
+    // Fetch theme data logic here
+    api.get(`${endPointApi.getTheme}`)
+      .then(response => {
+        if(response.data.status === 200) {
+          updateSettings({
+            primaryColor: response?.data?.primaryColor || '#1F5634',
+            mode: response?.data?.mode || 'light',
+            skin: response?.data?.skin || 'default',
+            // semiDark: Boolean(response?.data?.semiDark) ?? false,
+            layout: response?.data?.layout || 'vertical',
+            // navbarContentWidth: response?.data?.navbarContentWidth || 'full',
+            contentWidth: response?.data?.contentWidth || 'compact',
+            // footerContentWidth: response?.data?.footerContentWidth || 'full'
+          })
+      }
+      })
+      .catch(error => {
+        console.error('Error fetching theme data:', error)
+      })
+  }
+
+  useEffect(() => {
+    // Fetch theme data on component mount  
+    getThemeData()
+  }, [])
   return (
     !breakpointReached && (
       <div
@@ -187,11 +246,11 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
           <i className='ri-settings-5-line text-[22px]' />
         </div>
         <div className={classnames('customizer-header flex items-center justify-between', styles.header)}>
-          <div className='flex flex-col gap-2'>
+          <div className='flex flex-row items-center gap-4 w-full'>
             <h4 className={styles.customizerTitle}>Theme Customizer</h4>
-            <p className={styles.customizerSubtitle}>Customize & Preview in Real Time</p>
+            <Button variant='contained' type='submit' onClick={saveTheame}>Save Theme</Button>
           </div>
-          <div className='flex gap-4'>
+          <div className='flex gap-2'>
             <div onClick={resetSettings} className='relative flex cursor-pointer'>
               <i className='ri-refresh-line text-actionActive' />
               <div className={classnames(styles.dotStyles, { [styles.show]: isSettingsChanged })} />
@@ -217,7 +276,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                         [styles.active]: settings.primaryColor === item.main
                       })}
                       onClick={(e) => {
-                        window.location.reload()
+                        // window.location.reload()
                         handleChange('primaryColor', item.main)
                       }}
                     >
@@ -342,7 +401,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                   </div>
                 </div>
               </div>
-              {settings.mode === 'dark' ||
+              {settings.mode === 'dark' || settings.mode === 'light' ||
                 (settings.mode === 'system' && isSystemDark) ||
                 settings.layout === 'horizontal' ? null : (
                 <div className='flex items-center justify-between'>

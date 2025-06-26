@@ -129,7 +129,7 @@ const UserDropdown = () => {
           <ClickAwayListener onClickAway={e => handleDropdownClose(e as MouseEvent | TouchEvent)}>
             <MenuList>
               <div className='flex items-center plb-2 pli-4 gap-2' tabIndex={-1}>
-                <Avatar alt={loginStore.username || ''} src={adminStore.l_logo || ''} />
+                <Avatar src={adminStore.l_logo}  />
                 <div className='flex items-start flex-col'>
                   <Typography variant='body2' className='font-medium' color='text.primary'>
                     {loginStore.username || ''}

@@ -21,10 +21,11 @@ import { resetSchoolInfoSlice, setSchoolInfoSlice } from '@/redux-store/slices/s
 import { api } from '@/utils/axiosInstance'
 import { SchoolInfo } from '@/views/interface/schoolInfo.interface'
 import { Autocomplete, AutocompleteChangeReason, Box } from '@mui/material'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { Locale } from '@/configs/i18n'
+import { setAdminInfo } from '@/redux-store/slices/admin'
 
 interface Country {
   code: string
@@ -46,6 +47,7 @@ const languageData = ['English', 'Arabic', 'French', 'German', 'Portuguese']
 const SchoolAccountDetails = () => {
   const router = useRouter()
   const { lang: locale } = useParams()
+  const dispatch = useDispatch();
 
   const countryAndState = useSelector((state: RootState) => state.countryAndState)
   const selectedUser = useSelector((state: RootState) => state.schoolInfo)
@@ -182,7 +184,7 @@ const SchoolAccountDetails = () => {
       // formdata.append('username', data.username)
       formdata.append('contact_person_name', data.contact_person_name || '')
       formdata.append('contact_person_email', data.contact_person_email || '')
-      formdata.append('abn_number', String(data.abn_number))
+      formdata.append('abn_number', String(data.abn_number) || '')
       formdata.append('street_number', data.street_number || '')
       formdata.append('street_name', data.street_name || '')
       formdata.append('suburb', data.suburb || '')
@@ -206,6 +208,7 @@ const SchoolAccountDetails = () => {
       })
       if (response.data.success) {
         router.push(getLocalizedUrl('/dashboards/academy/', locale as Locale));
+        dispatch(setAdminInfo(response.data.data))
         toast.success(response?.data?.message)
       }
     } catch (error: any) {

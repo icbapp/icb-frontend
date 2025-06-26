@@ -38,24 +38,24 @@ export const api = apiAdminInstance;
 //   error => Promise.reject(error)
 // );
 
-// apiAdminInstance.interceptors.response.use(
-//   function (response) {
-//     return response;
-//   },
-//   error => {
-//     const { response } = error;
-//     console.log("throw", response);
-//     // if (response.status === 401) {
-//     //   localStorage.removeItem('auth_token');
-//     //   window.location.href = '/login';
-//     // }
-//     if (response.status === 500 || 401) {
-//       localStorage.removeItem('auth_token');
-//       window.location.href = '/login';
-//     }
-//     return Promise.reject(error);
-//   }
-// );
+apiAdminInstance.interceptors.response.use(
+  function (response) {
+    return response;
+  },
+  error => {
+    const { response } = error;
+    console.log("throw", response);
+    // if (response.status === 401) {
+    //   localStorage.removeItem('auth_token');
+    //   window.location.href = '/login';
+    // }
+    if (response.status === 401) {
+      localStorage.removeItem('auth_token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 
 // export const api = apiAdminInstance;

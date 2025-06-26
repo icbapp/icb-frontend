@@ -217,7 +217,7 @@ const NavSearch = () => {
           <i className='ri-search-line' />
         </IconButton>
       ) : (
-        <div className='flex items-center gap-2 cursor-pointer' onClick={() => setOpen(true)}>
+        <div className='flex items-center gap-2 cursor-pointer w-[300px] rounded-lg bg-[#f0eff0]' onClick={() => setOpen(true)}>
           <IconButton className='text-textPrimary' onClick={() => setOpen(true)}>
             <i className='ri-search-line' />
           </IconButton>
