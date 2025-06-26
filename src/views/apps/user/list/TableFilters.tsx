@@ -31,9 +31,10 @@ const TableFilters = ({ role, setRole, status, setStatus }: TableFiltersProps) =
         setLoading(true)
 
         const response = await api.get('roles')
-        // const roles = response.data.data.map((r: any) => r.name).filter((r: any) => typeof r === 'string')
+        
+        const roles = response.data.data.filter((item:any) => item.name !== 'Super Admin')
         // setRolesList(Array.from(new Set(roles)))
-        setRolesList(response.data.data)
+        setRolesList(roles)
       } catch (err) {
         // alert(err)
         return null
