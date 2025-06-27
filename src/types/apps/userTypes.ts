@@ -15,6 +15,8 @@ export type UsersType = {
   currentPlan: string
   avatarColor?: ThemeColor
   image:string;
-
+full_name: string;
+phone: string
+roles: any
 }
 

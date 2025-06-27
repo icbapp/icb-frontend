@@ -186,15 +186,22 @@ const Login = ({ mode }: { mode: Mode }) => {
   }, [adminStore])
 
     const firstApiCall = async () => {
-      const formData = new FormData();
-      
-      formData.append('type', 'myschool');
-      // const response = await axios.post(`https://petrolpe.com/api/`,formData)
-      const response = await axios.post(`/api/school`, formData);
-      if(response.data.status === 200) {
-        dispatch(setAdminInfo(response.data.data))
-      }
+  try {
+    const formData = new FormData();
+    formData.append('type', 'myschool');
+
+    const response = await axios.post('/api/school', formData);
+
+    if (response.data?.status === 200) {
+      dispatch(setAdminInfo(response.data.data));
+    } else {
+      console.error('Unexpected response:', response.data);
     }
+  } catch (error) {
+    console.error('❌ API call failed:', error);
+  }
+};
+
 
     useEffect(() => {
         firstApiCall();
