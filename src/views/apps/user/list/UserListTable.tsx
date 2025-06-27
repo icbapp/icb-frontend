@@ -400,7 +400,7 @@ const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
 
   useEffect(() => {
     fetchUsers()
-  }, [role, status, searchData, paginationInfo])
+  }, [role, status, searchData, paginationInfo, statusUser])
 
   const fetchUsers = async () => {
     try {
@@ -550,12 +550,54 @@ const inActiveAllUser = () => {
   setOpen(true);         // Open confirmation modal
   setStatusUser('')       // Open confirmation modal
 };
-const handleStatusChange = (value: any) => {
-  setStatusUser(value); // Optional: update selected value
-  if (value === 'active') {
-    activeAllUser();
-  } else if (value === 'inactive') {
-    inActiveAllUser();
+// const handleStatusChange = (value: any) => {
+//   setStatusUser(value); // Optional: update selected value
+//   if (value === 'active') {
+//     activeAllUser();
+//   } else if (value === 'inactive') {
+//     inActiveAllUser();
+//   }
+// };
+
+const handleStatusChange = async (value: 'active' | 'inactive') => {
+  setStatusUser(value); // Update UI dropdown
+
+  if (selectedUserIds.length === 0) {
+    toast.warning("Please select at least one user.");
+  setStatusUser('')
+
+    return;
+  }
+  const statusCode = value === 'active' ? '1' : '0';
+
+  try {
+    // setLoading(true);
+
+    // Update each selected user's status
+    for (const id of selectedUserIds) {
+      const formdata = new FormData();
+      formdata.append('user_id', id.toString());
+      formdata.append('school_id', adminStore?.school_id?.toString() ?? '');
+      formdata.append('tenant_id', adminStore?.tenant_id?.toString() ?? '');
+      formdata.append('status', statusCode);
+
+      await api.post('user-status-update', formdata, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    }
+
+    toast.success(`Users marked as ${value}.`);
+  setStatusUser('')
+  } catch (error) {
+    toast.error('Failed to update user status.');
+  setStatusUser('')
+
+  } finally {
+    // setLoading(false);
+    fetchUsers();
+    setSelectedUserIds([]);
+  setStatusUser('')
+
   }
 };
 
@@ -640,7 +682,7 @@ const handleConfirmation = () => {
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5'>
         {/* Left side (FormControl) */}
         <FormControl size='small' className='w-[200px]'>
-          {/* <InputLabel id='status-select'>User Status</InputLabel>
+          <InputLabel id='status-select'>User Status</InputLabel>
           <Select
             fullWidth
             id='select-status'
@@ -651,7 +693,7 @@ const handleConfirmation = () => {
           >
             <MenuItem value='active'>Active</MenuItem>
             <MenuItem value='inactive'>Inactive</MenuItem>
-          </Select> */}
+          </Select>
         </FormControl>
 
 
