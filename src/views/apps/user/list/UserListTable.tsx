@@ -66,7 +66,7 @@ import Loader from '@/components/Loader'
 import { tree } from 'next/dist/build/templates/app-page';
 import swal from 'sweetalert';
 import { toast } from 'react-toastify';
-import { Dialog, DialogActions, DialogContent, Tooltip } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, FormControl, InputLabel, MenuItem, Select, Tooltip } from '@mui/material';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -529,23 +529,31 @@ const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
     }
   }
 
-const activeAllUser = () => {
-   if (selectedUserIds.length === 0) {
-    toast.warning("Please select at least one user.");
-    return;
-  }
-  setPendingStatus('1'); // Set to activate
-  setOpen(true);         // Open confirmation modal
-};
+// const activeAllUser = () => {
+//    if (selectedUserIds.length === 0) {
+//     toast.warning("Please select at least one user.");
+//     return;
+//   }
+//   setPendingStatus('1'); // Set to activate
+//   setOpen(true);         // Open confirmation modal
+// };
 
-const inActiveAllUser = () => {
-   if (selectedUserIds.length === 0) {
-    toast.warning("Please select at least one user.");
-    return;
-  }
-  setPendingStatus('0'); // Set to deactivate
-  setOpen(true);         // Open confirmation modal
-};
+// const inActiveAllUser = () => {
+//    if (selectedUserIds.length === 0) {
+//     toast.warning("Please select at least one user.");
+//     return;
+//   }
+//   setPendingStatus('0'); // Set to deactivate
+//   setOpen(true);         // Open confirmation modal
+// };
+// const handleStatusChange = (value: any) => {
+//   setStatus(value); // Optional: update selected value
+//   if (value === 'active') {
+//     activeAllUser();
+//   } else if (value === 'inactive') {
+//     inActiveAllUser();
+//   }
+// };
 
 
 const handleConfirmation = () => {
@@ -625,44 +633,61 @@ const handleConfirmation = () => {
         <CardHeader title='Filters' className='pbe-4' />
         <TableFilters role={role} setRole={setRole} status={status} setStatus={setStatus} />
         <Divider />
-        <div className='flex  gap-4 p-5 flex-col items-start sm:flex-row sm:items-center justify-end'>
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5'>
+  {/* Left side (FormControl) */}
+ <FormControl size='small' className='w-[200px]'>
+  {/* <InputLabel id='status-select'>Status</InputLabel>
+  <Select
+    fullWidth
+    id='select-status'
+    value={status}
+    onChange={e => handleStatusChange(e.target.value)} // Handle status change
+    label='Status'
+    labelId='status-select'
+  >
+    <MenuItem value='active'>Active</MenuItem>
+    <MenuItem value='inactive'>Inactive</MenuItem>
+  </Select> */}
+</FormControl>
 
-          <div className='flex items-center gap-x-4 max-sm:gap-y-4 flex-col max-sm:is-full sm:flex-row'>
-            <DebouncedInput
-              value={searchData ?? ''}
-              onChange={value => setSearchData(String(value))}
-              placeholder='Search User'
-              className='max-sm:is-full'
-            />
-            {hasPermission('user-management', 'user-management-add') && (
-              <Button variant='contained' onClick={() => { setSelectedUser(null); setAddUserOpen(!addUserOpen); }} className='max-sm:is-full'>
-                Add New User
-              </Button>
-            )}
-            {statuConnected === 1 &&
-              <Tooltip title="Pull user from microsoft azure or microsoft entra" arrow>
-                <Button variant='contained' className='max-sm:is-full' onClick={() => SyncMicrosoftUser()}>
-                  Sync with Microsoft
-                </Button>
-              </Tooltip>
-            }
-            <div className='flex gap-2'>
-              {/* <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
+
+  {/* Right side controls */}
+  <div className='flex items-center gap-x-4 max-sm:gap-y-4 flex-col sm:flex-row w-full sm:w-auto'>
+    <DebouncedInput
+      value={searchData ?? ''}
+      onChange={value => setSearchData(String(value))}
+      placeholder='Search User'
+      className='w-full sm:w-auto'
+    />
+    {hasPermission('user-management', 'user-management-add') && (
+      <Button variant='contained' onClick={() => { setSelectedUser(null); setAddUserOpen(!addUserOpen); }} className='w-full sm:w-auto'>
+        Add New User
+      </Button>
+    )}
+    {statuConnected === 1 &&
+      <Tooltip title="Pull user from Microsoft Azure or Microsoft Entra" arrow>
+        <Button variant='contained' onClick={SyncMicrosoftUser} className='w-full sm:w-auto'>
+          Sync with Microsoft
+        </Button>
+      </Tooltip>
+    }
+     {/* <div className='flex gap-2'>
+              <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
                 Sync with Microsoft
-              </Button> */}
-              {/* <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
+              </Button>
+              <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
                 Sync with Tass
-              </Button> */}
+              </Button>
               <Button variant="contained" className='max-sm:is-full' onClick={() => activeAllUser()}>
                 Active Users
               </Button>
               <Button variant="contained" className='max-sm:is-full' onClick={() => inActiveAllUser()}>
                 Inactive Users
               </Button>
-            </div>
+            </div> */}
+  </div>
+</div>
 
-          </div>
-        </div>
 
         <div className='overflow-x-auto'>
           <table className={tableStyles.table}>
