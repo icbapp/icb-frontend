@@ -191,6 +191,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   })
   const [open, setOpen] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<(string | number)[]>([]);
+  const [statusUser, setStatusUser] = useState<UsersType['status']>('')
   
 const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1'); 
   // Hooks
@@ -529,31 +530,33 @@ const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
     }
   }
 
-// const activeAllUser = () => {
-//    if (selectedUserIds.length === 0) {
-//     toast.warning("Please select at least one user.");
-//     return;
-//   }
-//   setPendingStatus('1'); // Set to activate
-//   setOpen(true);         // Open confirmation modal
-// };
+const activeAllUser = () => {
+   if (selectedUserIds.length === 0) {
+    toast.warning("Please select at least one user.");
+    return;
+  }
+  setPendingStatus('1'); // Set to activate
+  setOpen(true);  
+  setStatusUser('')
+};
 
-// const inActiveAllUser = () => {
-//    if (selectedUserIds.length === 0) {
-//     toast.warning("Please select at least one user.");
-//     return;
-//   }
-//   setPendingStatus('0'); // Set to deactivate
-//   setOpen(true);         // Open confirmation modal
-// };
-// const handleStatusChange = (value: any) => {
-//   setStatus(value); // Optional: update selected value
-//   if (value === 'active') {
-//     activeAllUser();
-//   } else if (value === 'inactive') {
-//     inActiveAllUser();
-//   }
-// };
+const inActiveAllUser = () => {
+   if (selectedUserIds.length === 0) {
+    toast.warning("Please select at least one user.");
+    return;
+  }
+  setPendingStatus('0'); // Set to deactivate
+  setOpen(true);         // Open confirmation modal
+  setStatusUser('')       // Open confirmation modal
+};
+const handleStatusChange = (value: any) => {
+  setStatusUser(value); // Optional: update selected value
+  if (value === 'active') {
+    activeAllUser();
+  } else if (value === 'inactive') {
+    inActiveAllUser();
+  }
+};
 
 
 const handleConfirmation = () => {
@@ -634,21 +637,21 @@ const handleConfirmation = () => {
         <TableFilters role={role} setRole={setRole} status={status} setStatus={setStatus} />
         <Divider />
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5'>
-  {/* Left side (FormControl) */}
- <FormControl size='small' className='w-[200px]'>
-  {/* <InputLabel id='status-select'>Status</InputLabel>
-  <Select
-    fullWidth
-    id='select-status'
-    value={status}
-    onChange={e => handleStatusChange(e.target.value)} // Handle status change
-    label='Status'
-    labelId='status-select'
-  >
-    <MenuItem value='active'>Active</MenuItem>
-    <MenuItem value='inactive'>Inactive</MenuItem>
-  </Select> */}
-</FormControl>
+        {/* Left side (FormControl) */}
+        <FormControl size='small' className='w-[200px]'>
+          <InputLabel id='status-select'>User Status</InputLabel>
+          <Select
+            fullWidth
+            id='select-status'
+            value={statusUser}
+            onChange={e => handleStatusChange(e.target.value)} // Handle status change
+            label='User Status'
+            labelId='status-select'
+          >
+            <MenuItem value='active'>Active</MenuItem>
+            <MenuItem value='inactive'>Inactive</MenuItem>
+          </Select>
+        </FormControl>
 
 
   {/* Right side controls */}
