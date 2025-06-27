@@ -169,10 +169,8 @@ const Login = ({ mode }: { mode: Mode }) => {
         const message = error?.response?.data?.message || 'Username or Password is incorrect';
         if (error?.response?.status === 404) {
           toast.error(message);
-        } else if (error?.response?.status === 400) {
-          toast.error(message);
         } else {
-          toast.error('Something went wrong. Please try again.');
+          toast.error(message);
         }
       })
       .finally(() => {
