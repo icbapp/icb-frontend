@@ -218,7 +218,7 @@ const RoleFormPage = () => {
   const ACTION_ORDER = ["view", "add", "edit", "delete"];
   return (
     <div>
-      Role / {roleId !== 0 ? 'Edit Role' : 'Add Role'}
+      {/* Role / {roleId !== 0 ? 'Edit Role' : 'Add Role'} */}
       <Card className=''>
         <CardContent>
           <Typography variant='h4' className='text-center mb-2'>
@@ -254,9 +254,9 @@ const RoleFormPage = () => {
                 required
               />
 
-              <Typography variant='h5' className='my-6'>
+              {/* <Typography variant='h5' className='my-6'>
                 Role Permissions
-              </Typography>
+              </Typography> */}
 
               {validationErrors.permissions && (
                 <Typography color='error' className='mb-2'>
@@ -264,9 +264,9 @@ const RoleFormPage = () => {
                 </Typography>
               )}
 
-              <hr className='border-t border-gray-300 mb-4' />
+              {/* <hr className='border-t border-gray-300 mb-4' /> */}
 
-              <div className='flex flex-col overflow-x-auto'>
+              <div className='flex flex-col overflow-x-auto mt-10'>
                 <table className={tableStyles.table}>
                   <tbody>
                     {permissionsData?.menus
@@ -312,6 +312,7 @@ const RoleFormPage = () => {
                   </tbody>
                 </table>
               </div>
+              <hr className='border-t mb-4' />
 
               <div className='flex justify-center gap-4 mt-6'>
                 <Button variant='contained' type='submit'>

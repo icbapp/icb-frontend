@@ -283,7 +283,7 @@ const WelcomeCard = () => {
 
           {/* Recent Activities */}
           <div
-            className={`rounded-lg shadow-sm p-5 border ${theme.palette.mode === 'dark' ? 'bg-[#363b54] border-[#444b6e]' : 'bg-white border-gray-100'
+            className={`rounded-lg p-5 border ${theme.palette.mode === 'dark' ? 'bg-[#363b54] border-[#444b6e]' : 'bg-white border-gray-100'
               }`}
           >
             <div className="flex justify-between items-center mb-5">

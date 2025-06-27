@@ -383,7 +383,7 @@ const RolesTable = () => {
             value={globalFilter ?? ''}
             className='max-sm:is-full min-is-[220px]'
             onChange={value => setGlobalFilter(String(value))}
-            placeholder='Search User'
+            placeholder='Search Role'
           />
         </div>
         {loading ? (
