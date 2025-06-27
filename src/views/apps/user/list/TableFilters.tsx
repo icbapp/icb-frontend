@@ -11,7 +11,7 @@ import type { UsersType } from '@/types/apps/userTypes'
 import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 import { optionCommon } from '@/utils/optionComman'
-import { Autocomplete, TextField } from '@mui/material'
+import { Autocomplete, Skeleton, TextField } from '@mui/material'
 
 type TableFiltersProps = {
   role: UsersType['role']
@@ -31,8 +31,8 @@ const TableFilters = ({ role, setRole, status, setStatus }: TableFiltersProps) =
         setLoading(true)
 
         const response = await api.get('roles')
-        
-        const roles = response.data.data.filter((item:any) => item.name !== 'Super Admin')
+
+        const roles = response.data.data.filter((item: any) => item.name !== 'Super Admin')
         // setRolesList(Array.from(new Set(roles)))
         setRolesList(roles)
       } catch (err) {
@@ -49,73 +49,51 @@ const TableFilters = ({ role, setRole, status, setStatus }: TableFiltersProps) =
 
   return (
     <CardContent>
-      {loading && <Loader />}
-
       <Grid container spacing={5}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormControl fullWidth>
-            {/* <InputLabel id='role-select'>Select Role</InputLabel> */}
-            {/* <Select
-              fullWidth
-              id='select-role'
-              value={role}
-              onChange={e => setRole(e.target.value)}
-              label='Select Role '
-              labelId='role-select'
-              inputProps={{ placeholder: 'Select Role' }}
-            >
-              {rolesList.map((r: any, idx) => (
-                <MenuItem key={idx} value={r.id}>{r.name}</MenuItem>
-              ))}
-            </Select> */}
-            <Autocomplete
-              fullWidth
-              options={rolesList}
-              getOptionLabel={(option: any) => option.name}
-              value={rolesList.find((item: any) => item.id === role) || null}
-              onChange={(event, newValue: any) => {
-                setRole(newValue ? newValue.id : '')
-              }}
-              isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
-              renderInput={(params) => (
-                <TextField {...params} label="Select Role" />
-              )}
-              clearOnEscape
-            />
-          </FormControl>
+          {loading ? (
+            <Skeleton variant="rounded" height={55} />
+          ) : (
+            <FormControl fullWidth>
+              <Autocomplete
+                fullWidth
+                options={rolesList}
+                getOptionLabel={(option: any) => option.name}
+                value={rolesList.find((item: any) => item.id === role) || null}
+                onChange={(event, newValue: any) => {
+                  setRole(newValue ? newValue.id : '')
+                }}
+                isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+                renderInput={(params) => (
+                  <TextField {...params} label="Select Role" />
+                )}
+                clearOnEscape
+              />
+            </FormControl>
+          )}
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <FormControl fullWidth>
-            {/* <InputLabel id='status-select'>Select Status</InputLabel>
-            <Select
-              fullWidth
-              id='select-status'
-              label='Select Status'
-              value={status}
-              onChange={e => setStatus(e.target.value)}
-              labelId='status-select'
-              inputProps={{ placeholder: 'Select Status' }}
-            >
-              {optionCommon.map((item, index) => (
-                <MenuItem key={index} value={item.value}>{item.name}</MenuItem>
-              ))}
-            </Select> */}
-            <Autocomplete
-              fullWidth
-              options={optionCommon}
-              getOptionLabel={(option) => option.name}
-              value={optionCommon.find((item) => item.value === status) || null}
-              onChange={(event, newValue) => {
-                setStatus(newValue ? newValue.value : '')
-              }}
-              isOptionEqualToValue={(option, value) => option.value === value.value}
-              renderInput={(params) => (
-                <TextField {...params} label="Select Status" />
-              )}
-              clearOnEscape
-            />
-          </FormControl>
+          {loading ? (
+            <Skeleton variant="rounded" height={55} />
+          ) : (
+            <FormControl fullWidth>
+              <Autocomplete
+                fullWidth
+                options={optionCommon}
+                getOptionLabel={(option) => option.name}
+                value={optionCommon.find((item) => item.value === status) || null}
+                onChange={(event, newValue) => {
+                  setStatus(newValue ? newValue.value : '')
+                }}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
+                renderInput={(params) => (
+                  <TextField {...params} label="Select Status" />
+                )}
+                clearOnEscape
+              />
+            </FormControl>
+          )}
         </Grid>
       </Grid>
     </CardContent>

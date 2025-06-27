@@ -66,7 +66,7 @@ import Loader from '@/components/Loader'
 import { tree } from 'next/dist/build/templates/app-page';
 import swal from 'sweetalert';
 import { toast } from 'react-toastify';
-import { Dialog, DialogActions, DialogContent, FormControl, InputLabel, MenuItem, Select, Tooltip } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, FormControl, InputLabel, MenuItem, Select, Skeleton, Tooltip } from '@mui/material';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -192,9 +192,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [open, setOpen] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<(string | number)[]>([]);
   const [statusUser, setStatusUser] = useState<UsersType['status']>('')
-  console.log("data",data);
-  
-const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1'); 
+
+  const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
   // Hooks
   const { lang: locale } = useParams()
 
@@ -216,7 +215,7 @@ const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
                 setSelectedUserIds(prev =>
                   checked
                     ? Array.from(new Set([...prev, ...allVisibleIds]))
-                    : prev.filter((id:any) => !allVisibleIds.includes(id))
+                    : prev.filter((id: any) => !allVisibleIds.includes(id))
                 );
               }}
             />
@@ -228,18 +227,18 @@ const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
 
           return (
             <Checkbox
-      checked={isChecked}
-      onChange={(e) => {
-        const checked = e.target.checked;
-        setSelectedUserIds(prev => {
-          if (checked) {
-            return Array.from(new Set([...prev, id])); // prevent duplicates
-          } else {
-            return prev.filter(_id => _id !== id);
-          }
-        });
-      }}
-    />
+              checked={isChecked}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setSelectedUserIds(prev => {
+                  if (checked) {
+                    return Array.from(new Set([...prev, id])); // prevent duplicates
+                  } else {
+                    return prev.filter(_id => _id !== id);
+                  }
+                });
+              }}
+            />
           );
         }
       },
@@ -274,7 +273,7 @@ const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
               className={classnames('text-[22px]', userRoleObj[row.original.role].icon)}
               sx={{ color: `var(--mui-palette-${userRoleObj[row.original.role].color}-main)` }}
             /> */}
-            <i className="ri-user-3-line mui-qsdg36"></i>
+              <i className="ri-user-3-line mui-qsdg36"></i>
               {roles.length === 0 ? (
                 <Typography className='capitalize' color='text.primary'>
                   {typeof roleData === 'string' ? roleData : '-'}
@@ -482,7 +481,7 @@ const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
     }).then(async (willDelete) => {
       if (willDelete) {
         try {
-          setLoading(true);
+          // setLoading(true);
 
           const formdata = new FormData();
           formdata.append('user_id', id.toString());
@@ -503,15 +502,14 @@ const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
           return null
         } finally {
           if (swal && typeof swal.close === 'function') {
-            swal.close(); // Close the popup manually
+            swal.close();
           }
 
-          setLoading(false);
-          fetchUsers()
-            setSelectedUserIds([])
+          setSelectedUserIds([]);
+          setStatusUser('');
         }
       } else {
-          setSelectedUserIds([])
+        setSelectedUserIds([])
       }
     });
   };
@@ -531,270 +529,350 @@ const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
     }
   }
 
-const activeAllUser = () => {
-   if (selectedUserIds.length === 0) {
-    toast.warning("Please select at least one user.");
-    return;
-  }
-  setPendingStatus('1'); // Set to activate
-  setOpen(true);  
-  setStatusUser('')
-};
-
-const inActiveAllUser = () => {
-   if (selectedUserIds.length === 0) {
-    toast.warning("Please select at least one user.");
-    return;
-  }
-  setPendingStatus('0'); // Set to deactivate
-  setOpen(true);         // Open confirmation modal
-  setStatusUser('')       // Open confirmation modal
-};
-// const handleStatusChange = (value: any) => {
-//   setStatusUser(value); // Optional: update selected value
-//   if (value === 'active') {
-//     activeAllUser();
-//   } else if (value === 'inactive') {
-//     inActiveAllUser();
-//   }
-// };
-
-const handleStatusChange = async (value: 'active' | 'inactive') => {
-  setStatusUser(value); // Update UI dropdown
-
-  if (selectedUserIds.length === 0) {
-    toast.warning("Please select at least one user.");
-  setStatusUser('')
-
-    return;
-  }
-  const statusCode = value === 'active' ? '1' : '0';
-
-  try {
-    // setLoading(true);
-
-    // Update each selected user's status
-    for (const id of selectedUserIds) {
-      const formdata = new FormData();
-      formdata.append('user_id', id.toString());
-      formdata.append('school_id', adminStore?.school_id?.toString() ?? '');
-      formdata.append('tenant_id', adminStore?.tenant_id?.toString() ?? '');
-      formdata.append('status', statusCode);
-
-      await api.post('user-status-update', formdata, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+  const activeAllUser = () => {
+    if (selectedUserIds.length === 0) {
+      toast.warning("Please select at least one user.");
+      return;
     }
-
-    toast.success(`Users marked as ${value}.`);
-  setStatusUser('')
-  } catch (error) {
-    toast.error('Failed to update user status.');
-  setStatusUser('')
-
-  } finally {
-    // setLoading(false);
-    fetchUsers();
-    setSelectedUserIds([]);
-  setStatusUser('')
-
-  }
-};
-
-
-const handleConfirmation = () => {
-  const body = {
-    user_ids: selectedUserIds,
-    school_id: adminStore?.school_id?.toString() ?? '',
-    tenant_id: adminStore?.tenant_id?.toString() ?? '',
-    status: pendingStatus
+    setPendingStatus('1'); // Set to activate
+    setOpen(true);
+    setStatusUser('')
   };
-  api.post('users/status-toggle-multiple', body)
-    .then((response) => {
-      if (response.data.status === 200) {
-        setOpen(false);
-        toast.success(pendingStatus === '1' ? "Users activated successfully" : "Users deactivated successfully");
-        fetchUsers();
-        setSelectedUserIds([]);
+
+  const inActiveAllUser = () => {
+    if (selectedUserIds.length === 0) {
+      toast.warning("Please select at least one user.");
+      return;
+    }
+    setPendingStatus('0'); // Set to deactivate
+    setOpen(true);         // Open confirmation modal
+    setStatusUser('')       // Open confirmation modal
+  };
+  // const handleStatusChange = (value: any) => {
+  //   setStatusUser(value); // Optional: update selected value
+  //   if (value === 'active') {
+  //     activeAllUser();
+  //   } else if (value === 'inactive') {
+  //     inActiveAllUser();
+  //   }
+  // };
+
+  const handleStatusChange = async (value: 'active' | 'inactive') => {
+    setStatusUser(value); // Update UI dropdown
+
+    if (selectedUserIds.length === 0) {
+      toast.warning("Please select at least one user.");
+      setStatusUser('')
+
+      return;
+    }
+    const statusCode = value === 'active' ? '1' : '0';
+
+    try {
+      setLoading(true);
+
+      // Update each selected user's status
+      for (const id of selectedUserIds) {
+        const formdata = new FormData();
+        formdata.append('user_id', id.toString());
+        formdata.append('school_id', adminStore?.school_id?.toString() ?? '');
+        formdata.append('tenant_id', adminStore?.tenant_id?.toString() ?? '');
+        formdata.append('status', statusCode);
+
+        await api.post('user-status-update', formdata, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
       }
-    })
-    .catch((error) => {
-      setOpen(false);
-      toast.error(error.response?.data?.message || "An error occurred while updating users");
-    });
-};
 
+      toast.success(`Users marked as ${value}.`);
+      setStatusUser('')
+    } catch (error) {
+      toast.error('Failed to update user status.');
+      setStatusUser('')
+    } finally {
+      // setLoading(false);
+      setSelectedUserIds([]);
+      setStatusUser('')
+      setLoading(false);
+    }
+  };
 
+  const handleConfirmation = () => {
+    const body = {
+      user_ids: selectedUserIds,
+      school_id: adminStore?.school_id?.toString() ?? '',
+      tenant_id: adminStore?.tenant_id?.toString() ?? '',
+      status: pendingStatus
+    };
+    api.post('users/status-toggle-multiple', body)
+      .then((response) => {
+        if (response.data.status === 200) {
+          setOpen(false);
+          toast.success(pendingStatus === '1' ? "Users activated successfully" : "Users deactivated successfully");
+          fetchUsers();
+          setSelectedUserIds([]);
+        }
+      })
+      .catch((error) => {
+        setOpen(false);
+        toast.error(error.response?.data?.message || "An error occurred while updating users");
+      });
+  };
 
   return (
     <>
-      {loading && <Loader />}
+      {/* {loading && <Loader />} */}
 
-      <Grid container spacing={6} className='' sx={{ mt: 0, mb: 5 }}>
-        <Grid item xs={12} sm={12} md={6} lg={6} component="div" className='pt-0'>
+      <Grid container spacing={6} sx={{ mt: 0, mb: 5 }}>
+        {/* Active Users */}
+        <Grid item xs={12} sm={12} md={6} lg={6} className='pt-0'>
           <Card>
             <CardContent className="flex justify-between gap-1 items-center">
               <div className="flex flex-col gap-1 flex-grow">
-                <Typography color="text.primary">Active Users</Typography>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Typography variant="h4">{totalRows.active_count}</Typography>
-                  <Typography
-                    color='success.main'
-                  >
-                    {/* {`${item.trend === 'negative' ? '-' : '+'}${item.trendNumber}`} */}
-                  </Typography>
+                  {loading ? (
+                    <Skeleton variant="text" width={60} height={40} />
+                  ) : (
+                    <Typography variant="h4">{totalRows.active_count}</Typography>
+                  )}
                 </div>
-                <Typography variant="body2">total active user</Typography>
+                {loading ? (
+                  <Skeleton variant="text" width={100} height={20} />
+                ) : (
+                  <Typography variant="body2">Active Users</Typography>
+                )}
               </div>
-              <CustomAvatar color='success' skin="light" variant="rounded" size={62}>
-                <i className={classnames('ri-user-follow-line', 'text-[26px]')} />
-              </CustomAvatar>
+              {loading ? (
+                <Skeleton variant="circular" width={62} height={62} />
+              ) : (
+                <CustomAvatar color='success' skin="light" variant="rounded" size={62}>
+                  <i className={classnames('ri-user-follow-line', 'text-[26px]')} />
+                </CustomAvatar>
+              )}
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={12} md={6} lg={6} component="div" className='pt-0'>
+
+        {/* Inactive Users */}
+        <Grid item xs={12} sm={12} md={6} lg={6} className='pt-0'>
           <Card>
             <CardContent className="flex justify-between gap-1 items-center">
               <div className="flex flex-col gap-1 flex-grow">
-                <Typography color="text.primary">Inactive Users</Typography>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Typography variant="h4">{totalRows.inactive_count}</Typography>
-                  <Typography
-                    color='success.main'
-                  >
-                    {/* {`${item.trend === 'negative' ? '-' : '+'}${item.trendNumber}`} */}
-                  </Typography>
+                  {loading ? (
+                    <Skeleton variant="text" width={60} height={40} />
+                  ) : (
+                    <Typography variant="h4">{totalRows.inactive_count}</Typography>
+                  )}
                 </div>
-                <Typography variant="body2">total inactive user</Typography>
+                {loading ? (
+                  <Skeleton variant="text" width={100} height={20} />
+                ) : (
+                  <Typography variant="body2">Inactive Users</Typography>
+                )}
               </div>
-              <CustomAvatar color='error' skin="light" variant="rounded" size={62}>
-                <i className={classnames('ri-user-follow-line', 'text-[26px]')} />
-              </CustomAvatar>
+              {loading ? (
+                <Skeleton variant="circular" width={62} height={62} />
+              ) : (
+                <CustomAvatar color='error' skin="light" variant="rounded" size={62}>
+                  <i className={classnames('ri-user-line', 'text-[26px]')} />
+                </CustomAvatar>
+              )}
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
       <Card>
-        <CardHeader title='Filters' className='pbe-4' />
+        {/* <CardHeader title='Filters' className='pbe-4' /> */}
         <TableFilters role={role} setRole={setRole} status={status} setStatus={setStatus} />
         <Divider />
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5'>
-        {/* Left side (FormControl) */}
-        <FormControl size='small' className='w-[200px]'>
-          <InputLabel id='status-select'>User Status</InputLabel>
-          <Select
-            fullWidth
-            id='select-status'
-            value={statusUser}
-            onChange={e => handleStatusChange(e.target.value)} // Handle status change
-            label='User Status'
-            labelId='status-select'
-          >
-            <MenuItem value='active'>Active</MenuItem>
-            <MenuItem value='inactive'>Inactive</MenuItem>
-          </Select>
-        </FormControl>
+          {/* Left side (FormControl) */}
+          {loading ? (
+            <Skeleton
+              variant="rectangular"
+              height={40}
+              width={200}
+              className="rounded"
+            />
+          ) : (
+            <FormControl size='small' className='w-[200px]'>
+              <InputLabel id='status-select'>User Status</InputLabel>
+              <Select
+                fullWidth
+                id='select-status'
+                value={statusUser}
+                onChange={e => handleStatusChange(e.target.value)}
+                label='User Status'
+                labelId='status-select'
+              >
+                <MenuItem value='active'>Active</MenuItem>
+                <MenuItem value='inactive'>Inactive</MenuItem>
+              </Select>
+            </FormControl>
+          )}
 
 
-  {/* Right side controls */}
-  <div className='flex items-center gap-x-4 max-sm:gap-y-4 flex-col sm:flex-row w-full sm:w-auto'>
-    <DebouncedInput
-      value={searchData ?? ''}
-      onChange={value => setSearchData(String(value))}
-      placeholder='Search User'
-      className='w-full sm:w-auto'
-    />
-    {hasPermission('user-management', 'user-management-add') && (
-      <Button variant='contained' onClick={() => { setSelectedUser(null); setAddUserOpen(!addUserOpen); }} className='w-full sm:w-auto'>
-        Add New User
-      </Button>
-    )}
-    {statuConnected === 1 &&
-      <Tooltip title="Pull user from Microsoft Azure or Microsoft Entra" arrow>
-        <Button variant='contained' onClick={SyncMicrosoftUser} className='w-full sm:w-auto'>
-          Sync with Microsoft
-        </Button>
-      </Tooltip>
-    }
-     {/* <div className='flex gap-2'>
-              <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
-                Sync with Microsoft
-              </Button>
-              <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
-                Sync with Tass
-              </Button>
-              <Button variant="contained" className='max-sm:is-full' onClick={() => activeAllUser()}>
-                Active Users
-              </Button>
-              <Button variant="contained" className='max-sm:is-full' onClick={() => inActiveAllUser()}>
-                Inactive Users
-              </Button>
-            </div> */}
-  </div>
-</div>
+          {/* Right side controls */}
+          {loading ? (
+            <div className='flex items-center gap-x-4 max-sm:gap-y-4 flex-col sm:flex-row w-full sm:w-auto'>
+              {/* Search Input Skeleton */}
+              <Skeleton
+                variant="rectangular"
+                height={40}
+                width={250}
+                className="rounded w-full sm:w-auto"
+              />
 
+              {/* Add New User Button Skeleton */}
+              {hasPermission('user-management', 'user-management-add') && (
+                <Skeleton
+                  variant="rectangular"
+                  height={40}
+                  width={160}
+                  className="rounded w-full sm:w-auto"
+                />
+              )}
 
-        <div className='overflow-x-auto'>
-          <table className={tableStyles.table}>
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map(header => (
-                    <th key={header.id}>
-                      {header.isPlaceholder ? null : (
-                        <>
-                          <div
-                            className={classnames({
-                              'flex items-center': header.column.getIsSorted(),
-                              'cursor-pointer select-none': header.column.getCanSort()
-                            })}
-                            onClick={header.column.getToggleSortingHandler()}
-                          >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            {{
-                              asc: <i className='ri-arrow-up-s-line text-xl' />,
-                              desc: <i className='ri-arrow-down-s-line text-xl' />
-                            }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                          </div>
-                        </>
-                      )}
+              {/* Sync with Microsoft Button Skeleton */}
+              {statuConnected === 1 && (
+                <Skeleton
+                  variant="rectangular"
+                  height={40}
+                  width={180}
+                  className="rounded w-full sm:w-auto"
+                />
+              )}
+            </div>
+          ) : (
+            <div className='flex items-center gap-x-4 max-sm:gap-y-4 flex-col sm:flex-row w-full sm:w-auto'>
+
+              <DebouncedInput
+                value={searchData ?? ''}
+                onChange={value => setSearchData(String(value))}
+                placeholder='Search User'
+                className='w-full sm:w-auto'
+              />
+              {hasPermission('user-management', 'user-management-add') && (
+                <Button variant='contained' onClick={() => { setSelectedUser(null); setAddUserOpen(!addUserOpen); }} className='w-full sm:w-auto'>
+                  Add New User
+                </Button>
+              )}
+              {statuConnected === 1 &&
+                <Tooltip title="Pull user from Microsoft Azure or Microsoft Entra" arrow>
+                  <Button variant='contained' onClick={SyncMicrosoftUser} className='w-full sm:w-auto'>
+                    Sync with Microsoft
+                  </Button>
+                </Tooltip>
+              }
+              {/* <div className='flex gap-2'>
+                    <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
+                      Sync with Microsoft
+                    </Button>
+                    <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
+                      Sync with Tass
+                    </Button>
+                    <Button variant="contained" className='max-sm:is-full' onClick={() => activeAllUser()}>
+                      Active Users
+                    </Button>
+                    <Button variant="contained" className='max-sm:is-full' onClick={() => inActiveAllUser()}>
+                      Inactive Users
+                    </Button>
+                  </div> */}
+            </div>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="overflow-x-auto">
+            <table className={tableStyles.table}>
+              <thead>
+                <tr>
+                  {[...Array(5)].map((_, index) => (
+                    <th key={index}>
+                      <Skeleton variant="text" height={50} width={100} />
                     </th>
                   ))}
                 </tr>
-              ))}
-            </thead>
-            {table.getFilteredRowModel().rows.length === 0 ? (
+              </thead>
               <tbody>
-                <tr>
-                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                    No data available
-                  </td>
-                </tr>
+                {[...Array(6)].map((_, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {[...Array(5)].map((_, colIndex) => (
+                      <td key={colIndex}>
+                        <Skeleton variant="text" height={50} width="100%" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
               </tbody>
-            ) : (
-              <tbody>
-                {table
-                  .getRowModel()
-                  .rows.slice(0, table.getState().pagination.pageSize)
-                  .map(row => {
-                    return (
-                      <tr key={row.id} onClick={() => {
-                        const id = row.original.id;
-                        setSelectedUserIds(prev =>
-                          prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-                        );
-                      }} className={classnames({ selected: row.getIsSelected() })}>
-                        {row.getVisibleCells().map(cell => (
-                          <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                        ))}
-                      </tr>
-                    )
-                  })}
-              </tbody>
-            )}
-          </table>
-        </div>
+            </table>
+          </div>
+        ) : (
+          // Your real table goes here when loading = false
+          <div className='overflow-x-auto'>
+            <table className={tableStyles.table}>
+              <thead>
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <th key={header.id}>
+                        {header.isPlaceholder ? null : (
+                          <>
+                            <div
+                              className={classnames({
+                                'flex items-center': header.column.getIsSorted(),
+                                'cursor-pointer select-none': header.column.getCanSort()
+                              })}
+                              onClick={header.column.getToggleSortingHandler()}
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              {{
+                                asc: <i className='ri-arrow-up-s-line text-xl' />,
+                                desc: <i className='ri-arrow-down-s-line text-xl' />
+                              }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
+                            </div>
+                          </>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              {table.getFilteredRowModel().rows.length === 0 ? (
+                <tbody>
+                  <tr>
+                    <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
+                      No data available
+                    </td>
+                  </tr>
+                </tbody>
+              ) : (
+                <tbody>
+                  {table
+                    .getRowModel()
+                    .rows.slice(0, table.getState().pagination.pageSize)
+                    .map(row => {
+                      return (
+                        <tr key={row.id} onClick={() => {
+                          const id = row.original.id;
+                          setSelectedUserIds(prev =>
+                            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+                          );
+                        }} className={classnames({ selected: row.getIsSelected() })}>
+                          {row.getVisibleCells().map(cell => (
+                            <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                          ))}
+                        </tr>
+                      )
+                    })}
+                </tbody>
+              )}
+            </table>
+          </div>
+        )}
+
         <TablePagination
           component='div'
           rowsPerPageOptions={[10, 25, 50]}
