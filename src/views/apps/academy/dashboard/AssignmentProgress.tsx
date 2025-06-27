@@ -76,7 +76,7 @@ const FacilityUsage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
   return (
-    <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
+    <Card sx={{ borderRadius: 2 }}>
       <Box
         sx={{
           display: 'flex',

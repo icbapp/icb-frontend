@@ -68,11 +68,14 @@ type School = {
 
 type FormData = InferInput<typeof schema>
 
-const schema = object({
-  username: pipe(string(), nonEmpty('This field is required'),),
+export const schema = object({
+  username: pipe(
+    string(),
+    nonEmpty('Username is required')
+  ),
   password: pipe(
     string(),
-    nonEmpty('This field is required'),
+    nonEmpty('Password is required'),
     minLength(5, 'Password must be at least 5 characters long')
   )
 })
@@ -82,7 +85,6 @@ const Login = ({ mode }: { mode: Mode }) => {
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const adminStore = useSelector((state: RootState) => state.admin)
-console.log("adminStore666",adminStore);
 
   const [loading, setLoading] = useState(false)
   const [bgUrl, setBgUrl] = useState<string>('')
@@ -120,10 +122,10 @@ console.log("adminStore666",adminStore);
     formState: { errors }
   } = useForm<FormData>({
     resolver: valibotResolver(schema),
-    // defaultValues: {
-    //   username: 'aashadeep',
-    //   password: '12345678',
-    // }
+    defaultValues: {
+      username: '',
+      password: '',
+    }
   })
 
   const authBackground = useImageVariant(mode, lightImg, darkImg)
@@ -251,7 +253,7 @@ console.log("adminStore666",adminStore);
             <Controller
               name='username'
               control={control}
-              rules={{ required: true }}
+              // rules={{ required: true }}
 
               render={({ field }) => (
                 <TextField
@@ -305,8 +307,8 @@ console.log("adminStore666",adminStore);
                       color: '#fff'
                     }
                   }}
-                  error={!!errors.username || !!errorState}
-                  helperText={errors?.username?.message || errorState?.message?.[0]}
+                  error={!!errors.username}
+                  helperText={errors?.username?.message}
                 />
 
 
@@ -374,22 +376,7 @@ console.log("adminStore666",adminStore);
                 Forgot Password?
               </Typography>
             </div>
-            {/* <div className='flex justify-end items-center flex-wrap gap-2'>
-              <Typography>New on our platform? </Typography>
-              <Typography component={Link} href={getLocalizedUrl('/register', locale as Locale)} color='primary.main'>
-                Create an account 
-              </Typography>
-            </div> */}
           </form>
-          {/* <Divider className='gap-3'>or</Divider>
-          <Button
-            color='secondary'
-            className='self-center text-textPrimary'
-            startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
-            sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
-          >
-            Sign in with Google
-          </Button> */}
         </div>
       </div>
     </div>

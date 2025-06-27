@@ -45,7 +45,7 @@ const AccountSettingsData = ({ tabContentList }: { tabContentList: { [key: strin
             <Grid container spacing={6}>
                 <Grid size={{ xs: 12 }}>
                     <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
-                        <Tab label={'Edit Profile'} icon={<i className='ri-group-line' />} iconPosition='start' value='account' />
+                        <Tab label={'Edit User'} icon={<i className='ri-group-line' />} iconPosition='start' value='account' />
                         {/* <Tab label='Security' icon={<i className='ri-lock-2-line' />} iconPosition='start' value='security' /> */}
                         {/* <Tab
               label='Billing & Plans'

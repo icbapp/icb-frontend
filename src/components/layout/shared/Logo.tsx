@@ -80,11 +80,25 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
   }, [isHovered, layout, isBreakpointReached])
 
   return (
-    <div className='flex items-center  '>
-      {adminStore?.f_logo &&
-        <img className='border-2 rounded-full w-[55px] h-[55px]' 
-          src={adminStore?.f_logo} />
-      }
+ <div className='flex items-center'>
+  {(isHovered || layout === 'vertical') ? (
+    adminStore?.d_logo && (
+      <img
+        className='border-2 rounded-full'
+        src={adminStore.d_logo}
+        alt='Hovered Logo'
+      />
+    )
+  ) : (
+    adminStore?.f_logo && (
+      <img
+        className='rounded-lg ml-[-6px]'
+        src={adminStore.f_logo}
+        alt='Default Logo'
+      />
+    )
+  )}
+
 
       {/* <LogoText
         color={color}
