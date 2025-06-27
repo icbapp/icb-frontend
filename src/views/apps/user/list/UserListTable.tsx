@@ -192,6 +192,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [open, setOpen] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<(string | number)[]>([]);
   const [statusUser, setStatusUser] = useState<UsersType['status']>('')
+  console.log("data",data);
   
 const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1'); 
   // Hooks
@@ -639,7 +640,7 @@ const handleConfirmation = () => {
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5'>
         {/* Left side (FormControl) */}
         <FormControl size='small' className='w-[200px]'>
-          <InputLabel id='status-select'>User Status</InputLabel>
+          {/* <InputLabel id='status-select'>User Status</InputLabel>
           <Select
             fullWidth
             id='select-status'
@@ -650,7 +651,7 @@ const handleConfirmation = () => {
           >
             <MenuItem value='active'>Active</MenuItem>
             <MenuItem value='inactive'>Inactive</MenuItem>
-          </Select>
+          </Select> */}
         </FormControl>
 
 
