@@ -194,6 +194,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [open, setOpen] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<(string | number)[]>([]);
   const [statusUser, setStatusUser] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+ const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null);
+  const [selectedDeleteIdStatus, setSelectedDeleteStatus] = useState<string | null>(null);
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
@@ -309,7 +312,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           <div className='flex items-center gap-0.5'>
             {row.original.status === 'inactive' ? (
               // Show Restore button
-              <IconButton size='small' onClick={() => deleteUser(row.original.id, "1")}>
+              <IconButton size='small' onClick={() => {setDeleteOpen(true); handleOpenDeleteDialog(row.original.id, "1")}}>
                 <i className='ri-loop-left-line text-textSecondary' />
               </IconButton>
             ) : (
@@ -332,7 +335,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 )}
 
                 {hasPermission('user-management', 'user-management-delete') && (
-                  <IconButton size='small' onClick={() => deleteUser(row.original.id, "0")}>
+                  <IconButton size='small' onClick={() => {setDeleteOpen(true); handleOpenDeleteDialog(row.original.id, "0")}}>
                     <i className='ri-delete-bin-7-line text-textSecondary' />
                   </IconButton>
                 )}
@@ -460,55 +463,34 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       }
   }
 
-  const deleteUser = async (id: number, status: string) => {
-    swal({
-      title: "Are you sure?",
-      text: "Are you sure that you want to delete this user?",
-      icon: "warning",
-      buttons: {
-        cancel: {
-          text: "No",
-          visible: true,
-          closeModal: true,
-        },
-        confirm: {
-          text: "Yes",
-          closeModal: false,
-        },
-      },
-      dangerMode: true,
-    }).then(async (willDelete) => {
-      if (willDelete) {
-        try {
-          const formdata = new FormData();
-          formdata.append('user_id', id.toString());
-          formdata.append('school_id', adminStore?.school_id?.toString() ?? '');
-          formdata.append('tenant_id', adminStore?.tenant_id?.toString() ?? '');
-          formdata.append('status', status); // use the passed status here
+  const handleOpenDeleteDialog = (id: number,status: string) => {
+    setSelectedDeleteId(id);
+    setSelectedDeleteStatus(status)
+  };
 
-          const response = await api.post('user-status-update', formdata, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
+  const deleteUser = async () => {
+    try {
+      const formdata = new FormData();
+      formdata.append('user_id', selectedDeleteId?.toString() ?? '');
+      formdata.append('school_id', adminStore?.school_id?.toString() ?? '');
+      formdata.append('tenant_id', adminStore?.tenant_id?.toString() ?? '');
+      formdata.append('status', selectedDeleteIdStatus ?? '');
 
-          if (response.data?.status === 200) {
-            fetchUsers(); // refresh the list after update
-            setSelectedUserIds([])
-          }
+      const response = await api.post('user-status-update', formdata, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
-        } catch (error: any) {
-          return null
-        } finally {
-          if (swal && typeof swal.close === 'function') {
-            swal.close();
-          }
-
-          setSelectedUserIds([]);
-          setStatusUser('');
-        }
-      } else {
+      if (response.data?.status === 200) {
+        fetchUsers(); // refresh the list after update
         setSelectedUserIds([])
       }
-    });
+
+    } catch (error: any) {
+      return null
+    } finally {
+      setSelectedUserIds([]);
+      setStatusUser('');
+    }
   };
 
   const SyncMicrosoftUser = async () => {
@@ -875,7 +857,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           </Dialog>
         </>
       )}
-
+      {deleteOpen && (
+        <DeleteGialog open={deleteOpen} setOpen={setDeleteOpen} type={'delete-user'} onConfirm={deleteUser} selectedDeleteStatus={selectedDeleteIdStatus}/>
+      )}
     </>
   )
 }
