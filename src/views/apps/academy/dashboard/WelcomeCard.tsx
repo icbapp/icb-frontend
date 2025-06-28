@@ -230,7 +230,8 @@ const WelcomeCard = () => {
   return (<>
     {/* {loading && <Loader />} */}
 
-    <div className="rounded-xl border" style={{ backgroundColor: '#FFFF' }}>
+    <div className="rounded-xl">
+    {/* <div className="rounded-xl border" style={{ backgroundColor: '#FFFF' }}> */}
 
       <div className="flex max-md:flex-col md:items-stretch gap-0">
         {/* Left side */}
