@@ -13,25 +13,20 @@ import TabPanel from '@mui/lab/TabPanel'
 
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
-import Loader from '@/components/Loader'
-
 
 const SchoolSettings = ({ tabContentList }: { tabContentList: { [key: string]: ReactElement } }) => {
-  // States
+ 
+const [activeTab, setActiveTab] = useState(() => {
+  return localStorage.getItem('activeSchoolTab') || 'account'; // default to 'Edit School'
+});
 
-
-
-  const [activeTab, setActiveTab] = useState('account')
-  const [loading, setLoading] = useState(false)
-
-  const handleChange = (event: SyntheticEvent, value: string) => {
-    setActiveTab(value)
-  }
-
+ const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+  setActiveTab(newValue);
+  localStorage.setItem('activeSchoolTab', newValue);
+};
   return (
 
     <TabContext value={activeTab}>
-      {loading && <Loader />}
       <Grid container spacing={6}>
         <Grid size={{ xs: 12 }}>
           <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>

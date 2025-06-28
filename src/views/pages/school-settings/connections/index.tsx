@@ -246,10 +246,10 @@ fetchData()
                         variant='outlined'
                         color={item.title === 'Microsoft' && statuConnected == 1 ? 'error' : 'secondary'}
                         disabled={item.title !== 'Microsoft' && !item.isConnected} // Disable all except Microsoft when not connected
+                        onClick={item.title === 'Microsoft' && !item.isConnected && statuConnected !== 1 ? redirectTo : deleteTo}
                       >
                         <i
                           className={item.title === 'Microsoft' && statuConnected == 1 ? 'ri-delete-bin-line' : 'ri-link'}
-                          onClick={item.title === 'Microsoft' && !item.isConnected && statuConnected !== 1 ? redirectTo : deleteTo}
                         />
                       </CustomIconButton>
                     </div> 
