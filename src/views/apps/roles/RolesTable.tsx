@@ -379,15 +379,19 @@ const RolesTable = () => {
       <CardContent className='flex justify-between flex-col items-start sm:flex-row sm:items-center max-sm:gap-4'>
         {/* <Button variant='outlined' color='secondary' startIcon={<i className='ri-upload-2-line' />} className='max-sm:is-full'>Export</Button> */}
         <div className='flex flex-col !items-start max-sm:is-full sm:flex-row sm:items-center gap-4'>
+           {loading ? (
+          <Skeleton variant='rectangular' height={40} width={200} className='rounded-md' />
+        ):(
           <DebouncedInput
             value={globalFilter ?? ''}
             className='max-sm:is-full min-is-[220px]'
             onChange={value => setGlobalFilter(String(value))}
             placeholder='Search Role'
           />
+        )}
         </div>
         {loading ? (
-          <Skeleton variant='rectangular' height={40} width={120} className='mb-2 rounded-md' />
+          <Skeleton variant='rectangular' height={40} width={120} className='rounded-md' />
         ) : showAddRoleButton && (
           <Button
             variant='contained'
@@ -401,6 +405,7 @@ const RolesTable = () => {
           </Button>
         )}
       </CardContent>
+      
       <div className='overflow-x-auto'>
         <table className={tableStyles.table}>
           <thead>
@@ -425,28 +430,37 @@ const RolesTable = () => {
               </tr>
             ))}
           </thead>
-          <tbody>
-            {table.getFilteredRowModel().rows.length === 0 ? (
-              <tr>
-                <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                  No data available
+           <tbody>
+      {loading ? (
+        [...Array(5)].map((_, rowIndex) => (
+          <tr key={`skeleton-${rowIndex}`}>
+            {table.getVisibleFlatColumns().map((column, colIndex) => (
+              <td key={`skeleton-cell-${colIndex}`} className="px-4 py-2">
+               <div className="h-4 bg-gray-200 rounded animate-pulse w-full my-1" />
+              </td>
+            ))}
+          </tr>
+        ))
+      ) : table.getFilteredRowModel().rows.length === 0 ? (
+        <tr>
+          <td colSpan={table.getVisibleFlatColumns().length} className="text-center">
+            No data available
+          </td>
+        </tr>
+      ) : (
+        table.getRowModel().rows
+          .slice(0, table.getState().pagination.pageSize)
+          .map(row => (
+            <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+              {row.getVisibleCells().map(cell => (
+                <td key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows
-                .slice(0, table.getState().pagination.pageSize)
-                .map((row) => (
-                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-            )}
-
-          </tbody>
+              ))}
+            </tr>
+          ))
+      )}
+    </tbody>
         </table>
       </div>
       <TablePagination

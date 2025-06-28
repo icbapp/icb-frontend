@@ -18,14 +18,12 @@ import {
   Button
 } from '@mui/material'
 
-import { addRoleToDB } from '@/redux-store/slices/role'
 import type { RoleType } from '@/types/apps/roleType'
 import tableStyles from '@core/styles/table.module.css'
 import { api } from '@/utils/axiosInstance'
 import { useParams, useRouter } from 'next/navigation'
 import { getLocalizedUrl } from '@/utils/i18n'
 import type { Locale } from '@configs/i18n'
-import type { Mode } from '@core/types'
 import { useSettings } from '@core/hooks/useSettings'
 import Loader from '@/components/Loader'
 import { toast } from 'react-toastify'
@@ -147,34 +145,28 @@ const RoleDialog = ({ open, setOpen, item, title }: RoleDialogProps) => {
       if (errors && typeof errors === 'object') {
         const messages = Object.values(errors).flat()
         setErrorState({ message: messages as string[] })
-
-
         toast.error("something went wrong, please try again later.")
 
       } else {
         setErrorState({ message: ['Something went wrong. Please try again.'] })
         toast.error("something went wrong, please try again later.")
-
       }
     }
     finally {
       setLoading(false)
-
     }
   }
-
 
   const handleClose = () => {
     setRoleName('')
     setSelectedCheckbox([])
     setIsIndeterminateCheckbox(false)
     setOpen(false)
-
   }
 
   return (
     <Dialog fullWidth maxWidth='md' scroll='body' open={open} onClose={handleClose}>
-      {loading && <Loader />}
+      {/* {loading && <Loader />} */}
 
       <DialogTitle variant='h4' className='flex flex-col gap-2 text-center'>
         {title ? 'Edit Role' : 'Add Role'}
