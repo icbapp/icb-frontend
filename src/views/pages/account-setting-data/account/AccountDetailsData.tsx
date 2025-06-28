@@ -81,12 +81,7 @@ const AccountDetailsData = () => {
     const [loading, setLoading] = useState(false)
     // States
     const [formData, setFormData] = useState<Data>(selectedUser || initialData)
-    const [fileInput, setFileInput] = useState<string>('')
-    const [imgSrc, setImgSrc] = useState<string>(selectedUser.image ? selectedUser.image : '/images/avatars/2.png')
-    const [language, setLanguage] = useState<string[]>(['English'])
-    const [imageFile, setImageFile] = useState<File | null>(null)
     const [role, setRole] = useState<number[]>([]) // now it's array
-    const isValid = role.length > 0;
     const [rolesList, setRolesList] = useState<RoleOption[]>([])
 
     const { lang: locale } = useParams()

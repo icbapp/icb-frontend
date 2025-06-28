@@ -1,19 +1,15 @@
 // React Imports
 'use client'
 import { useState, useEffect } from 'react'
-import CardContent from '@mui/material/CardContent'
-import type { ChangeEvent } from 'react'
 import Chip from '@mui/material/Chip'
 
 // MUI Imports
 import {
   Button, Drawer, FormControl, IconButton, InputLabel, MenuItem,
-  Select, TextField, FormHelperText, Typography, Divider,
+  Select, TextField, Typography, Divider,
   Box,
   Checkbox,
-  Autocomplete,
   ListItemText,
-  SelectChangeEvent,
   OutlinedInput
 } from '@mui/material'
 
@@ -31,15 +27,9 @@ import { toast } from 'react-toastify'
 type Props = {
   open: boolean
   handleClose: () => void
-  userData?: UsersType[]
-  user?: UsersType
-  setData: (data: UsersType[]) => void
+  editUserData?: UsersType
   fetchUsers: () => void
-}
-
-type SchoolDetailsType = {
-  school_id?: string
-  tenant_id?: string
+  selectedUser: any
 }
 
 type FormValidateType = {
@@ -49,18 +39,7 @@ type FormValidateType = {
   password: string
   confirmPassword: string
   role: number[]
-}
-
-type FormNonValidateType = {
-  company: string
-  country: string
-  contact: string
-}
-
-const initialData: FormNonValidateType = {
-  company: '',
-  country: '',
-  contact: ''
+  phone: string
 }
 
 type RoleOption = {
@@ -68,24 +47,11 @@ type RoleOption = {
   name: string
 }
 
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
-  },
-}
-
-const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers }: Props) => {
-  const [formDataState, setFormDataState] = useState<FormNonValidateType>(initialData)
+const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUser }: Props) => {
 
   const [role, setRole] = useState<number[]>([])
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
   const [loading, setLoading] = useState(false)
-  const [imgSrc, setImgSrc] = useState<string>('/images/avatars/2.png')
   const [suggestName, setSuggestedName] = useState<string[]>([])
   const adminStore = useSelector((state: RootState) => state.admin)
 
@@ -102,54 +68,51 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
       email: '',
       password: '',
       confirmPassword: '',
-      role: []
+      role: [],
+      phone:''
     },
     mode: 'onChange',
-    shouldUnregister: true // Ensures form resets on user change
+    shouldUnregister: true
 
   })
 
-  useEffect(() => {
-    if (user) {
-      // Prefill in edit mode
-      resetForm({
-        fullName: user.fullName,
-        username: user.username,
-        email: user.email,
-        password: '',
-        confirmPassword: '',
-        role: []
-      })
-      setFormDataState({
-        contact: user.contact || '',
-        company: user.company || '',
-        country: user.country || ''
-      })
-      // Optional: preselect existing roles if editing
-    } else {
-      // Clear form in add mode
-      resetForm()
-      setFormDataState(initialData)
-      setRole([])
-    }
-  }, [user, resetForm])
+ useEffect(() => {
+  if (editUserData) {
+    resetForm({
+      fullName: editUserData.full_name || '',
+      username: editUserData.username || '',
+      email: editUserData.email || '',
+      password: '',
+      confirmPassword: '',
+      role: editUserData?.roles?.map((r: any) => r.id) || [],
+      phone: editUserData.phone || ''
+    })
+  } else {
+    resetForm()
+    setRole([])
+  }
+}, [editUserData, resetForm])
 
   const fetchRoles = async () => {
     try {
       const response = await api.get('roles')
 
-      // const roles: RoleOption[] = response.data.data.map((r: any) => ({ id: r.id, name: r.name }))
-      const roles: RoleOption[] = response.data.data
-      .filter((r: any) => r.name !== 'default' && r.name !== 'Super Admin') // Remove default and Super Admin
-      .map((r: any) => ({ id: r.id, name: r.name }));
+   const roles: RoleOption[] = response.data.data
+    .filter((r: any) =>
+      selectedUser
+        ? r.name !== 'Super Admin'
+        : r.name !== 'default' && r.name !== 'Super Admin'
+    )
+    .map((r: any) => ({ id: r.id, name: r.name }));
       setRolesList(roles)
     } catch (err) {
       return null
     }
   }
+  
   useEffect(() => {
     fetchRoles()
-  }, [])
+  }, [selectedUser])
 
   const onSubmit = async (data: FormValidateType) => {
     try {
@@ -157,14 +120,14 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
       const formdata = new FormData()
 
       formdata.append('full_name', data.fullName || '')
-      formdata.append('username', data.username || '')
+      formdata.append('username', data.username)
       formdata.append('email', data.email || '')
       formdata.append('password', data.password || '')
       formdata.append('password_confirmation', data.password || '')
-      formdata.append('phone', formDataState.contact || '')
+      formdata.append('phone', data.phone || '')
       formdata.append('school_id', adminStore?.school_id.toString() || '')
       formdata.append('tenant_id', adminStore?.tenant_id.toString() || '')
-      formdata.append('id', user?.id ? String(user.id) : '0')
+      formdata.append('id', editUserData?.id ? String(editUserData.id) : '0')
 
       const selectedRoles = getValues('role')
 
@@ -176,27 +139,30 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 
-      if (response.data?.success === true) {
+      if (response.data?.status === 200) {
         toast.success(response.data.message)
-        fetchRoles()
-        handleReset()
+          resetForm({
+      fullName: '',
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: [],
+      phone:''
+    })
         fetchUsers()
+        
       }
-
     } catch (error: any) {
       toast.error(error.response.data.message)
       setSuggestedName(error.response.data.data.suggested_usernames)
-      const message = 'Something went wrong'
     } finally {
       setLoading(false)
+      handleReset()
     }
   }
 
-
   const handleReset = () => {
-    handleClose()
-    setFormDataState(initialData)
-
     resetForm({
       fullName: '',
       username: '',
@@ -204,7 +170,9 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
       password: '',
       confirmPassword: '',
       role: [],
+      phone:''
     })
+    handleClose()
   }
 
   return (
@@ -223,7 +191,7 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
       {loading && <Loader />}
 
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Add New User</Typography>
+        <Typography variant='h5'>{selectedUser ? 'Edit' : 'Add'} User</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -262,15 +230,16 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
                   error={!!errors.username}
                   helperText={errors.username?.message}
                   autoComplete='off'
+                  disabled={!!selectedUser}
                 />
 
-                {suggestName.length > 0 && (
+                {suggestName?.length > 0 && (
                   <Box>
                     <Typography variant="body2" color="text.secondary">
                       Suggested Usernames:
                     </Typography>
                     <Box display="flex" gap={1} flexWrap="wrap" mt={0.5}>
-                      {suggestName.map((name: any) => (
+                      {suggestName?.map((name: any) => (
                         <Chip
                           key={name}
                           label={name}
@@ -299,24 +268,51 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
                 error={!!errors.email}
                 helperText={errors.email?.message}
                 autoComplete='off'
-
               />
             )}
           />
-          <TextField
-            label='Contact'
-            type='tel'
-            fullWidth
-            placeholder='(397) 294-5153'
-            value={formDataState.contact}
-            onChange={e => setFormDataState({ ...formDataState, contact: e.target.value })}
-            autoComplete='off'
-
+         <Controller
+            name='phone'
+            control={control}
+            rules={{
+              required: 'Phone is required',
+              pattern: {
+                value: /^\d{10}$/,
+                message: 'Phone number must be 10 digits'
+              }
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label='Phone'
+                placeholder='1234567890'
+                error={!!errors.phone}
+                helperText={errors.phone?.message}
+                autoComplete='off'
+                type="tel"
+                inputProps={{
+                  maxLength: 10,
+                  inputMode: 'numeric',
+                  pattern: '[0-9]*',
+                  onInput: (e: React.FormEvent<HTMLInputElement>) => {
+                    // Remove any non-digit characters on input
+                    const target = e.currentTarget;
+                    target.value = target.value.replace(/\D/g, '');
+                    field.onChange(target.value);
+                  }
+                }}
+              />
+            )}
           />
           <Controller
             name='password'
             control={control}
-            rules={{ required: 'Password is required' }}
+            rules={
+              !selectedUser
+                ? { required: 'Password is required' } // Add mode: password is required
+                : {} // Edit mode: password is optional
+            }
             render={({ field }) => (
               <TextField
                 {...field}
@@ -331,111 +327,14 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
               />
             )}
           />
-          {/* <Controller
-            name='confirmPassword'
-            control={control}
-            rules={{
-              required: 'Confirm Password is required',
-              validate: value => value === getValues('password') || 'Passwords do not match'
-            }}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                fullWidth
-                type='password'
-                label='Confirm Password'
-                placeholder='Re-enter password'
-                error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword?.message}
-              />
-            )}
-          /> */}
-
-          {/* <FormControl fullWidth>
-            <InputLabel id='country'>Select Country</InputLabel>
-            <Select
-              fullWidth
-              id='country'
-              value={formDataState.country}
-              onChange={e => setFormDataState({ ...formDataState, country: e.target.value })}
-              label='Select Country'
-              labelId='country'
-            >
-              <MenuItem value='India'>India</MenuItem>
-              <MenuItem value='USA'>USA</MenuItem>
-              <MenuItem value='Australia'>Australia</MenuItem>
-              <MenuItem value='Germany'>Germany</MenuItem>
-            </Select>
-          </FormControl> */}
+        
           <FormControl fullWidth>
-            {/* <InputLabel id='role-select'>Select Role</InputLabel> */}
             <Controller
               name="role"
               control={control}
               rules={{ required: 'Role is required' }}
               render={({ field }) => (
                 <FormControl fullWidth error={!!errors.role}>
-                  {/* <InputLabel id="role-select">Select Role</InputLabel> */}
-                  {/* <Select
-                    {...field}
-                    multiple
-                    fullWidth
-                    id="select-role"
-                    value={field.value || []}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      field.onChange(typeof value === 'string' ? value.split(',').map(Number) : value);
-                    }}
-                    // label="Role"
-                    // labelId="role-select"
-                    renderValue={(selected) => (
-                      <div className="flex flex-wrap gap-2">
-                        {(selected as number[]).map((roleId) => {
-                          const roleName = rolesList.find(r => r.id === roleId)?.name;
-                          return (
-                            <Chip
-                              key={roleId}
-                              label={roleName}
-                              size="small"
-                              onDelete={() => {
-                                const newValue = (field.value as number[]).filter(id => id !== roleId);
-                                field.onChange(newValue);
-                              }}
-                              deleteIcon={
-                                <i
-                                  className="ri-close-circle-fill"
-                                  onMouseDown={(event) => event.stopPropagation()}
-                                />
-                              }
-                            />
-                          );
-                        })}
-                      </div>
-                    )}
-                  >
-                    {rolesList.map((role) => (
-                      <MenuItem key={role.id} value={role.id}>
-                        {role.name}
-                      </MenuItem>
-                    ))}
-                  </Select> */}
-                  {/* <Select
-                    {...field}
-                    fullWidth
-                    multiple
-                    // id='select-role'
-                    value={field.value || []}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      field.onChange(typeof value === 'string' ? value.split(',').map(Number) : value);
-                    }}
-                    label='Select Role'
-                    inputProps={{ placeholder: 'Select Role' }}
-                  >
-                    {rolesList.map((r: any, idx) => (
-                      <MenuItem key={idx} value={r.id}>{r.name}</MenuItem>
-                    ))}
-                  </Select> */}
                   <InputLabel id="demo-multiple-checkbox-label">Select Roles</InputLabel>
                   <Select
                     labelId="role-select-label"
@@ -493,7 +392,7 @@ const AddUserDrawer = ({ open, handleClose, userData, user, setData, fetchUsers 
             {/* <FormHelperText>Select one or more roles</FormHelperText> */}
           </FormControl>
           <div className='flex self-end items-center gap-4'>
-            <Button variant='contained' type='submit' disabled={!isValid && !user?.id}>
+            <Button variant='contained' type='submit' disabled={!isValid && !selectedUser}>
               Submit
             </Button>
             <Button variant='outlined' color='error' onClick={handleReset}>

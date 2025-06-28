@@ -67,6 +67,7 @@ import { tree } from 'next/dist/build/templates/app-page';
 import swal from 'sweetalert';
 import { toast } from 'react-toastify';
 import { Dialog, DialogActions, DialogContent, FormControl, InputLabel, MenuItem, Select, Skeleton, Tooltip } from '@mui/material';
+import DeleteGialog from '@/comman/deleteDialog/DeleteGialog';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -181,6 +182,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [role, setRole] = useState<UsersType['role']>('')
   const [status, setStatus] = useState<UsersType['status']>('')
   const [data, setData] = useState<UsersType[]>([])
+  const [editUserData, setEditUserData] = useState<UsersType | undefined>(undefined)
   const [searchData, setSearchData] = useState<string>('')
   const [selectedUser, setSelectedUser] = useState<any>(null); // ideally type this
   const [loading, setLoading] = useState(false)
@@ -320,19 +322,16 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 {hasPermission('user-management', 'user-management-edit') && (
                   <IconButton
                     size="small"
-                    onClick={() => {
-                      localStorage.setItem("selectedUser", JSON.stringify(row.original));
-                      setSelectedUser(row.original.id);
-                    }}
+                    onClick={() => {setAddUserOpen(true); editUser(row.original.id)}}
                   >
-                    <Link
+                    {/* <Link
                       href={{
                         pathname: getLocalizedUrl('/pages/account-setting-data', locale as Locale),
                       }}
                       className="flex"
-                    >
-                      <i className="ri-edit-box-line text-textSecondary" />
-                    </Link>
+                    > */}
+                    <i className="ri-edit-box-line text-textSecondary" />
+                    {/* </Link> */}
                   </IconButton>
                 )}
 
@@ -397,14 +396,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     }
   }
 
-  useEffect(() => {
-    fetchUsers()
-  }, [role, status, searchData, paginationInfo, statusUser])
-
   const fetchUsers = async () => {
     try {
       setLoading(true)
-
       const response = await api.get('user-get', {
         params: {
           role_id: role,
@@ -415,42 +409,35 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           id: '',
         }
       })
+
+        const users = response.data.users.data.map((user: {
+          id: number;
+          full_name: string;
+          name: string;
+          email: string;
+          username: string;
+          roles: { name: string }[];
+          status: number;
+          image: string;
+          phone: string
+        }) => ({
+          id: user.id,
+          fullName: user.full_name ?? '',
+          name: user.name ?? '',
+          email: user.email ?? '',
+          username: user.username ?? '',
+          role: user.roles ?? [],
+          status: user.status === 1 ? 'active' : 'inactive',
+          phone: user.phone,
+          currentPlan: 'enterprise'
+        }))
+        setTotalRows(response.data) // get total from API if exists
+        setData(users)
+     
       if (response.data.message === "Data not found for this User") {
         toast.error("Data not found for this User")
         setData([])
       }
-
-      const users = response.data.users.data.map((user: {
-        id: number;
-        full_name: string;
-        name: string;
-        email: string;
-        username: string;
-        roles: { name: string }[];
-        status: number;
-        image: string;
-        phone: string
-      }) => ({
-        id: user.id,
-        fullName: user.full_name ?? '',
-        name: user.name ?? '',
-        email: user.email ?? '',
-        username: user.username ?? '',
-        role: user.roles ?? [],
-        status: user.status === 1 ? 'active' : 'inactive',
-        avatar: '',
-        avatarColor: 'primary',
-        image: user.image,
-        phone: user.phone,
-        // ✅ Add all required fields from UsersType
-        company: 'N/A',
-        country: 'N/A',
-        currentPlan: 'enterprise'
-      }))
-
-      setTotalRows(response.data) // get total from API if exists
-      setData(users)
-
 
     } catch (err: any) {
       // toast.error("error")
@@ -459,6 +446,23 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     finally {
       setLoading(false)
     }
+  }
+
+
+  useEffect(() => {
+    fetchUsers()
+  }, [role, status, searchData, paginationInfo, statusUser])
+
+  const editUser = async (id:number) => {
+    setSelectedUser(id)
+    const response = await api.get('user-get', {
+        params: {
+          id: id || '',
+        }
+      })
+      if(response.data.message === "User fetched successfully"){
+        setEditUserData(response.data)
+      }
   }
 
   const deleteUser = async (id: number, status: string) => {
@@ -474,7 +478,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         },
         confirm: {
           text: "Yes",
-          closeModal: false, // keep popup open until API finishes
+          closeModal: false,
         },
       },
       dangerMode: true,
@@ -528,34 +532,6 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       setLoading(false);
     }
   }
-
-  const activeAllUser = () => {
-    if (selectedUserIds.length === 0) {
-      toast.warning("Please select at least one user.");
-      return;
-    }
-    setPendingStatus('1'); // Set to activate
-    setOpen(true);
-    setStatusUser('')
-  };
-
-  const inActiveAllUser = () => {
-    if (selectedUserIds.length === 0) {
-      toast.warning("Please select at least one user.");
-      return;
-    }
-    setPendingStatus('0'); // Set to deactivate
-    setOpen(true);         // Open confirmation modal
-    setStatusUser('')       // Open confirmation modal
-  };
-  // const handleStatusChange = (value: any) => {
-  //   setStatusUser(value); // Optional: update selected value
-  //   if (value === 'active') {
-  //     activeAllUser();
-  //   } else if (value === 'inactive') {
-  //     inActiveAllUser();
-  //   }
-  // };
 
   const handleStatusChange = async (value: 'active' | 'inactive') => {
     setStatusUser(value); // Update UI dropdown
@@ -703,7 +679,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 fullWidth
                 id='select-status'
                 value={statusUser}
-                onChange={e => handleStatusChange(e.target.value)}
+                onChange={(e:any) => handleStatusChange(e.target.value)}
                 label='User Status'
                 labelId='status-select'
               >
@@ -755,7 +731,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 className='w-full sm:w-auto'
               />
               {hasPermission('user-management', 'user-management-add') && (
-                <Button variant='contained' onClick={() => { setSelectedUser(null); setAddUserOpen(!addUserOpen); }} className='w-full sm:w-auto'>
+                <Button variant='contained' onClick={() => { setSelectedUser(null); setAddUserOpen(true); }} className='w-full sm:w-auto'>
                   Add New User
                 </Button>
               )}
@@ -855,14 +831,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                     .rows.slice(0, table.getState().pagination.pageSize)
                     .map(row => {
                       return (
-                        <tr key={row.id} onClick={() => {
-                          const id = row.original.id;
-                          setSelectedUserIds(prev =>
-                            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-                          );
-                        }} className={classnames({ selected: row.getIsSelected() })}>
+                        <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
                           {row.getVisibleCells().map(cell => (
-                            <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                            <td key={cell.id}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
                           ))}
                         </tr>
                       )
@@ -903,11 +876,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
       <AddUserDrawer
         open={addUserOpen}
-        handleClose={() => setAddUserOpen(!addUserOpen)}
-        userData={data}
-        user={selectedUser}
-        setData={setData}
+        handleClose={() => setAddUserOpen(false)}
+        editUserData={editUserData}
         fetchUsers={fetchUsers}
+        selectedUser={selectedUser}
       />
 
       {open && (
@@ -915,7 +887,6 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           <Dialog fullWidth maxWidth='xs' open={open} onClose={() => setOpen(false)} closeAfterTransition={false}>
             <DialogContent className='flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
               <i className='ri-error-warning-line text-[88px] mbe-6 text-warning' />
-              {/* <Wrapper> */}
               <Typography variant='h4'>
                 Are you sure {pendingStatus === '1' ? 'Activate' : 'Inactivate'} user?
               </Typography>
@@ -935,6 +906,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
               </Button>
             </DialogActions>
           </Dialog>
+          {/* <DeleteGialog open={open}  setOpen={setOpen} type={'delete-account'} /> */}
         </>
       )}
 
