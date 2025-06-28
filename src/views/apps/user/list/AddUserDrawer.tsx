@@ -97,17 +97,17 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
     try {
       const response = await api.get('roles')
 
-   const roles: RoleOption[] = response.data.data
-    .filter((r: any) =>
-      selectedUser
-        ? r.name !== 'Super Admin'
-        : r.name !== 'default' && r.name !== 'Super Admin'
-    )
-    .map((r: any) => ({ id: r.id, name: r.name }));
-      setRolesList(roles)
-    } catch (err) {
-      return null
-    }
+      const roles: RoleOption[] = response.data.data
+        .filter((r: any) =>
+          selectedUser
+            ? r.name !== 'Super Admin'
+            : r.name !== 'default' && r.name !== 'Super Admin'
+        )
+        .map((r: any) => ({ id: r.id, name: r.name }));
+          setRolesList(roles)
+        } catch (err) {
+          return null
+        }
   }
   
   useEffect(() => {
@@ -355,9 +355,14 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
                               key={roleId}
                               label={roleName}
                               size="small"
-                              onDelete={() =>
-                                field.onChange(field.value.filter((id: number) => id !== roleId))
-                              }
+                             onDelete={() => {
+                                if (roleName !== 'default') {
+                                  field.onChange(field.value.filter((id: number) => id !== roleId));
+                                }
+                              }}
+                              // onDelete={() =>
+                              //   field.onChange(field.value.filter((id: number) => id !== roleId))
+                              // }
                               deleteIcon={
                                 <i
                                   className="ri-close-circle-fill"
@@ -378,12 +383,24 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
                       },
                     }}
                   >
-                    {rolesList.map((item) => (
+                  {rolesList
+                  .filter((item) => {
+                    // Hide 'default' role when selectedUser exists
+                    if (item.name === 'default' && selectedUser) return false;
+                    return true;
+                  })
+                  .map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      <Checkbox checked={field.value?.includes(item.id)} />
+                      <ListItemText primary={item.name} />
+                    </MenuItem>
+                  ))}
+                   {/* {rolesList.map((item) => (
                       <MenuItem key={item.id} value={item.id}>
                         <Checkbox checked={field.value?.includes(item.id)} />
                         <ListItemText primary={item.name} />
                       </MenuItem>
-                    ))}
+                    ))} */}
                   </Select>
                   {/* <FormHelperText>{errors.role?.message}</FormHelperText> */}
                 </FormControl>
