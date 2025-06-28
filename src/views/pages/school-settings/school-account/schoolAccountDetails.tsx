@@ -235,7 +235,7 @@ const SchoolAccountDetails = () => {
   return (
     <Card >
 
-      {loading && <Loader />}
+      {/* {loading && <Loader />} */}
       <form
         onSubmit={e => {
           e.preventDefault()

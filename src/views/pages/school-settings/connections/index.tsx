@@ -18,6 +18,7 @@ import Loader from '@/components/Loader'
 import { toast } from 'react-toastify'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
+import { Skeleton } from '@mui/material'
 
 type ConnectedAccountsType = {
   title: string
@@ -182,7 +183,7 @@ fetchData()
 
   return (
     <Card>
-            {loading && <Loader />}
+            {/* {loading && <Loader />} */}
       
       <Grid container>
         {/* <Grid size={{ xs: 12, md: 6 }}>
@@ -210,36 +211,49 @@ fetchData()
         <Grid size={{ xs: 12, md: 6 }}>
           <CardHeader title='Integration Accounts' subheader='Integration with diffrent account' />
           <CardContent className='flex flex-col gap-4'>
-            {socialAccountsArr.map((item, index) => (
-              <div key={index} className='flex items-center justify-between gap-4'>
-                <div className='flex flex-grow items-center gap-4'>
-                  <img height={32} width={32} className='' src={item.logo} alt={item.title} style={{ opacity: item.title === 'Microsoft' && !item.isConnected  ? 1 : 0.5 }}/>
-                  <div className='flex-grow'>
-                    <Typography className='font-medium' color='text.primary'>
-                      {item.title}
-                    </Typography>
-                    {item.title === 'Microsoft' && statuConnected == 1 ? (
-                      <Typography color='primary.main'>
-                        {/* {item.username} */}
-                        {loginStore.microsoft_name}
-                      </Typography>
-                    ) : (
-                      <Typography variant='body2'>Not Connected</Typography>
-                    )}
-                  </div>
-                </div>
-                 <CustomIconButton
-                  variant='outlined'
-                  color={item.title === 'Microsoft' && statuConnected == 1 ? 'error' : 'secondary'}
-                  disabled={item.title !== 'Microsoft' && !item.isConnected} // Disable all except Microsoft when not connected
-                >
-                  <i
-                    className={item.title === 'Microsoft' && statuConnected == 1 ? 'ri-delete-bin-line' : 'ri-link'}
-                    onClick={item.title === 'Microsoft' && !item.isConnected && statuConnected !== 1 ? redirectTo : deleteTo}
-                  />
-                </CustomIconButton>
-              </div> 
-            ))}
+             {loading
+                ? [...Array(3)].map((_, index) => (
+                    <div key={index} className="flex items-center justify-between gap-4">
+                      <div className="flex flex-grow items-center gap-4">
+                        <Skeleton variant="circular" width={32} height={32} />
+                        <div className="flex-grow">
+                          <Skeleton variant="text" width="40%" height={20} />
+                          <Skeleton variant="text" width="60%" height={16} />
+                        </div>
+                      </div>
+                      <Skeleton variant="circular" width={32} height={32} />
+                    </div>
+                  )) :
+                  socialAccountsArr.map((item, index) => (
+                    <div key={index} className='flex items-center justify-between gap-4'>
+                      <div className='flex flex-grow items-center gap-4'>
+                        <img height={32} width={32} className='' src={item.logo} alt={item.title} style={{ opacity: item.title === 'Microsoft' && !item.isConnected  ? 1 : 0.5 }}/>
+                        <div className='flex-grow'>
+                          <Typography className='font-medium' color='text.primary'>
+                            {item.title}
+                          </Typography>
+                          {item.title === 'Microsoft' && statuConnected == 1 ? (
+                            <Typography color='primary.main'>
+                              {/* {item.username} */}
+                              {loginStore.microsoft_name}
+                            </Typography>
+                          ) : (
+                            <Typography variant='body2'>Not Connected</Typography>
+                          )}
+                        </div>
+                      </div>
+                      <CustomIconButton
+                        variant='outlined'
+                        color={item.title === 'Microsoft' && statuConnected == 1 ? 'error' : 'secondary'}
+                        disabled={item.title !== 'Microsoft' && !item.isConnected} // Disable all except Microsoft when not connected
+                      >
+                        <i
+                          className={item.title === 'Microsoft' && statuConnected == 1 ? 'ri-delete-bin-line' : 'ri-link'}
+                          onClick={item.title === 'Microsoft' && !item.isConnected && statuConnected !== 1 ? redirectTo : deleteTo}
+                        />
+                      </CustomIconButton>
+                    </div> 
+                  ))}
           </CardContent>
         </Grid>
       </Grid>

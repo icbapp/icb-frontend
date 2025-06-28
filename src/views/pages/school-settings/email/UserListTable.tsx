@@ -273,7 +273,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   return (
     <>
-      {loading && <Loader />}
+      {/* {loading && <Loader />} */}
       <Card>
         <TableFilters role={role} setRole={setRole} />
         <Divider />

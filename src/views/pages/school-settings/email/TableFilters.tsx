@@ -64,7 +64,7 @@ const TableFilters = ({ role, setRole }: { role: string[], setRole: (role: strin
 
   return (
     <CardContent>
-      {loading && <Loader />}
+      {/* {loading && <Loader />} */}
       <Grid container spacing={5}>
         <Grid item xs={12} sm={6}>
           <FormControl fullWidth>
