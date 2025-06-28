@@ -193,11 +193,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   })
   const [open, setOpen] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<(string | number)[]>([]);
-  const [statusUser, setStatusUser] = useState<UsersType['status']>('')
-
-  const [pendingStatus, setPendingStatus] = useState<'1' | '0'>('1');
-  // Hooks
-  const { lang: locale } = useParams()
+  const [statusUser, setStatusUser] = useState('');
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
@@ -448,10 +444,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     }
   }
 
-
   useEffect(() => {
     fetchUsers()
-  }, [role, status, searchData, paginationInfo, statusUser])
+  }, [role, status, searchData, paginationInfo])
 
   const editUser = async (id:number) => {
     setSelectedUser(id)
@@ -485,8 +480,6 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     }).then(async (willDelete) => {
       if (willDelete) {
         try {
-          // setLoading(true);
-
           const formdata = new FormData();
           formdata.append('user_id', id.toString());
           formdata.append('school_id', adminStore?.school_id?.toString() ?? '');
@@ -535,63 +528,35 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const handleStatusChange = async (value: 'active' | 'inactive') => {
     setStatusUser(value); // Update UI dropdown
-
+    setOpen(true)
     if (selectedUserIds.length === 0) {
       toast.warning("Please select at least one user.");
       setStatusUser('')
-
-      return;
-    }
-    const statusCode = value === 'active' ? '1' : '0';
-
-    try {
-      setLoading(true);
-
-      // Update each selected user's status
-      for (const id of selectedUserIds) {
-        const formdata = new FormData();
-        formdata.append('user_id', id.toString());
-        formdata.append('school_id', adminStore?.school_id?.toString() ?? '');
-        formdata.append('tenant_id', adminStore?.tenant_id?.toString() ?? '');
-        formdata.append('status', statusCode);
-
-        await api.post('user-status-update', formdata, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      }
-
-      toast.success(`Users marked as ${value}.`);
-      setStatusUser('')
-    } catch (error) {
-      toast.error('Failed to update user status.');
-      setStatusUser('')
-    } finally {
-      // setLoading(false);
-      setSelectedUserIds([]);
-      setStatusUser('')
-      setLoading(false);
     }
   };
 
   const handleConfirmation = () => {
+  const statusCode = statusUser === 'active' ? 1 : 0;
     const body = {
       user_ids: selectedUserIds,
       school_id: adminStore?.school_id?.toString() ?? '',
       tenant_id: adminStore?.tenant_id?.toString() ?? '',
-      status: pendingStatus
+      status: statusCode ?? ''
     };
     api.post('users/status-toggle-multiple', body)
       .then((response) => {
         if (response.data.status === 200) {
           setOpen(false);
-          toast.success(pendingStatus === '1' ? "Users activated successfully" : "Users deactivated successfully");
+          toast.success(statusUser === 'active' ? "Users activated successfully" : "Users deactivated successfully");
           fetchUsers();
           setSelectedUserIds([]);
+          setStatusUser('')
         }
       })
       .catch((error) => {
         setOpen(false);
         toast.error(error.response?.data?.message || "An error occurred while updating users");
+        setStatusUser('')
       });
   };
 
@@ -888,25 +853,26 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
             <DialogContent className='flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
               <i className='ri-error-warning-line text-[88px] mbe-6 text-warning' />
               <Typography variant='h4'>
-                Are you sure {pendingStatus === '1' ? 'Activate' : 'Inactivate'} user?
+                Are you sure {statusUser === 'active' ? 'Activate' : 'Inactivate'} user?
               </Typography>
             </DialogContent>
             <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
               <Button variant='contained' onClick={handleConfirmation}>
-                Yes, {pendingStatus === '1' ? 'Activate' : 'Inactivate'} User!
+                Yes, {statusUser === 'active' ? 'Activate' : 'Inactivate'} User!
               </Button>
               <Button
                 variant='outlined'
                 color='secondary'
                 onClick={() => {
                   setOpen(false)
+                  setSelectedUserIds([]);
+                  setStatusUser('')
                 }}
               >
                 Cancel
               </Button>
             </DialogActions>
           </Dialog>
-          {/* <DeleteGialog open={open}  setOpen={setOpen} type={'delete-account'} /> */}
         </>
       )}
 
