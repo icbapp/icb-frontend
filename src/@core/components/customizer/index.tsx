@@ -401,7 +401,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                   </div>
                 </div>
               </div>
-              {settings.mode === 'dark' || settings.mode === 'light' ||
+              {settings.mode === 'dark' ||
                 (settings.mode === 'system' && isSystemDark) ||
                 settings.layout === 'horizontal' ? null : (
                 <div className='flex items-center justify-between'>
