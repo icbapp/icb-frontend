@@ -322,7 +322,10 @@ const WelcomeCard = () => {
             </div>
 
             <div className="mt-6 flex justify-center">
-              <Button variant="outlined" color="primary" className="rounded-full">
+              {/* <Button variant="outlined" color="primary" className="rounded-full">
+                Load More Activities
+              </Button> */}
+              <Button variant='contained' className='rounded-full'>
                 Load More Activities
               </Button>
             </div>

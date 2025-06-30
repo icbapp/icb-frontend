@@ -54,6 +54,7 @@ import showMsg from '@/utils/showMsg'
 import { api } from '@/utils/axiosInstance'
 import themeConfig from '@/configs/themeConfig'
 import { setAdminInfo } from '@/redux-store/slices/admin'
+import ToastsCustom from '@/comman/toastsCustom/LoginToasts'
 
 
 type ErrorType = {
@@ -148,8 +149,10 @@ const Login = ({ mode }: { mode: Mode }) => {
     })
       .then(async (response) => {
         // if (response.data.status === 200 && response.data.message === 'Login Success') {
+        
           saveToken(response.data.access_token);
-          toast.success(`${showMsg.login}`);
+          ToastsCustom(response.data.data.username, `${showMsg.login}`, '/images/avatars/1.png')
+          // toast.success(`${showMsg.login}`);
           dispatch(setLoginInfo(response.data.data));
 
           const redirectURL = searchParams.get('redirectTo') ?? '/dashboards/academy';
@@ -384,6 +387,7 @@ const Login = ({ mode }: { mode: Mode }) => {
           </form>
         </div>
       </div>
+      {/* <ToastsCustom /> */}
     </div>
   )
 }
