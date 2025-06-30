@@ -18,6 +18,9 @@ import type { Mode } from '@core/types'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import endPointApi from '@/utils/endPointApi'
+import { api } from '@/utils/axiosInstance'
+import { toast } from 'react-toastify'
 
 const ModeDropdown = () => {
   // States
@@ -41,12 +44,58 @@ const ModeDropdown = () => {
 
   const handleModeSwitch = (mode: Mode) => {
     handleClose()
+console.log("mode",mode);
 
     if (settings.mode !== mode) {
       updateSettings({ mode: mode })
     }
+      const body = {
+        // primaryColor: settings.primaryColor,
+        mode: mode,
+        // skin: settings.skin,
+        // semiDark: settings.semiDark,
+        // layout: settings.layout,
+        // navbarContentWidth: settings.navbarContentWidth,
+        // contentWidth: settings.contentWidth,
+        // footerContentWidth: settings.footerContentWidth
+      }
+  
+      api.post(`${endPointApi.themeSettingSave}`, body, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }).then((response) => {
+            if( response?.data?.message === 'Colors saved successfully') {
+              getThemeData()
+              toast.success('Colors saved successfully!')
+              // window.location.reload();
+            }
+          }).catch((error) => {
+            console.error('Error saving theme:', error);
+          })
   }
 
+   const getThemeData = () => {
+      // Fetch theme data logic here
+      api.get(`${endPointApi.getTheme}`)
+        .then(response => {
+          if(response.data.status === 200) {
+            updateSettings({
+              primaryColor: response?.data?.primaryColor || '#1F5634',
+              mode: response?.data?.mode || 'light',
+              skin: response?.data?.skin || 'default',
+              // semiDark: Boolean(response?.data?.semiDark) ?? false,
+              layout: response?.data?.layout || 'vertical',
+              // navbarContentWidth: response?.data?.navbarContentWidth || 'full',
+              contentWidth: response?.data?.contentWidth || 'compact',
+              // footerContentWidth: response?.data?.footerContentWidth || 'full'
+            })
+        }
+        })
+        .catch(error => {
+          console.error('Error fetching theme data:', error)
+        })
+    }
   const getModeIcon = () => {
     if (settings.mode === 'system') {
       return 'ri-macbook-line'
@@ -56,6 +105,11 @@ const ModeDropdown = () => {
       return 'ri-sun-line'
     }
   }
+
+    const saveTheame = () => {
+      // Save theme logic here
+    
+    }
 
   return (
     <>
