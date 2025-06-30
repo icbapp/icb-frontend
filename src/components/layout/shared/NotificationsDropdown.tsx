@@ -305,9 +305,9 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                   </>}
                   <Divider />
                   <div className='p-4'>
-                    <Button fullWidth variant='contained' size='small'>
+                    {/* <Button fullWidth variant='contained' size='small'>
                       {notificationsState.length > 0 ? "View All Notifications" : "No Notification"}
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               </ClickAwayListener>

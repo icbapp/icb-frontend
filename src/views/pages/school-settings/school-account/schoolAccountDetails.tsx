@@ -678,7 +678,7 @@ const SchoolAccountDetails = () => {
           {/* </form> */}
         </CardContent>
         <CardContent>
-          <Button variant='contained' type='submit'>Save School Info</Button>
+          <Button variant='contained' type='submit'>Save</Button>
         </CardContent>
       </form>
     </Card>

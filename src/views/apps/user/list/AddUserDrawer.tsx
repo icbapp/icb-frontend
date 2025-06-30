@@ -413,11 +413,11 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
             />
             {/* <FormHelperText>Select one or more roles</FormHelperText> */}
           </FormControl>
-          <div className='flex self-end items-center gap-4'>
+          <div className='flex self-center items-center gap-4'>
             <Button variant='contained' type='submit' disabled={!isValid && !selectedUser}>
               Submit
             </Button>
-            <Button variant='outlined' color='error' onClick={handleReset}>
+            <Button variant='outlined' color='secondary' onClick={handleReset}>
               Cancel
             </Button>
           </div>

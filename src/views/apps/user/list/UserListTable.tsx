@@ -1,7 +1,7 @@
 'use client'
 import '@tanstack/table-core';
 // React Imports
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, MouseEvent } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -66,7 +66,7 @@ import Loader from '@/components/Loader'
 import { tree } from 'next/dist/build/templates/app-page';
 import swal from 'sweetalert';
 import { toast } from 'react-toastify';
-import { Dialog, DialogActions, DialogContent, FormControl, InputLabel, MenuItem, Select, Skeleton, Tooltip } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, FormControl, InputLabel, Menu, MenuItem, Select, Skeleton, Tooltip } from '@mui/material';
 import DeleteGialog from '@/comman/deleteDialog/DeleteGialog';
 
 declare module '@tanstack/table-core' {
@@ -297,6 +297,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           <div className='flex items-center gap-3'>
             <Chip
               variant='tonal'
+              sx={{ fontWeight: 'bold' }}
               label={row.original.status}
               size='small'
               color={row.original.status === 'inactive' ? 'error' : userStatusObj[row.original.status]}
@@ -543,6 +544,17 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       });
   };
 
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const opens = Boolean(anchorEl)
+  
+   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+      setAnchorEl(event.currentTarget)
+    }
+  
+   const handleClose = () => {
+    setAnchorEl(null)
+  }
+
   return (
     <>
       {/* {loading && <Loader />} */}
@@ -611,102 +623,85 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         {/* <CardHeader title='Filters' className='pbe-4' /> */}
         <TableFilters role={role} setRole={setRole} status={status} setStatus={setStatus} />
         <Divider />
-        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5'>
-          {/* Left side (FormControl) */}
-          {loading ? (
-            <Skeleton
-              variant="rectangular"
-              height={40}
-              width={200}
-              className="rounded"
+      <div className='p-5'>
+        {loading ? (
+          <div className='flex justify-end flex-wrap gap-4'>
+            <Skeleton variant="rectangular" height={40} width={250} className="rounded" />
+            {hasPermission('user-management', 'user-management-add') && (
+              <Skeleton variant="rectangular" height={40} width={160} className="rounded" />
+            )}
+            {statuConnected === 1 && (
+              <Skeleton variant="rectangular" height={40} width={180} className="rounded" />
+            )}
+            <Skeleton variant="rectangular" height={40} width={120} className="rounded" />
+
+          </div>
+        ) : (
+          <div className='flex justify-end flex-wrap gap-4 items-center'>
+            <DebouncedInput
+              value={searchData ?? ''}
+              onChange={value => setSearchData(String(value))}
+              placeholder='Search User'
+              className='w-full sm:w-auto'
             />
-          ) : (
-            <FormControl size='small' className='w-[200px]'>
-              <InputLabel id='status-select'>User Status</InputLabel>
-              <Select
-                fullWidth
-                id='select-status'
-                value={statusUser}
-                onChange={(e:any) => handleStatusChange(e.target.value)}
-                label='User Status'
-                labelId='status-select'
-              >
-                <MenuItem value='active'>Active</MenuItem>
-                <MenuItem value='inactive'>Inactive</MenuItem>
-              </Select>
-            </FormControl>
-          )}
 
-
-          {/* Right side controls */}
-          {loading ? (
-            <div className='flex items-center gap-x-4 max-sm:gap-y-4 flex-col sm:flex-row w-full sm:w-auto'>
-              {/* Search Input Skeleton */}
-              <Skeleton
-                variant="rectangular"
-                height={40}
-                width={250}
-                className="rounded w-full sm:w-auto"
-              />
-
-              {/* Add New User Button Skeleton */}
-              {hasPermission('user-management', 'user-management-add') && (
-                <Skeleton
-                  variant="rectangular"
-                  height={40}
-                  width={160}
-                  className="rounded w-full sm:w-auto"
-                />
-              )}
-
-              {/* Sync with Microsoft Button Skeleton */}
-              {statuConnected === 1 && (
-                <Skeleton
-                  variant="rectangular"
-                  height={40}
-                  width={180}
-                  className="rounded w-full sm:w-auto"
-                />
-              )}
-            </div>
-          ) : (
-            <div className='flex items-center gap-x-4 max-sm:gap-y-4 flex-col sm:flex-row w-full sm:w-auto'>
-
-              <DebouncedInput
-                value={searchData ?? ''}
-                onChange={value => setSearchData(String(value))}
-                placeholder='Search User'
+            {hasPermission('user-management', 'user-management-add') && (
+              <Button
+                variant='contained'
+                onClick={() => {
+                  setSelectedUser(null);
+                  setAddUserOpen(true);
+                }}
                 className='w-full sm:w-auto'
-              />
-              {hasPermission('user-management', 'user-management-add') && (
-                <Button variant='contained' onClick={() => { setSelectedUser(null); setAddUserOpen(true); }} className='w-full sm:w-auto'>
-                  Add New User
+              >
+                Add New User
+              </Button>
+            )}
+
+            {statuConnected === 1 && (
+              <Tooltip title="Pull user from Microsoft Azure or Microsoft Entra" arrow>
+                <Button variant='contained' onClick={SyncMicrosoftUser} className='w-full sm:w-auto'>
+                  Sync with Microsoft
                 </Button>
-              )}
-              {statuConnected === 1 &&
-                <Tooltip title="Pull user from Microsoft Azure or Microsoft Entra" arrow>
-                  <Button variant='contained' onClick={SyncMicrosoftUser} className='w-full sm:w-auto'>
-                    Sync with Microsoft
-                  </Button>
-                </Tooltip>
-              }
-              {/* <div className='flex gap-2'>
-                    <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
-                      Sync with Microsoft
-                    </Button>
-                    <Button variant="outlined" onClick={() => SyncMicrosoftUser()}>
-                      Sync with Tass
-                    </Button>
-                    <Button variant="contained" className='max-sm:is-full' onClick={() => activeAllUser()}>
-                      Active Users
-                    </Button>
-                    <Button variant="contained" className='max-sm:is-full' onClick={() => inActiveAllUser()}>
-                      Inactive Users
-                    </Button>
-                  </div> */}
+              </Tooltip>
+            )}
+            <div>
+              <Button
+                variant='contained'
+                aria-haspopup='true'
+                onClick={handleClick}
+                aria-expanded={opens ? 'true' : undefined}
+                // endIcon={<i className='ri-upload-2-line' />}
+                aria-controls={opens ? 'user-view-overview-export' : undefined}
+              >
+                Action
+              </Button>
+              <Menu open={opens} anchorEl={anchorEl} onClose={handleClose} id='user-view-overview-export'  anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right', // anchor point on the button
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right', // menu aligns from its right side
+                }}>
+                <MenuItem onClick={() => handleStatusChange('active')}>
+                  <CustomAvatar color='success' skin="light" variant="rounded" size={25}>
+                    <i className={classnames('ri-user-follow-line', 'text-[16px]')} />
+                  </CustomAvatar>
+                  Active
+                </MenuItem>
+                <MenuItem onClick={() => handleStatusChange('inactive')}>
+                  <CustomAvatar color='error' skin="light" variant="rounded" size={25}>
+                    <i className={classnames('ri-user-line', 'text-[16px]')} />
+                  </CustomAvatar>
+                  Inactive
+                </MenuItem>
+              </Menu>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
+
 
         {loading ? (
           <div className="overflow-x-auto">
@@ -819,7 +814,6 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
             table.setPageIndex(0)
           }}
         />
-
       </Card>
 
       <AddUserDrawer
