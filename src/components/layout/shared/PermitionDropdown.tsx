@@ -36,13 +36,25 @@ const PermitionDropdown = () => {
 
     // Set default role on mount
     useEffect(() => {
-        if (!selectedRole && userPermissionStore.length > 0) {
-            if (userSelectedRoleStore.length === 0 && isRole(userPermissionStore[0])) {
-                setSelectedRole(userPermissionStore[0])
+        // if (!selectedRole && userPermissionStore.length > 0) {
+        //     if (userSelectedRoleStore.length === 0 && isRole(userPermissionStore[0])) {
+        //         setSelectedRole(userPermissionStore[0])
+        //     } else if (isRole(userSelectedRoleStore)) {
+        //         setSelectedRole(userSelectedRoleStore)
+        //     }
+        //     dispatch(setUserSelectedRoleInfo(userSelectedRoleStore));
+        // }
+        if (!selectedRole && Array.isArray(userPermissionStore) && userPermissionStore.length > 0) {
+            if (!userSelectedRoleStore || Object.keys(userSelectedRoleStore).length === 0) {
+                // Case 1: No role selected, use first from permission list
+                if (isRole(userPermissionStore[0])) {
+                    setSelectedRole(userPermissionStore[0]);
+                    dispatch(setUserSelectedRoleInfo(userPermissionStore[0]));
+                }
             } else if (isRole(userSelectedRoleStore)) {
-                setSelectedRole(userSelectedRoleStore)
+                // Case 2: Restore previously selected role
+                setSelectedRole(userSelectedRoleStore);
             }
-            dispatch(setUserSelectedRoleInfo(userSelectedRoleStore));
         }
     }, [userPermissionStore, selectedRole, dispatch]);
 
