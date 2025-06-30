@@ -257,7 +257,12 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
           <Controller
             name='email'
             control={control}
-            rules={{ required: 'Email is required' }}
+            rules={{ required: 'Email is required',
+               pattern: {
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: 'Invalid email address',
+            },
+             }}
             render={({ field }) => (
               <TextField
                 {...field}
