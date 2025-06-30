@@ -38,10 +38,10 @@ const RoleFormPage = () => {
   const router = useRouter()
   const { lang: locale } = useParams()
   const role_id = searchParams.get('role_id') || ''
-
+  const userSelectedRoleStore = useSelector((state: RootState) => state.userSelectedRole);
+  
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
-  const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const [roleId, setRoleId] = useState(0)
   const [validationErrors, setValidationErrors] = useState<{
@@ -167,7 +167,8 @@ const RoleFormPage = () => {
 
         // Fetch updated sidebar permissions
         const formData = new FormData();
-        formData.append('role_id', role_id);
+        // formData.append('role_id', role_id);
+        formData.append('role_id', userSelectedRoleStore.id);
         formData.append('tenant_id', loginStore.tenant_id);
         formData.append('school_id', loginStore.school_id);
         formData.append('user_id', loginStore.id);
