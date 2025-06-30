@@ -510,10 +510,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const handleStatusChange = async (value: 'active' | 'inactive') => {
     setStatusUser(value); // Update UI dropdown
-    setOpen(true)
     if (selectedUserIds.length === 0) {
       toast.warning("Please select at least one user.");
       setStatusUser('')
+    }else {
+      setOpen(true)
     }
   };
 
