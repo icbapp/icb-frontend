@@ -26,6 +26,8 @@ import type { Locale } from '@configs/i18n'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
 import { toast } from 'react-toastify'
+import SaveButton from '@/comman/button/SaveButton'
+import CancelButtons from '@/comman/button/CancelButtons'
 
 type Data = {
   full_name: string
@@ -128,29 +130,6 @@ const AccountDetails = () => {
     setFormData({ ...formData, [field]: value })
   }
 
-  const handleFileInputChange = (file: ChangeEvent) => {
-
-    const { files } = file.target as HTMLInputElement
-
-    if (files && files.length !== 0) {
-      const selectedFile = files[0]
-
-      // preview image
-      const reader = new FileReader()
-      reader.onload = () => setImgSrc(reader.result as string)
-      reader.readAsDataURL(selectedFile)
-
-      // store the actual file instead of base64 string
-      setFileInput(selectedFile as any) // ❗ Type assertion since `fileInput` is string
-    }
-  }
-
-
-  const handleFileInputReset = () => {
-    setFileInput('')
-    setImgSrc('/images/avatars/1.png')
-  }
-
   const storedSchool = localStorage.getItem('user')
   const schoolDetails = storedSchool ? JSON.parse(storedSchool) : {}
 
@@ -223,13 +202,10 @@ const AccountDetails = () => {
         error.response?.data?.message ||
         error.response?.data?.errors?.username?.[0] ||
         'Something went wrong'
-
-      toast.error(message)
-
+        toast.error(message)
     }
     finally {
       setLoading(false)
-
     }
   }
 
@@ -241,7 +217,6 @@ const AccountDetails = () => {
       return null
     }
   }
-
 
   useEffect(() => {
     getProfile()
@@ -282,7 +257,6 @@ const AccountDetails = () => {
             onSubmit(formData)
           }}
         >
-
           <Grid container spacing={5}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
@@ -384,18 +358,11 @@ const AccountDetails = () => {
             </Grid> */}
 
             <Grid size={{ xs: 12 }} className='flex gap-4 flex-wrap pbs-6'>
-              <Button variant='contained' type='submit'>
-
-                Save Changes
-              </Button>
-              <Button variant='outlined' type='reset' color='secondary' onClick={() => {
-                // setFormData(initialData);
-                // setRole([]);
+              <SaveButton name={'Save'}  type='submit' disabled={false} />
+              <CancelButtons name='Cancel' onClick={() => {
                 const url = getLocalizedUrl('/dashboards/academy/', locale as Locale);
                 router.push(url);
-              }}>
-                Cancel
-              </Button>
+              }}/>
             </Grid>
           </Grid>
         </form>
@@ -405,7 +372,3 @@ const AccountDetails = () => {
 }
 
 export default AccountDetails
-function getProfile() {
-  throw new Error('Function not implemented.')
-}
-

@@ -29,6 +29,9 @@ import { api } from '@/utils/axiosInstance'
 import { saveToken } from '@/utils/tokenManager'
 import { setSidebarPermissionInfo } from '@/redux-store/slices/sidebarPermission'
 import { setUserPermissionInfo } from '@/redux-store/slices/userPermission'
+import SaveButton from '@/comman/button/SaveButton'
+import CancelButtons from '@/comman/button/CancelButtons'
+import { useSettings } from '@/@core/hooks/useSettings'
 
 type ErrorType = { message: string[] }
 
@@ -39,6 +42,7 @@ const RoleFormPage = () => {
   const { lang: locale } = useParams()
   const role_id = searchParams.get('role_id') || ''
   const userSelectedRoleStore = useSelector((state: RootState) => state.userSelectedRole);
+  const { settings } = useSettings()
   
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
@@ -205,9 +209,10 @@ const RoleFormPage = () => {
   }
 
   const ACTION_ORDER = ["view", "add", "edit", "delete"];
+  
   return (
     <div>
-      {/* Role / {roleId !== 0 ? 'Edit Role' : 'Add Role'} */}
+      <p style={{ color: settings.primaryColor }} className="font-bold">Role / {roleId !== 0 ? 'Edit Role' : 'Add Role'}</p>
       <Card className=''>
         <CardContent>
           <Typography variant='h4' className='text-center mb-2'>
@@ -304,12 +309,8 @@ const RoleFormPage = () => {
               <hr className='border-t mb-4' />
 
               <div className='flex justify-center gap-4 mt-6'>
-                <Button variant='contained' type='submit'>
-                  {roleId !== 0 ? 'Update' : 'Submit'}
-                </Button>
-                <Button variant='outlined' color='secondary' onClick={handleCancelRole}>
-                  Cancel
-                </Button>
+                <SaveButton name={roleId !== 0 ? 'Update' : 'Save'}  type='submit' disabled={false} />
+                <CancelButtons name='Cancel' onClick={handleCancelRole}/>
               </div>
             </form>
           )}

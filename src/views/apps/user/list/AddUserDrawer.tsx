@@ -23,6 +23,8 @@ import { RootState } from '@/redux-store'
 // Types Imports
 import type { UsersType } from '@/types/apps/userTypes'
 import { toast } from 'react-toastify'
+import SaveButton from '@/comman/button/SaveButton'
+import CancelButtons from '@/comman/button/CancelButtons'
 
 type Props = {
   open: boolean
@@ -73,7 +75,6 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
     },
     mode: 'onChange',
     shouldUnregister: true
-
   })
 
  useEffect(() => {
@@ -414,12 +415,11 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
             {/* <FormHelperText>Select one or more roles</FormHelperText> */}
           </FormControl>
           <div className='flex self-center items-center gap-4'>
-            <Button variant='contained' type='submit' disabled={!isValid && !selectedUser}>
+            {/* <Button variant='contained' type='submit' disabled={!isValid && !selectedUser}>
               Submit
-            </Button>
-            <Button variant='outlined' color='secondary' onClick={handleReset}>
-              Cancel
-            </Button>
+            </Button> */}
+            <SaveButton name="Save"  type='submit' disabled={!isValid && !selectedUser}/>
+            <CancelButtons name='Cancel' onClick={handleReset}/>
           </div>
         </form>
       </div>

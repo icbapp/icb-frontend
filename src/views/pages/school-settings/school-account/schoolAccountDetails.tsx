@@ -502,7 +502,7 @@ const SchoolAccountDetails = () => {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="body2" sx={{ mb: 1 }}>
-                Favicion Image:
+                Favicon Image:
               </Typography>
               <div className="flex flex-col gap-2">
 
