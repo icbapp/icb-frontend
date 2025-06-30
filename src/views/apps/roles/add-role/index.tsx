@@ -76,8 +76,6 @@ const RoleFormPage = () => {
   }, [])
 
   useEffect(() => {
-
-
     fetchPermissions()
   }, [])
   const fetchPermissions = async () => {
@@ -158,15 +156,6 @@ const RoleFormPage = () => {
 
     try {
       setLoading(true);
-      // if (!hasRefreshedToken.current) {
-      //   hasRefreshedToken.current = true;
-      //   try {
-      //     const res = await api.post('auth/refresh');
-      //     saveToken(res.data.access_token);
-      //   } catch (err) {
-      //     console.error('Token refresh error:', err);
-      //   }
-      // }
       const response = await api.post('/roles', payload);
 
       if (response.data.success) {
@@ -191,7 +180,7 @@ const RoleFormPage = () => {
               },
             });
             dispatch(setSidebarPermissionInfo(res.data));
-            dispatch(setUserPermissionInfo(res.data));
+            // dispatch(setUserPermissionInfo(res.data));
           } catch (err: any) {
             console.error('Permission error:', err?.response || err);
             toast.error('Failed to fetch permissions.');
@@ -206,7 +195,6 @@ const RoleFormPage = () => {
     } finally {
       setLoading(false);
     }
-
   }
 
   const handleCancelRole = () => {

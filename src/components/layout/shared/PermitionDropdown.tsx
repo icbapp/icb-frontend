@@ -81,7 +81,7 @@ const PermitionDropdown = () => {
             {!loginStore?.super_admin && (
                 <Autocomplete<Role>
                     disablePortal
-                    options={userPermissionStore}
+                    options={Array.isArray(userPermissionStore) ? userPermissionStore : []}
                     getOptionLabel={(option) => option.name}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     value={selectedRole}

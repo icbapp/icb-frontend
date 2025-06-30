@@ -289,7 +289,6 @@ const RolesTable = () => {
       )
       setAvailableRoles(uniqueRoles)
       setData(users)
-      // dispatch(setSidebarPermissionInfo(users))
       setFilteredData(users)
       setLoading(false)
 
