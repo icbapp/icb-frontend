@@ -214,7 +214,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
             primaryColor: response?.data?.primaryColor || '#1F5634',
             mode: response?.data?.mode || 'light',
             skin: response?.data?.skin || 'default',
-            // semiDark: Boolean(response?.data?.semiDark) ?? false,
+            semiDark: Boolean(response?.data?.semiDark) || true,
             layout: response?.data?.layout || 'vertical',
             // navbarContentWidth: response?.data?.navbarContentWidth || 'full',
             contentWidth: response?.data?.contentWidth || 'compact',
@@ -410,7 +410,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                   </label>
                   <Switch
                     id='customizer-semi-dark'
-                    checked={settings.semiDark === true}
+                    checked={settings.semiDark == true}
                     onChange={() => handleChange('semiDark', !settings.semiDark)}
                   />
                 </div>
