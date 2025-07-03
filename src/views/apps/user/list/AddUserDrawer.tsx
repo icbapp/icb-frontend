@@ -192,7 +192,7 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
       {loading && <Loader />}
 
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>{selectedUser ? 'Edit' : 'Add'} User00</Typography>
+        <Typography variant='h5'>{selectedUser ? 'Edit' : 'Add'} User</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
