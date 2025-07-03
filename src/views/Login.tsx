@@ -23,17 +23,10 @@ import type { SubmitHandler } from 'react-hook-form'
 import type { InferInput } from 'valibot'
 import classnames from 'classnames'
 
-import Loader from '@/components/Loader'
-
 // Type Imports
 import type { Mode } from '@core/types'
 import type { Locale } from '@/configs/i18n'
 import axios from 'axios'
-
-// Component Imports
-// import Logo from '@components/layout/shared/Logo'
-
-// Config Imports
 
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
@@ -44,18 +37,15 @@ import { getLocalizedUrl } from '@/utils/i18n'
 import { saveToken } from '@/utils/tokenManager'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
-import { Checkbox, FormControlLabel } from '@mui/material'
+import { Checkbox, FormControlLabel, Skeleton } from '@mui/material'
 import { toast } from 'react-toastify'
 import { setLoginInfo } from '@/redux-store/slices/login'
 import { setUserPermissionInfo } from '@/redux-store/slices/userPermission'
-import { clearSidebarPermission } from '@/redux-store/slices/sidebarPermission'
 import endPointApi from '@/utils/endPointApi'
 import showMsg from '@/utils/showMsg'
 import { api } from '@/utils/axiosInstance'
-import themeConfig from '@/configs/themeConfig'
 import { setAdminInfo } from '@/redux-store/slices/admin'
 import ToastsCustom from '@/comman/toastsCustom/LoginToasts'
-
 
 type ErrorType = {
   message: string[]
@@ -104,7 +94,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const { settings } = useSettings()
   const [shouldRender, setShouldRender] = useState(false)
 
-    useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem('auth_token')
 
     if (token) {
@@ -213,7 +203,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   return (
     <div className='flex bs-full justify-center'
     >
-      {loading && <Loader />}
+      {/* {loading && <Loader />} */}
       <div
         style={{
           width: '100vw',
@@ -239,10 +229,23 @@ const Login = ({ mode }: { mode: Mode }) => {
         </div> */}
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset]'>
           <div className='self-center m-5 "w-[50px]"'>
-            {adminStore?.l_logo &&
-              <img src={adminStore?.l_logo || logo}
-                className='max-bs-[73px] max-is-full bs-auto'
-                alt='School Logo' />}
+            {loading || !adminStore?.l_logo ? (
+              <Skeleton
+                variant="rectangular"
+                width={200}
+                height={50}
+                sx={{ borderRadius: '8px' }}
+              />
+            ) : (
+              <img
+                src={adminStore?.l_logo}
+                onError={(e) => {
+                  e.currentTarget.onerror = null // prevent infinite loop
+                  e.currentTarget.src = '/default-logo.png' // your fallback image path
+                }}
+                className="max-bs-[73px] max-is-full bs-auto"
+              />
+            )}
           </div>
 
           <div>
