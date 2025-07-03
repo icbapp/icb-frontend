@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const apiAdminInstance = axios.create({
-  baseURL: 'https://petrolpe.com/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://petrolpe.com/api',
   headers: {
     'Content-Type': 'application/json'
   }

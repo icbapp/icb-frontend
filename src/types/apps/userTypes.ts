@@ -2,6 +2,8 @@
 import type { ThemeColor } from '@core/types'
 
 export type UsersType = {
+    attachments: any
+    attachments(attachments: any): unknown
   id: number
   role: string
   email: string

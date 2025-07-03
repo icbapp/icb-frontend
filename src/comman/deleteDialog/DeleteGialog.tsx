@@ -46,14 +46,16 @@ const DeleteGialog = ({ open, setOpen, type, onConfirm, selectedDeleteStatus }: 
             })}
           >
             <Typography variant='h4'>
-              {type === 'delete-user' && selectedDeleteStatus === '1' ? (
-                <Typography variant='h4'>
-                  Are you sure that you want to activate this user?
-                </Typography>
-              ) : (
-                <Typography variant='h4'>
-                  Are you sure that you want to delete this user?
-                </Typography>
+              {type === 'delete-user' && (
+                selectedDeleteStatus === '1' ? (
+                  <Typography variant='h4'>
+                    Are you sure that you want to activate this user?
+                  </Typography>
+                ) : (
+                  <Typography variant='h4'>
+                    Are you sure that you want to delete this user?
+                  </Typography>
+                )
               )}
               {type === 'delete-account' && 'Are you sure you want to deactivate your account?'}
               {type === 'unsubscribe' && 'Are you sure to cancel your subscription?'}
@@ -63,9 +65,6 @@ const DeleteGialog = ({ open, setOpen, type, onConfirm, selectedDeleteStatus }: 
             </Typography>
             {type === 'suspend-account' && (
               <Typography color='text.primary'>You won&#39;t be able to revert user!</Typography>
-            )}
-            {type === 'delete-order' && (
-              <Typography color='text.primary'>You won&#39;t be able to revert order!</Typography>
             )}
             {type === 'delete-customer' && (
               <Typography color='text.primary'>You won&#39;t be able to revert customer!</Typography>
@@ -77,7 +76,7 @@ const DeleteGialog = ({ open, setOpen, type, onConfirm, selectedDeleteStatus }: 
             {type === 'suspend-account'
               ? 'Yes, Suspend User!'
               : type === 'delete-order'
-                ? 'Yes, Delete Order!'
+                ? 'Yes, Delete!'
                 : type === 'delete-customer'
                   ? 'Yes, Delete Customer!'
                   : 'Yes'}

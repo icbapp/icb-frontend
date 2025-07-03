@@ -15,6 +15,10 @@ export interface EndPointApi {
     //School-settings
     //Email
     postEmailSetting: string
+    getAnnouncements: string
+    addAnnouncements: string
+    deleteAnnouncements: string,
+    deleteImageAnnouncements: string
 }
 
 // Define and export the API endpoint object
@@ -34,6 +38,11 @@ const endPointApi: EndPointApi = {
     //School-settings
     //Email
     postEmailSetting: 'email-setting',
+
+    getAnnouncements: 'announcements-get',
+    addAnnouncements: 'announcements-add',
+    deleteAnnouncements: 'announcements-delete',
+    deleteImageAnnouncements: 'announcements-delete-image',
 };
 
 export default endPointApi;

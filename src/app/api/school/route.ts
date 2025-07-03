@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     formData.append('type', String(type))
 
     // 🔁 Forward the request to external API
-    const response = await fetch('https://petrolpe.com/api/', {
+    const response = await fetch(`${process.env.API_URL}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'

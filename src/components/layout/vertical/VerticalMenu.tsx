@@ -256,6 +256,18 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
                           {dictionary['navigation'].roles}
                         </MenuItem>
                       )
+                    case 'announcement':
+                      return (
+                        <MenuItem
+                          key={item.menu_id}
+                          href={`/${locale}/apps/announcement`}
+                          icon={<i className='ri-speaker-line' />}
+                          exactMatch={false}
+                          activeUrl='/apps/announcement'
+                        >
+                          {dictionary['navigation'].announcements}
+                        </MenuItem>
+                      )
 
                     default:
                       return null
