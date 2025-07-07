@@ -2,7 +2,6 @@
 
 import '@tanstack/table-core'
 import { useState, useMemo, useEffect, useRef } from 'react'
-import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import swal from 'sweetalert';
 import {
@@ -33,7 +32,6 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
-import type { ThemeColor } from '@core/types'
 import type { UsersType } from '@/types/apps/userTypes'
 import type { Locale } from '@configs/i18n'
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -43,11 +41,11 @@ import { api } from '@/utils/axiosInstance'
 import tableStyles from '@core/styles/table.module.css'
 import { useSettings } from '@core/hooks/useSettings'
 import { RoleType } from '@/types/apps/roleType'
-import Loader from '@/components/Loader'
 import { toast } from 'react-toastify'
 import { RootState } from '@/redux-store'
 import { saveToken } from '@/utils/tokenManager'
 import { useSelector } from 'react-redux'
+import DeleteGialog from '@/comman/dialog/DeleteDialog';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -69,7 +67,7 @@ interface Permissions {
   sub_menus: SubMenus[]
 }
 
-type UsersTypeWithAction = RoleType & { action?: string }
+type UsersTypeWithAction = RoleType & { action?: string; user_count: number }
 
 const Icon = styled('i')({})
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -109,6 +107,10 @@ const RolesTable = () => {
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [availableRoles, setAvailableRoles] = useState<string[]>([])
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null);
+  const [selectedDeleteIdStatus, setSelectedDeleteStatus] = useState<string | null>(null);
+
   const { settings } = useSettings()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -227,7 +229,7 @@ const RolesTable = () => {
           {showDeleteRoleButton && (
             <IconButton size='small'
               disabled={['super admin', 'default'].includes(row.original.title?.toLowerCase())}
-              onClick={() => handleDeleteRole(row.original.id, 0)}>
+              onClick={() => {setDeleteOpen(true); handleOpenDeleteDialog(row.original.id, 0)}}>
               <i className='ri-delete-bin-7-line text-textSecondary' />
             </IconButton>
           )}
@@ -314,64 +316,33 @@ const RolesTable = () => {
     fetchUsers()
   }, [])
 
-  const handleDeleteRole = async (roleId: number, status: boolean) => {
-    swal({
-      title: "Are you sure?",
-      text: "Are you sure that you want to delete this role?",
-      icon: "warning",
-      buttons: {
-        cancel: {
-          text: "No",
-          visible: true,
-          closeModal: true,
-        },
-        confirm: {
-          text: "Yes",
-          closeModal: false, // keep popup open until API finishes
-        },
-      },
-      dangerMode: true,
-    }).then(async (willDelete) => {
-      if (willDelete) {
-        try {
-          setLoading(true);
-          const body = {
-            role_id: roleId,
-            tenant_id: loginStore.tenant_id,
-            school_id: loginStore.school_id,
-            status: status
-          }
-          const response = await api.post(`roles-status-update`, body);
+  const handleOpenDeleteDialog = (id: number, status: string) => {
+    setSelectedDeleteId(id);
+    setSelectedDeleteStatus(status)
+  }; 
 
-          if (response.data.status == 200) {
-            setData(prev => prev.filter(user => Number(user.id) !== roleId));
-            setFilteredData(prev => prev.filter(user => Number(user.id) !== roleId));
-            toast.success(response.data.message);
-            fetchUsers()
-          }
-          else {
-            toast.error(response.data.message);
-          }
-          setLoading(false);
+  const deleteUser = async () => {
+   try{
+        const body = {
+          role_id: selectedDeleteId,
+          tenant_id: loginStore.tenant_id,
+          school_id: loginStore.school_id,
+          status: selectedDeleteIdStatus
+        }
+        const response = await api.post(`roles-status-update`, body);
 
-        } catch (error: any) {
-          toast.error(error?.response?.data?.message || 'Error deleting role');
-          console.error('Error deleting role:', error);
-
-        } finally {
-          setLoading(false);
-          if (swal && typeof swal.close === 'function') {
-            swal.close(); // Close the popup manually
-          }
+        if (response.data.status == 200) {
+          // toast.success(response.data.message);
           fetchUsers()
         }
-      } else {
-        console.log("User canceled.");
+      } catch (error: any) {
+        return null
+      } finally {
       }
-    });
   }
 
   return (
+    <>
     <Card>
       {/* {loading && <Loader />} */}
 
@@ -399,6 +370,7 @@ const RolesTable = () => {
               localStorage.removeItem('editRoleData');
               router.replace(getLocalizedUrl('/apps/roles/add-role', locale as Locale));
             }}
+            startIcon={<i className='ri-add-line' />}
           >
             Add Role
           </Button>
@@ -474,7 +446,11 @@ const RolesTable = () => {
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
     </Card>
+      {deleteOpen && (
+        <DeleteGialog open={deleteOpen} setOpen={setDeleteOpen} type={'delete-role'} onConfirm={deleteUser} selectedDeleteStatus='' />
+      )}
 
+    </>
   )
 }
 

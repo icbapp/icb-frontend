@@ -49,9 +49,8 @@ type RoleOption = {
   name: string
 }
 
-const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUser }: Props) => {
+const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers, selectedUser }: Props) => {
 
-  const [role, setRole] = useState<number[]>([])
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
   const [loading, setLoading] = useState(false)
   const [suggestName, setSuggestedName] = useState<string[]>([])
@@ -71,46 +70,48 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
       password: '',
       confirmPassword: '',
       role: [],
-      phone:''
+      phone: ''
     },
     mode: 'onChange',
     shouldUnregister: true
   })
 
- useEffect(() => {
-  if (editUserData) {
-    resetForm({
-      fullName: editUserData.full_name || '',
-      username: editUserData.username || '',
-      email: editUserData.email || '',
-      password: '',
-      confirmPassword: '',
-      role: editUserData?.roles?.map((r: any) => r.id) || [],
-      phone: editUserData.phone || ''
-    })
-  } else {
-    resetForm()
-    setRole([])
-  }
-}, [editUserData, resetForm])
+  useEffect(() => {
+    if (editUserData) {
+      resetForm({
+        fullName: editUserData.full_name || '',
+        username: editUserData.username || '',
+        email: editUserData.email || '',
+        password: '',
+        confirmPassword: '',
+        role: editUserData?.roles?.map((r: any) => r.id) || [],
+        phone: editUserData.phone || ''
+      })
+    } else {
+      resetForm()
+    }
+  }, [editUserData, resetForm])
 
   const fetchRoles = async () => {
     try {
       const response = await api.get('roles')
 
+      // const roles: RoleOption[] = response.data.data
+      //   .filter((r: any) =>
+      //     selectedUser
+      //       ? r.name !== 'Super Admin'
+      //       : r.name !== 'default' && r.name !== 'Super Admin'
+      //   )
+      //   .map((r: any) => ({ id: r.id, name: r.name }));
       const roles: RoleOption[] = response.data.data
-        .filter((r: any) =>
-          selectedUser
-            ? r.name !== 'Super Admin'
-            : r.name !== 'default' && r.name !== 'Super Admin'
-        )
+        .filter((r: any) => r.name !== 'Default' && r.name !== 'Super Admin')
         .map((r: any) => ({ id: r.id, name: r.name }));
-          setRolesList(roles)
-        } catch (err) {
-          return null
-        }
+      setRolesList(roles)
+    } catch (err) {
+      return null
+    }
   }
-  
+
   useEffect(() => {
     fetchRoles()
   }, [selectedUser])
@@ -142,17 +143,17 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
 
       if (response.data?.status === 200) {
         toast.success(response.data.message)
-          resetForm({
-      fullName: '',
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      role: [],
-      phone:''
-    })
+        resetForm({
+          fullName: '',
+          username: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          role: [],
+          phone: ''
+        })
         fetchUsers()
-        
+
       }
     } catch (error: any) {
       toast.error(error.response.data.message)
@@ -171,7 +172,7 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
       password: '',
       confirmPassword: '',
       role: [],
-      phone:''
+      phone: ''
     })
     handleClose()
   }
@@ -258,12 +259,13 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
           <Controller
             name='email'
             control={control}
-            rules={{ required: 'Email is required',
-               pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: 'Invalid email address',
-            },
-             }}
+            rules={{
+              required: 'Email is required',
+              pattern: {
+                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: 'Invalid email address',
+              },
+            }}
             render={({ field }) => (
               <TextField
                 {...field}
@@ -277,7 +279,7 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
               />
             )}
           />
-         <Controller
+          <Controller
             name='phone'
             control={control}
             rules={{
@@ -333,7 +335,7 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
               />
             )}
           />
-        
+
           <FormControl fullWidth>
             <Controller
               name="role"
@@ -361,7 +363,7 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
                               key={roleId}
                               label={roleName}
                               size="small"
-                             onDelete={() => {
+                              onDelete={() => {
                                 if (roleName !== 'default') {
                                   field.onChange(field.value.filter((id: number) => id !== roleId));
                                 }
@@ -389,24 +391,18 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
                       },
                     }}
                   >
-                  {rolesList
-                  .filter((item) => {
-                    // Hide 'default' role when selectedUser exists
-                    if (item.name === 'default' && selectedUser) return false;
-                    return true;
-                  })
-                  .map((item) => (
-                    <MenuItem key={item.id} value={item.id}>
-                      <Checkbox checked={field.value?.includes(item.id)} />
-                      <ListItemText primary={item.name} />
-                    </MenuItem>
-                  ))}
-                   {/* {rolesList.map((item) => (
-                      <MenuItem key={item.id} value={item.id}>
-                        <Checkbox checked={field.value?.includes(item.id)} />
-                        <ListItemText primary={item.name} />
-                      </MenuItem>
-                    ))} */}
+                    {rolesList
+                      .filter((item) => {
+                        // Hide 'default' role when selectedUser exists
+                        if (item.name === 'default' && selectedUser) return false;
+                        return true;
+                      })
+                      .map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          <Checkbox checked={field.value?.includes(item.id)} />
+                          <ListItemText primary={item.name} />
+                        </MenuItem>
+                      ))}
                   </Select>
                   {/* <FormHelperText>{errors.role?.message}</FormHelperText> */}
                 </FormControl>
@@ -418,8 +414,8 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers,selectedUse
             {/* <Button variant='contained' type='submit' disabled={!isValid && !selectedUser}>
               Submit
             </Button> */}
-            <SaveButton name="Save"  type='submit' disabled={!isValid && !selectedUser}/>
-            <CancelButtons name='Cancel' onClick={handleReset}/>
+            <SaveButton name="Save" type='submit' disabled={!isValid && !selectedUser} />
+            <CancelButtons name='Cancel' onClick={handleReset} />
           </div>
         </form>
       </div>

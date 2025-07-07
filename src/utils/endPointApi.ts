@@ -12,9 +12,18 @@ export interface EndPointApi {
     themeSettingSave: string;
     getTheme: string;
        
+    //User Management
+    getUser: string
+    postMultipleStatusChange: string
+    postMultipleRoleChange: string
+    
     //School-settings
     //Email
     postEmailSetting: string
+    //Microsoft
+    microsoftAuthTokenValide: string
+    microsoftFetchUsers: string
+
     getAnnouncements: string
     addAnnouncements: string
     deleteAnnouncements: string,
@@ -35,9 +44,18 @@ const endPointApi: EndPointApi = {
     //Theme save
     themeSettingSave: 'theme-colors-fonted-add',
     getTheme: 'theme-colors-fonted-get',
+
+    //User Management
+    getUser: 'user-get',
+    postMultipleStatusChange: 'users/status-toggle-multiple',
+    postMultipleRoleChange: 'users/roles-toggle-multiple',
+
     //School-settings
     //Email
     postEmailSetting: 'email-setting',
+    //Microsoft
+    microsoftAuthTokenValide: '/ms-auth-token/school-token-valide',
+    microsoftFetchUsers: 'auth/microsoft/fetch-users',
 
     getAnnouncements: 'announcements-get',
     addAnnouncements: 'announcements-add',

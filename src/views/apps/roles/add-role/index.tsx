@@ -46,7 +46,6 @@ const RoleFormPage = () => {
   
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
-  const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const [roleId, setRoleId] = useState(0)
   const [validationErrors, setValidationErrors] = useState<{
     roleName?: string;

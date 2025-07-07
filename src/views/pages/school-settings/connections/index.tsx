@@ -19,6 +19,7 @@ import { toast } from 'react-toastify'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
 import { Skeleton } from '@mui/material'
+import ConfirmDialog from '@/comman/dialog/ConfirmDialog'
 
 type ConnectedAccountsType = {
   title: string
@@ -101,10 +102,11 @@ const socialAccountsArr: SocialAccountsType[] = [
 ]
 
 const Connections = () => {
-    const loginStore = useSelector((state: RootState) => state.login);
+  const loginStore = useSelector((state: RootState) => state.login);
   
-const [statuConnected, setStatusConnected] = useState(0);
+  const [statuConnected, setStatusConnected] = useState(0);
   const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const redirectTo = async() =>{
     const response = await api.get('ms-auth/redirect', {
@@ -116,15 +118,20 @@ const [statuConnected, setStatusConnected] = useState(0);
     // window.open(response.data.redirect_url);
     window.location.href = response.data.redirect_url;
   }
+
+  const handleDelete = () =>{
+    setOpen(true)
+  }
+
   const deleteTo = async() =>{
     const response = await api.delete('ms-auth-token/school-token-delete');
     // window.open(response.data.redirect_url);
     if(response.data.status == 200) {
       setStatusConnected(0);
       toast.success(response.data.message)  
+      setOpen(false)
     }
   }
-
 
   const queryParams = window.location.search; // Get the entire query string after '?'
   const codeStartIndex = queryParams.indexOf('code=') + 5; // Get index after '?code='
@@ -136,10 +143,8 @@ const [statuConnected, setStatusConnected] = useState(0);
     // Remove the unwanted part '?code='
   const cleanCode = decodedCode.replace('?code=', '');
 
-
-
-    const url = new URL(window.location.href); // Get the current URL
-const params = new URLSearchParams(url.search); // Get query parameters
+  const url = new URL(window.location.href); // Get the current URL
+  const params = new URLSearchParams(url.search); // Get query parameters
 
 // // Extract specific query parameters
 const code = params.get('code');
@@ -170,10 +175,9 @@ const sessionState = params.get('session_state');
         setLoading(false);
       }
     };
-fetchData()
+  fetchData()
   }, []); 
 
-  
   useEffect(() => {
     api.get('/ms-auth-token/school-token-valide')
     .then((response) => {
@@ -182,6 +186,7 @@ fetchData()
   }, [cleanCode]);
 
   return (
+    <>
     <Card>
             {/* {loading && <Loader />} */}
       
@@ -246,7 +251,7 @@ fetchData()
                         variant='outlined'
                         color={item.title === 'Microsoft' && statuConnected == 1 ? 'error' : 'secondary'}
                         disabled={item.title !== 'Microsoft' && !item.isConnected} // Disable all except Microsoft when not connected
-                        onClick={item.title === 'Microsoft' && !item.isConnected && statuConnected !== 1 ? redirectTo : deleteTo}
+                        onClick={item.title === 'Microsoft' && !item.isConnected && statuConnected !== 1 ? redirectTo : handleDelete}
                       >
                         <i
                           className={item.title === 'Microsoft' && statuConnected == 1 ? 'ri-delete-bin-line' : 'ri-link'}
@@ -258,6 +263,18 @@ fetchData()
         </Grid>
       </Grid>
     </Card>
+    {open &&
+     (
+      <ConfirmDialog
+        open={open}
+        setOpen={setOpen}
+        type={'microsoft-disconnect'}
+        onConfirm={deleteTo}
+        setRoleName={() => {}}
+        setSelectedUserIds={() => {}}
+      />
+      )}
+    </>
   )
 }
 

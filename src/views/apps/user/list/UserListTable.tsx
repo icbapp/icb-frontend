@@ -3,10 +3,6 @@ import '@tanstack/table-core';
 // React Imports
 import { useEffect, useState, useMemo, MouseEvent } from 'react'
 
-// Next Imports
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
-
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -47,27 +43,23 @@ import type { RankingInfo } from '@tanstack/match-sorter-utils'
 // Type Imports
 import type { ThemeColor } from '@core/types'
 import type { UsersType } from '@/types/apps/userTypes'
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import TableFilters from './TableFilters'
 import AddUserDrawer from './AddUserDrawer'
-import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
-import { api } from '@/utils/axiosInstance';
-import Loader from '@/components/Loader'
-import { tree } from 'next/dist/build/templates/app-page';
-import swal from 'sweetalert';
 import { toast } from 'react-toastify';
-import { Dialog, DialogActions, DialogContent, FormControl, InputLabel, Menu, MenuItem, Select, Skeleton, Tooltip } from '@mui/material';
-import DeleteGialog from '@/comman/deleteDialog/DeleteGialog';
+import { Dialog, DialogActions, DialogContent, Menu, MenuItem, Skeleton, Stack, Tooltip } from '@mui/material';
+import DeleteGialog from '@/comman/dialog/DeleteDialog';
+import ConfirmDialog from '@/comman/dialog/ConfirmDialog';
+import { api } from '@/utils/axiosInstance';
+import endPointApi from '@/utils/endPointApi';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -84,27 +76,10 @@ type UsersTypeWithAction = UsersType & {
   name: string
 }
 
-type UserRoleType = {
-  [key: string]: { icon: string; color: string }
-}
-
 type UserStatusType = {
   [key: string]: ThemeColor
 }
 
-type UserCount = {
-  active_count: number;
-  inactive_count: number;
-  [key: string]: any; // add more properties if needed
-};
-
-// interface OptionMenuItemType {
-//   text: string;
-//   icon?: string;
-//   // ...other properties...
-//   onClick?: () => void; // Add this line
-// }
-// Styled Components
 const Icon = styled('i')({})
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -149,7 +124,6 @@ const DebouncedInput = ({
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
 }
 
-
 const userStatusObj: UserStatusType = {
   active: 'success',
   pending: 'warning',
@@ -164,13 +138,15 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const permissions = useSelector((state: RootState) => state.sidebarPermission)
   const adminStore = useSelector((state: RootState) => state.admin)
   const [statuConnected, setStatusConnected] = useState(0);
+  const [roleName, setRoleName] = useState<{ id: string | number; name: string }[]>([]);
 
   useEffect(() => {
-    api.get('/ms-auth-token/school-token-valide')
+    api.get(`${endPointApi.microsoftAuthTokenValide}`)
       .then((response) => {
         setStatusConnected(response.data.satus);
       })
   }, []);
+
   const hasPermission = (menuName: string, subMenuName: string) => {
     const menus = (permissions as any).menus;
     const menu = menus?.find((m: any) => m.menu_name === menuName && m.checked);
@@ -186,18 +162,63 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [searchData, setSearchData] = useState<string>('')
   const [selectedUser, setSelectedUser] = useState<any>(null); // ideally type this
   const [loading, setLoading] = useState(false)
-  const [totalRows, setTotalRows] = useState<UserCount>({ active_count: 0, inactive_count: 0 });
-  const [paginationInfo, setPaginationInfo] = useState({
-    page: 0,
-    perPage: 10
+  const [totalRows, setTotalRows] = useState(0);
+  const [totalUser, setTotalUser] = useState<{ active_count: number; inactive_count: number }>({
+    active_count: 0,
+    inactive_count: 0
   })
+
+  // const [paginationInfo, setPaginationInfo] = useState({
+  //   page: 0,
+  //   perPage: 10
+  // })
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const handleChangePage = (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
+    setPage(newPage); // pageIndex will trigger useEffect to fetch
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to first page
+  };
+
   const [open, setOpen] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<(string | number)[]>([]);
   const [statusUser, setStatusUser] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
- const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null);
+  const [roleConfirmOpen, setRoleConfirmOpen] = useState(false);
+  const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null);
   const [selectedDeleteIdStatus, setSelectedDeleteStatus] = useState<string | null>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+
+      // Alt + A to toggle select all visible
+      if (e.altKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+
+        const allVisibleIds = table.getFilteredRowModel().rows.map(row => row.original.id)
+        const allSelected = allVisibleIds.every(id => selectedUserIds.includes(id))
+
+        setSelectedUserIds(prev => {
+          return allSelected
+            ? prev.filter(id => !allVisibleIds.includes(id)) // unselect visible
+            : Array.from(new Set([...prev, ...allVisibleIds])) // select visible
+        })
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedUserIds])
+  
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
       {
@@ -313,7 +334,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           <div className='flex items-center gap-0.5'>
             {row.original.status === 'inactive' ? (
               // Show Restore button
-              <IconButton size='small' onClick={() => {setDeleteOpen(true); handleOpenDeleteDialog(row.original.id, "1")}}>
+              <IconButton size='small' onClick={() => { setDeleteOpen(true); handleOpenDeleteDialog(row.original.id, "1") }}>
                 <i className='ri-loop-left-line text-textSecondary' />
               </IconButton>
             ) : (
@@ -322,7 +343,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 {hasPermission('user-management', 'user-management-edit') && (
                   <IconButton
                     size="small"
-                    onClick={() => {setAddUserOpen(true); editUser(row.original.id)}}
+                    onClick={() => { setAddUserOpen(true); editUser(row.original.id) }}
                   >
                     {/* <Link
                       href={{
@@ -336,7 +357,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 )}
 
                 {hasPermission('user-management', 'user-management-delete') && (
-                  <IconButton size='small' onClick={() => {setDeleteOpen(true); handleOpenDeleteDialog(row.original.id, "0")}}>
+                  <IconButton size='small' onClick={() => { setDeleteOpen(true); handleOpenDeleteDialog(row.original.id, "0") }}>
                     <i className='ri-delete-bin-7-line text-textSecondary' />
                   </IconButton>
                 )}
@@ -362,8 +383,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       rowSelection,
       globalFilter: searchData,
       pagination: {
-        pageIndex: paginationInfo.page,
-        pageSize: paginationInfo.perPage
+        pageIndex: page,
+        pageSize: rowsPerPage
       }
     },
     manualPagination: true,
@@ -396,44 +417,45 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     }
   }
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (pageIndex = 0, perPage = 10) => {
     try {
       setLoading(true)
-      const response = await api.get('user-get', {
+      const response = await api.get(`${endPointApi.getUser}`, {
         params: {
           role_id: role,
           search: searchData,
-          per_page: paginationInfo.perPage,
-          page: paginationInfo.page + 1,
+          per_page: perPage,
+          page: pageIndex + 1,
           status: status || '',
           id: '',
         }
       })
+      const users = response.data.users.data.map((user: {
+        id: number;
+        full_name: string;
+        name: string;
+        email: string;
+        username: string;
+        roles: { name: string }[];
+        status: number;
+        image: string;
+        phone: string
+      }) => ({
+        id: user.id,
+        fullName: user.full_name ?? '',
+        name: user.name ?? '',
+        email: user.email ?? '',
+        username: user.username ?? '',
+        role: user.roles ?? [],
+        status: user.status === 1 ? 'active' : 'inactive',
+        phone: user.phone,
+        currentPlan: 'enterprise'
+      }))
 
-        const users = response.data.users.data.map((user: {
-          id: number;
-          full_name: string;
-          name: string;
-          email: string;
-          username: string;
-          roles: { name: string }[];
-          status: number;
-          image: string;
-          phone: string
-        }) => ({
-          id: user.id,
-          fullName: user.full_name ?? '',
-          name: user.name ?? '',
-          email: user.email ?? '',
-          username: user.username ?? '',
-          role: user.roles ?? [],
-          status: user.status === 1 ? 'active' : 'inactive',
-          phone: user.phone,
-          currentPlan: 'enterprise'
-        }))
-        setTotalRows(response.data) // get total from API if exists
-        setData(users)
-     
+      setTotalRows(response.data.users.total)
+      setTotalUser(response.data)
+      setData(users)
+
       if (response.data.message === "Data not found for this User") {
         toast.error("Data not found for this User")
         setData([])
@@ -449,22 +471,22 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   }
 
   useEffect(() => {
-    fetchUsers()
-  }, [role, status, searchData, paginationInfo])
+    fetchUsers(page, rowsPerPage)
+  }, [role, status, searchData, page, rowsPerPage])
 
-  const editUser = async (id:number) => {
+  const editUser = async (id: number) => {
     setSelectedUser(id)
-    const response = await api.get('user-get', {
-        params: {
-          id: id || '',
-        }
-      })
-      if(response.data.message === "User fetched successfully"){
-        setEditUserData(response.data)
+    const response = await api.get(`${endPointApi.getUser}`, {
+      params: {
+        id: id || '',
       }
+    })
+    if (response.data.message === "User fetched successfully") {
+      setEditUserData(response.data)
+    }
   }
 
-  const handleOpenDeleteDialog = (id: number,status: string) => {
+  const handleOpenDeleteDialog = (id: number, status: string) => {
     setSelectedDeleteId(id);
     setSelectedDeleteStatus(status)
   };
@@ -497,7 +519,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const SyncMicrosoftUser = async () => {
     try {
       setLoading(true);
-      const response = await api.get('auth/microsoft/fetch-users/11/myschool');
+      const response = await api.get(`${endPointApi.microsoftFetchUsers}/${adminStore?.school_id?.toString()}/${adminStore?.tenant_id?.toString()}`);
       if (response.data.status === 200) {
         toast.success("Users synced successfully");
         fetchUsers();
@@ -514,20 +536,20 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     if (selectedUserIds.length === 0) {
       toast.warning("Please select at least one user.");
       setStatusUser('')
-    }else {
+    } else {
       setOpen(true)
     }
   };
 
   const handleConfirmation = () => {
-  const statusCode = statusUser === 'active' ? 1 : 0;
+    const statusCode = statusUser === 'active' ? 1 : 0;
     const body = {
       user_ids: selectedUserIds,
       school_id: adminStore?.school_id?.toString() ?? '',
       tenant_id: adminStore?.tenant_id?.toString() ?? '',
       status: statusCode ?? ''
     };
-    api.post('users/status-toggle-multiple', body)
+    api.post(`${endPointApi.postMultipleStatusChange}`, body)
       .then((response) => {
         if (response.data.status === 200) {
           setOpen(false);
@@ -544,21 +566,45 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       });
   };
 
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const opens = Boolean(anchorEl)
-  
-   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-      setAnchorEl(event.currentTarget)
+  const handleOpenMultipleRoleDialog = () => {
+    if (selectedUserIds.length === 0) {
+      toast.warning("Please select at least one user.");
+      setRoleName([])
+      return
+    } else {
+      setRoleConfirmOpen(true)
     }
-  
-   const handleClose = () => {
-    setAnchorEl(null)
-  }
 
+  };
+  const multipleRoleChange = async () => {
+    const selectedRole = roleName.map((role: { id: string | number; name: string }) => role.id);
+    try {
+      const body = {
+        user_ids: selectedUserIds,
+        roles_ids: selectedRole,
+        school_id: adminStore?.school_id?.toString() ?? '',
+        tenant_id: adminStore?.tenant_id?.toString() ?? ''
+      }
+
+      const response = await api.post(`${endPointApi.postMultipleRoleChange}`, body);
+
+      if (response.data?.status === 200) {
+        fetchUsers(); // refresh the list after update
+        setSelectedUserIds([])
+        setRoleName([])
+        setRoleConfirmOpen(false)
+
+        toast.success("Roles updated successfully!")
+      }
+
+    } catch (error: any) {
+      toast.error(error.response?.data?.message);
+      return null
+    }
+  }
   return (
     <>
       {/* {loading && <Loader />} */}
-
       <Grid container spacing={6} sx={{ mt: 0, mb: 5 }}>
         {/* Active Users */}
         <Grid item xs={12} sm={12} md={6} lg={6} className='pt-0'>
@@ -569,17 +615,17 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                   {loading ? (
                     <Skeleton variant="text" width={60} height={40} />
                   ) : (
-                    <Typography variant="h4">{totalRows.active_count}</Typography>
+                    <Typography variant="h4">{totalUser.active_count}</Typography>
                   )}
                 </div>
                 {loading ? (
-                  <Skeleton variant="text" width={100} height={20} />
+                  <Skeleton variant="text" width={100} height={15} />
                 ) : (
                   <Typography variant="body2">Active Users</Typography>
                 )}
               </div>
               {loading ? (
-                <Skeleton variant="circular" width={62} height={62} />
+                <Skeleton variant="rectangular" sx={{ borderRadius: '12px' }}  width={62} height={62} />
               ) : (
                 <CustomAvatar color='success' skin="light" variant="rounded" size={62}>
                   <i className={classnames('ri-user-follow-line', 'text-[26px]')} />
@@ -598,7 +644,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                   {loading ? (
                     <Skeleton variant="text" width={60} height={40} />
                   ) : (
-                    <Typography variant="h4">{totalRows.inactive_count}</Typography>
+                    <Typography variant="h4">{totalUser.inactive_count}</Typography>
                   )}
                 </div>
                 {loading ? (
@@ -608,7 +654,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 )}
               </div>
               {loading ? (
-                <Skeleton variant="circular" width={62} height={62} />
+                <Skeleton variant="rectangular" sx={{ borderRadius: '12px' }} width={62} height={62} />
               ) : (
                 <CustomAvatar color='error' skin="light" variant="rounded" size={62}>
                   <i className={classnames('ri-user-line', 'text-[26px]')} />
@@ -621,88 +667,79 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
       <Card>
         {/* <CardHeader title='Filters' className='pbe-4' /> */}
-        <TableFilters role={role} setRole={setRole} status={status} setStatus={setStatus} />
+        <TableFilters
+          role={role}
+          setRole={setRole}
+          status={status}
+          setStatus={setStatus}
+          handleOpenMultipleRoleDialog={() => handleOpenMultipleRoleDialog()}
+          selectedUserIds={selectedUserIds}
+          roleName={roleName}
+          setRoleName={setRoleName}
+        />
         <Divider />
-      <div className='p-5'>
-        {loading ? (
-          <div className='flex justify-end flex-wrap gap-4'>
-            <Skeleton variant="rectangular" height={40} width={250} className="rounded" />
-            {hasPermission('user-management', 'user-management-add') && (
-              <Skeleton variant="rectangular" height={40} width={160} className="rounded" />
-            )}
-            {statuConnected === 1 && (
-              <Skeleton variant="rectangular" height={40} width={180} className="rounded" />
-            )}
-            <Skeleton variant="rectangular" height={40} width={120} className="rounded" />
+        <>
+          <div className="p-5">
+            <div className="flex flex-wrap justify-between items-center gap-4">
+              {/* Left side: Selected count */}
+              {selectedUserIds.length > 0 && (
+                <Typography variant="body2" className='font-bold'>
+                  {selectedUserIds.length} users selected
+                </Typography>
+              )}
 
-          </div>
-        ) : (
-          <div className='flex justify-end flex-wrap gap-4 items-center'>
-            <DebouncedInput
-              value={searchData ?? ''}
-              onChange={value => setSearchData(String(value))}
-              placeholder='Search User'
-              className='w-full sm:w-auto'
-            />
+              {/* Right side: Search, Add User, Menu */}
+              {loading ? (
+                <div className="flex justify-end flex-wrap gap-4 ml-auto">
+                  <Skeleton variant="rectangular" height={40} width={250} className="rounded" />
+                  {hasPermission('user-management', 'user-management-add') && (
+                    <Skeleton variant="rectangular" height={40} width={160} className="rounded" />
+                  )}
+                  <Stack spacing={0.5} alignItems="center" justifyContent="center" height={40}>
+                    <Skeleton variant="circular" width={6} height={6} />
+                    <Skeleton variant="circular" width={6} height={6} />
+                    <Skeleton variant="circular" width={6} height={6} />
+                  </Stack>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-4 items-center ml-auto">
+                  <DebouncedInput
+                    value={searchData ?? ''}
+                    onChange={(value) => setSearchData(String(value))}
+                    placeholder="Search User"
+                    className="w-full sm:w-auto"
+                  />
 
-            {hasPermission('user-management', 'user-management-add') && (
-              <Button
-                variant='contained'
-                onClick={() => {
-                  setSelectedUser(null);
-                  setAddUserOpen(true);
-                }}
-                className='w-full sm:w-auto'
-              >
-                Add New User
-              </Button>
-            )}
+                  {hasPermission('user-management', 'user-management-add') && (
+                    <Button
+                      variant="contained"
+                      onClick={() => {
+                        setSelectedUser(null)
+                        setAddUserOpen(true)
+                      }}
+                      className="w-full sm:w-auto"
+                      startIcon={<i className="ri-add-line" />}
+                    >
+                      Add User
+                    </Button>
+                  )}
 
-            {statuConnected === 1 && (
-              <Tooltip title="Pull user from Microsoft Azure or Microsoft Entra" arrow>
-                <Button variant='contained' onClick={SyncMicrosoftUser} className='w-full sm:w-auto'>
-                  Sync with Microsoft
-                </Button>
-              </Tooltip>
-            )}
-            <div>
-              <Button
-                variant='contained'
-                aria-haspopup='true'
-                onClick={handleClick}
-                aria-expanded={opens ? 'true' : undefined}
-                // endIcon={<i className='ri-upload-2-line' />}
-                aria-controls={opens ? 'user-view-overview-export' : undefined}
-              >
-                Action
-              </Button>
-              <Menu open={opens} anchorEl={anchorEl} onClose={handleClose} id='user-view-overview-export'  anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right', // anchor point on the button
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right', // menu aligns from its right side
-                }}>
-                <MenuItem onClick={() => handleStatusChange('active')}>
-                  <CustomAvatar color='success' skin="light" variant="rounded" size={25}>
-                    <i className={classnames('ri-user-follow-line', 'text-[16px]')} />
-                  </CustomAvatar>
-                  Active
-                </MenuItem>
-                <MenuItem onClick={() => handleStatusChange('inactive')}>
-                  <CustomAvatar color='error' skin="light" variant="rounded" size={25}>
-                    <i className={classnames('ri-user-line', 'text-[16px]')} />
-                  </CustomAvatar>
-                  Inactive
-                </MenuItem>
-              </Menu>
+                  <CardHeader
+                    sx={{ p: 0 }}
+                    action={
+                      <StatusOptionMenu
+                        onChange={handleStatusChange}
+                        onSync={SyncMicrosoftUser}
+                        statuConnected={statuConnected}
+                      />
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </div>
 
-
+        </>
         {loading ? (
           <div className="overflow-x-auto">
             <table className={tableStyles.table}>
@@ -788,31 +825,14 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
             </table>
           </div>
         )}
-
         <TablePagination
-          component='div'
+          component="div"
+          count={totalRows} // total: 14
+          page={page} // 0-based index
+          rowsPerPage={rowsPerPage}
           rowsPerPageOptions={[10, 25, 50]}
-          className='border-bs'
-          count={totalRows.active_count + totalRows.inactive_count}
-          page={paginationInfo.page}
-          rowsPerPage={paginationInfo.perPage}
-          SelectProps={{ inputProps: { 'aria-label': 'rows per page' } }}
-          onPageChange={(_, page) => {
-            setPaginationInfo(prev => ({
-              ...prev,
-              page
-            }))
-            table.setPageIndex(page)
-          }}
-          onRowsPerPageChange={e => {
-            const newSize = Number(e.target.value)
-            setPaginationInfo({
-              page: 0,
-              perPage: newSize
-            })
-            table.setPageSize(newSize)
-            table.setPageIndex(0)
-          }}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Card>
 
@@ -853,10 +873,96 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         </>
       )}
       {deleteOpen && (
-        <DeleteGialog open={deleteOpen} setOpen={setDeleteOpen} type={'delete-user'} onConfirm={deleteUser} selectedDeleteStatus={selectedDeleteIdStatus}/>
+        <DeleteGialog open={deleteOpen} setOpen={setDeleteOpen} type={'delete-user'} onConfirm={deleteUser} selectedDeleteStatus={selectedDeleteIdStatus} />
+      )}
+      {roleConfirmOpen && (
+        <ConfirmDialog
+          open={roleConfirmOpen}
+          setOpen={setRoleConfirmOpen}
+          type={'role-change'}
+          onConfirm={multipleRoleChange}
+          setRoleName={setRoleName}
+          setSelectedUserIds={setSelectedUserIds}
+        />
       )}
     </>
   )
 }
 
 export default UserListTable
+
+interface StatusOptionMenuProps {
+  onChange?: (status: 'active' | 'inactive') => void
+  onSync?: () => void
+  statuConnected: Number
+}
+
+const StatusOptionMenu: React.FC<StatusOptionMenuProps> = ({ onChange, onSync, statuConnected }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const open = Boolean(anchorEl)
+
+  const handleClick = (event: MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleClose = () => {
+    setAnchorEl(null)
+  }
+
+  const handleStatusChange = (status: 'active' | 'inactive') => {
+    if (onChange) onChange(status)
+    handleClose()
+  }
+
+  const handleSync = () => {
+    if (onSync) onSync()
+    handleClose()
+  }
+
+  return (
+    <>
+      <Tooltip title="Action">
+        <IconButton
+          aria-label='more'
+          aria-controls={open ? 'status-options-menu' : undefined}
+          aria-haspopup='true'
+          onClick={handleClick}
+        >
+          <i className='ri-more-2-fill text-xl' />
+        </IconButton>
+      </Tooltip>
+      <Menu
+        id='status-options-menu'
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MenuItem onClick={() => handleStatusChange('active')}>
+          <CustomAvatar color='success' skin='light' variant='rounded' size={25}>
+            <i className={classnames('ri-user-follow-line', 'text-[16px]')} />
+          </CustomAvatar>
+          Active
+        </MenuItem>
+
+        <MenuItem onClick={() => handleStatusChange('inactive')}>
+          <CustomAvatar color='error' skin='light' variant='rounded' size={25}>
+            <i className={classnames('ri-user-line', 'text-[16px]')} />
+          </CustomAvatar>
+          Inactive
+        </MenuItem>
+
+        {statuConnected === 1 && (
+          <MenuItem onClick={handleSync}>
+            <CustomAvatar skin='light' variant='rounded' size={25}>
+              <img src='/images/logos/Microsoft-Icon.png' alt='Microsoft' className='w-[17px] h-[17px]' />
+            </CustomAvatar>
+            Sync With Microsoft
+          </MenuItem>
+        )}
+      </Menu>
+
+    </>
+  )
+}

@@ -11,46 +11,66 @@ import type { UsersType } from '@/types/apps/userTypes'
 import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 import { optionCommon } from '@/utils/optionComman'
-import { Autocomplete, Skeleton, TextField } from '@mui/material'
+import { Autocomplete, Box, Button, Checkbox, ListItemText, OutlinedInput, Skeleton, TextField } from '@mui/material'
 
-type TableFiltersProps = {
-  role: UsersType['role']
-  setRole: React.Dispatch<React.SetStateAction<UsersType['role']>>
-  status: UsersType['status']
-  setStatus: React.Dispatch<React.SetStateAction<UsersType['status']>>
+export interface TableFiltersProps {
+  role: string
+  setRole: (role: string) => void
+  status: string
+  setStatus: (status: string) => void
+  handleOpenMultipleRoleDialog: () => void
+  selectedUserIds: (string | number)[]
+  roleName: { id: string | number; name: string }[]
+  setRoleName: React.Dispatch<React.SetStateAction<{ id: string | number; name: string }[]>>
 }
 
-const TableFilters = ({ role, setRole, status, setStatus }: TableFiltersProps) => {
-  const [plan, setPlan] = useState<UsersType['currentPlan']>('')
-  const [rolesList, setRolesList] = useState<string[]>([])
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
+const TableFilters = ({ role, setRole, status, setStatus,roleName, setRoleName, handleOpenMultipleRoleDialog }: TableFiltersProps) => {
+  const [rolesList, setRolesList] = useState<{ id: string | number; name: string }[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         setLoading(true)
-
         const response = await api.get('roles')
-
         const roles = response.data.data.filter((item: any) => item.name !== 'Super Admin')
-        // setRolesList(Array.from(new Set(roles)))
         setRolesList(roles)
       } catch (err) {
-        // alert(err)
         return null
       }
       finally {
         setLoading(false)
-
       }
     }
     fetchRoles()
   }, [])
 
+  const handleChange = (event: any) => {
+    const selectedNames = typeof event.target.value === 'string'
+      ? event.target.value.split(',')
+      : event.target.value
+
+    const selectedObjects = rolesList.filter(role =>
+      selectedNames.includes(role.name)
+    )
+    setRoleName(selectedObjects)
+  }
+
   return (
     <CardContent>
       <Grid container spacing={5}>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 5 }}>
           {loading ? (
             <Skeleton variant="rounded" height={55} />
           ) : (
@@ -73,7 +93,7 @@ const TableFilters = ({ role, setRole, status, setStatus }: TableFiltersProps) =
           )}
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 5 }}>
           {loading ? (
             <Skeleton variant="rounded" height={55} />
           ) : (
@@ -92,6 +112,61 @@ const TableFilters = ({ role, setRole, status, setStatus }: TableFiltersProps) =
                 )}
                 clearOnEscape
               />
+            </FormControl>
+          )}
+        </Grid>
+        <Grid size={{ xs: 12, sm: 2 }}>
+          {loading ? (
+            <Skeleton variant="rounded" height={55} />
+          ) : (
+            <FormControl fullWidth>
+              {/* <Autocomplete
+                fullWidth
+                options={rolesList}
+                getOptionLabel={(option: any) => option.name}
+                value={rolesList.find((item: any) => item.id === role) || null}
+                onChange={(event, newValue: any) => {
+                  setRole(newValue ? newValue.id : '')
+                }}
+                isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+                renderInput={(params) => (
+                  <TextField {...params} label="Bulk Role Change" />
+                )}
+                clearOnEscape
+              /> */}
+              <InputLabel id="demo-multiple-checkbox-label">Bulk Role Change</InputLabel>
+                <Select
+                  labelId="demo-multiple-checkbox-label"
+                  id="demo-multiple-checkbox"
+                  multiple
+                  value={roleName.map(r => r.name)} // must be strings for MUI
+                  onChange={handleChange}
+                  input={<OutlinedInput label="Bulk Role Change" />}
+                  renderValue={(selected) => selected.join(', ')}
+                  MenuProps={MenuProps}
+                >
+                  {rolesList.filter(role => role.name !== 'Default').map((item) => (
+                    <MenuItem key={item.id} value={item.name}>
+                      <Checkbox checked={roleName.some(role => role.id === item.id)} />
+                      <ListItemText primary={item.name} />
+                    </MenuItem>
+                  ))}
+
+                  {/* Save Button inside dropdown */}
+                  <Box px={2} py={1} borderTop="1px solid #e0e0e0">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      size="small"
+                      onClick={() => {
+                        handleOpenMultipleRoleDialog()
+                      }}
+                    >
+                      Save
+                    </Button>
+                  </Box>
+                </Select>
             </FormControl>
           )}
         </Grid>

@@ -10,10 +10,7 @@ import DialogActions from '@mui/material/DialogActions'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 
-// Third-party Imports
-import classnames from 'classnames'
-
-type ConfirmationType = 'delete-account' | 'unsubscribe' | 'suspend-account' | 'delete-order' | 'delete-customer' | 'delete-user'
+type ConfirmationType = 'delete-account' | 'unsubscribe' | 'suspend-account' | 'delete-order' | 'delete-customer' | 'delete-user' | 'role-change' | 'delete-role'
 
 type ConfirmationDialogProps = {
   open: boolean
@@ -23,7 +20,7 @@ type ConfirmationDialogProps = {
   selectedDeleteStatus?: string | null;
 }
 
-const DeleteGialog = ({ open, setOpen, type, onConfirm, selectedDeleteStatus }: ConfirmationDialogProps) => {
+const DeleteDialog = ({ open, setOpen, type, onConfirm, selectedDeleteStatus }: ConfirmationDialogProps) => {
 
   // Vars
   const Wrapper = type === 'suspend-account' ? 'div' : Fragment
@@ -62,6 +59,8 @@ const DeleteGialog = ({ open, setOpen, type, onConfirm, selectedDeleteStatus }: 
               {type === 'suspend-account' && 'Are you sure?'}
               {type === 'delete-order' && 'Are you sure?'}
               {type === 'delete-customer' && 'Are you sure?'}
+              {type === 'role-change' && 'Do you want to proceed with changing multiple user roles?'}
+              {type === 'delete-role' && 'Are you sure to delete this role?'}
             </Typography>
             {type === 'suspend-account' && (
               <Typography color='text.primary'>You won&#39;t be able to revert user!</Typography>
@@ -96,4 +95,4 @@ const DeleteGialog = ({ open, setOpen, type, onConfirm, selectedDeleteStatus }: 
   )
 }
 
-export default DeleteGialog
+export default DeleteDialog

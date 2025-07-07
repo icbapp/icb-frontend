@@ -1,12 +1,5 @@
 // MUI Imports
 import Grid from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-
-// Type Imports
-import type { UsersType } from '@/types/apps/userTypes'
-
-// Component Imports
-import RoleCards from './RoleCards'
 import RolesTable from './RolesTable'
 
 const Roles = () => {
