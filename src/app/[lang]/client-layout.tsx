@@ -48,7 +48,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             formData.append('type', hostname);
             // const response = await axios.post(`/api/school`, formData) as AxiosResponse<SchoolResponse>;
             // const data = response.data.data;
-        //   const response = await axios.post('https://petrolpe.com/api',formData)
+        //   const response = await axios.post('https://masteradmin.icbapp.site/api',formData)
             // console.log("Response from API:", response);
             const adminData: AdminData = {
             d_logo: "https://petrolpe.com/uploads/myschool/logo/dark_1750770795_light_1749633297_Group_2.png000000",
@@ -118,7 +118,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       const formData = new FormData();
       
       formData.append('type', 'myschool');
-      // const response = await axios.post(`https://petrolpe.com/api/`,formData)
+      // const response = await axios.post(`https://masteradmin.icbapp.site/api/`,formData)
       const response = await axios.post(`/api/school`, formData);
       if(response.data.status === 200) {
         dispatch(setAdminInfo(response.data.data))
