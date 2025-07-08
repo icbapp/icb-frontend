@@ -3,7 +3,6 @@
 import '@tanstack/table-core'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import swal from 'sweetalert';
 import {
   Card,
   CardContent,
@@ -46,6 +45,7 @@ import { RootState } from '@/redux-store'
 import { saveToken } from '@/utils/tokenManager'
 import { useSelector } from 'react-redux'
 import DeleteGialog from '@/comman/dialog/DeleteDialog';
+import endPointApi from '@/utils/endPointApi';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -101,15 +101,15 @@ const RolesTable = () => {
 
   const searchParams = useSearchParams()
 
-  const [role, setRole] = useState<UsersType['role']>('')
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<RoleType[]>([])
-  const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
-  const [availableRoles, setAvailableRoles] = useState<string[]>([])
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null);
   const [selectedDeleteIdStatus, setSelectedDeleteStatus] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
 
   const { settings } = useSettings()
   const [loading, setLoading] = useState(false)
@@ -141,6 +141,20 @@ const RolesTable = () => {
       menu.checked &&
       menu.sub_menus?.some((sub: any) => sub.name === 'roles-delete' && sub.checked)
   );
+
+  const handleChangePage = (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
+    setPage(newPage); // pageIndex will trigger useEffect to fetch
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to first page
+  };
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(() => [
     // {
@@ -175,7 +189,7 @@ const RolesTable = () => {
         </div>
       )
     }),
-    columnHelper.accessor('description', {
+    columnHelper.accessor('user_count', {
       header: 'User Count',
       cell: ({ row }) => {
         const count = row.original.user_count;
@@ -212,6 +226,7 @@ const RolesTable = () => {
       enableSorting: false,
       cell: ({ row }) => (
         <div className='flex items-center gap-0.5'>
+          {console.log("row.original",row)}
           {showEditRoleButton &&
             <IconButton
               size='small'
@@ -237,14 +252,21 @@ const RolesTable = () => {
       )
 
     })
-  ], [data, filteredData, userPermissionStore])
+  ], [data, userPermissionStore])
 
   const table = useReactTable({
-    data: filteredData,
+    data: data,
     columns,
     filterFns: { fuzzy: fuzzyFilter },
-    state: { rowSelection, globalFilter },
-    initialState: { pagination: { pageSize: 10 } },
+     state: { 
+      rowSelection, 
+      globalFilter, 
+      pagination: {
+        pageIndex: page,
+        pageSize: rowsPerPage
+      } 
+    },
+    manualPagination: true,
     enableRowSelection: true,
     globalFilterFn: fuzzyFilter,
     onRowSelectionChange: setRowSelection,
@@ -255,18 +277,32 @@ const RolesTable = () => {
     getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues()
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    getRowId: (row) => row.id
   })
 
   const getAvatar = ({ avatar, fullName }: Pick<UsersType, 'avatar' | 'fullName'>) =>
     avatar ? <CustomAvatar src={avatar} size={34} /> : <CustomAvatar>{getInitials(fullName)}</CustomAvatar>
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (pageIndex = 0, perPage = 10) => {
     try {
       setLoading(true)
-      const response = await api.get('roles')
+      const formData = new FormData();
 
-      const users = response.data.data.map((user: {
+      formData.append('tenant_id', loginStore.tenant_id);
+      formData.append('per_page', perPage.toString());
+      formData.append('page', pageIndex + 1);
+
+      // const response = await api.post('roles-all-get', formData, {
+      const response = await api.post(`${endPointApi.getAllRoles}`,formData,{
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            });
+            console.log("response", response);
+            
+      const users = response.data.data.data.map((user: {
+        menus: never[];
         id: number;
         name: string;
         permissions: Permissions[];
@@ -275,23 +311,14 @@ const RolesTable = () => {
       }) => ({
         id: user.id,
         title: user.name ?? 'No Title',
-        permissions: user.permissions ?? [],
+        permissions: user.menus ?? [],
         role: user.roles?.[0]?.name ?? '',   // 🟢 ADD THIS LINE
-        company: 'N/A',
-        country: 'N/A',
-        contact: '',
-        currentPlan: 'enterprise',
         user_count: user.user_count ?? 0,
       }))
-
-      const uniqueRoles: string[] = Array.from(
-        new Set(
-          users.map((user: { role: any }) => user.role).filter((role: string | any[]): role is string => typeof role === 'string' && role.length > 0)
-        )
-      )
-      setAvailableRoles(uniqueRoles)
+            console.log("users", users);
+      
+      setTotalRows(response.data.data.total)
       setData(users)
-      setFilteredData(users)
       setLoading(false)
 
       if (response.data.status === 200 && !hasRefreshedToken.current) {
@@ -303,7 +330,6 @@ const RolesTable = () => {
           console.error('Token refresh error:', err);
         }
       }
-
     } catch (err) {
       console.error('Error fetching users:', err)
     }
@@ -313,8 +339,8 @@ const RolesTable = () => {
   }
 
   useEffect(() => {
-    fetchUsers()
-  }, [])
+    fetchUsers(page, rowsPerPage)
+  }, [page, rowsPerPage])
 
   const handleOpenDeleteDialog = (id: number, status: string) => {
     setSelectedDeleteId(id);
@@ -377,73 +403,90 @@ const RolesTable = () => {
         )}
       </CardContent>
       
-      <div className='overflow-x-auto'>
-        <table className={tableStyles.table}>
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th key={header.id}>
-                    {!header.isPlaceholder && (
-                      <div
-                        className={classnames({
-                          'flex items-center': header.column.getIsSorted(),
-                          'cursor-pointer select-none': header.column.getCanSort()
-                        })}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{ asc: <i className='ri-arrow-up-s-line text-xl' />, desc: <i className='ri-arrow-down-s-line text-xl' /> }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-           <tbody>
       {loading ? (
-        [...Array(5)].map((_, rowIndex) => (
-          <tr key={`skeleton-${rowIndex}`}>
-            {table.getVisibleFlatColumns().map((column, colIndex) => (
-              <td key={`skeleton-cell-${colIndex}`} className="px-4 py-2">
-               <div className="h-4 bg-gray-200 rounded animate-pulse w-full my-1" />
+  <div className="overflow-x-auto">
+    <table className={tableStyles.table}>
+      <thead>
+        <tr>
+          {[...Array(3)].map((_, index) => (
+            <th key={index}>
+              <Skeleton variant="text" height={50} width={100} />
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {[...Array(6)].map((_, rowIndex) => (
+          <tr key={rowIndex}>
+            {[...Array(3)].map((_, colIndex) => (
+              <td key={colIndex}>
+                <Skeleton variant="text" height={50} width="100%" />
               </td>
             ))}
           </tr>
-        ))
-      ) : table.getFilteredRowModel().rows.length === 0 ? (
-        <tr>
-          <td colSpan={table.getVisibleFlatColumns().length} className="text-center">
-            No data available
-          </td>
-        </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
       ) : (
-        table.getRowModel().rows
-          .slice(0, table.getState().pagination.pageSize)
-          .map(row => (
-            <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-              {row.getVisibleCells().map(cell => (
-                <td key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
+        <div className="overflow-x-auto">
+          <table className={tableStyles.table}>
+            <thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <th key={header.id}>
+                      {!header.isPlaceholder && (
+                        <div
+                          className={classnames({
+                            'flex items-center': header.column.getIsSorted(),
+                            'cursor-pointer select-none': header.column.getCanSort()
+                          })}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {{
+                            asc: <i className="ri-arrow-up-s-line text-xl" />,
+                            desc: <i className="ri-arrow-down-s-line text-xl" />
+                          }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
+                        </div>
+                      )}
+                    </th>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.length === 0 ? (
+                <tr>
+                  <td colSpan={table.getVisibleFlatColumns().length} className="text-center py-4">
+                    No data available
+                  </td>
+                </tr>
+              ) : (
+                table.getRowModel().rows.map(row => (
+                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
-    </tbody>
-        </table>
-      </div>
       <TablePagination
-        rowsPerPageOptions={[10, 25, 50]}
+        // className='border-bs'
         component='div'
-        className='border-bs'
-        count={table.getFilteredRowModel().rows.length}
-        rowsPerPage={table.getState().pagination.pageSize}
-        page={table.getState().pagination.pageIndex}
-        SelectProps={{ inputProps: { 'aria-label': 'rows per page' } }}
-        onPageChange={(_, page) => table.setPageIndex(page)}
-        onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+        count={totalRows}
+        page={page} // 0-based index
+        rowsPerPage={rowsPerPage}
+        rowsPerPageOptions={[10, 25, 50]}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
       />
     </Card>
       {deleteOpen && (

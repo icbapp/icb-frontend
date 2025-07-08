@@ -32,6 +32,7 @@ import { setUserPermissionInfo } from '@/redux-store/slices/userPermission'
 import SaveButton from '@/comman/button/SaveButton'
 import CancelButtons from '@/comman/button/CancelButtons'
 import { useSettings } from '@/@core/hooks/useSettings'
+import endPointApi from '@/utils/endPointApi'
 
 type ErrorType = { message: string[] }
 
@@ -159,7 +160,7 @@ const RoleFormPage = () => {
 
     try {
       setLoading(true);
-      const response = await api.post('/roles', payload);
+      const response = await api.post(`${endPointApi.postRolesAddUpdate}`, payload);
 
       if (response.data.success) {
         setPermissionsData(response.data.data);

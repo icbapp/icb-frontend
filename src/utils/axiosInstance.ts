@@ -18,21 +18,21 @@
 
 // export const api = apiAdminInstance;
 
-// // let apiAdminInstance = axios.create({
-// //   baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://petrolpe.com/api',
-// // });
-// // apiAdminInstance.interceptors.request.use(
-// //   async config => {
-// //     const token = localStorage.getItem('auth_token');
-// //     // const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-// //     if (token) {
-// //       config.headers.Authorization = `Bearer ${token}`;
-// //     }
-// //     config.headers['ngrok-skip-browser-warning'] = 'true'
-// //     return config;
-// //   },
-// //   error => Promise.reject(error)
-// // );
+// let apiAdminInstance = axios.create({
+//   baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://petrolpe.com/api',
+// });
+// apiAdminInstance.interceptors.request.use(
+//   async config => {
+//     const token = localStorage.getItem('auth_token');
+//     // const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+//     if (token) {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     }
+//     config.headers['ngrok-skip-browser-warning'] = 'true'
+//     return config;
+//   },
+//   error => Promise.reject(error)
+// );
 
 // apiAdminInstance.interceptors.response.use(
 //   function (response) {
@@ -53,7 +53,6 @@
 
 
 import axios from 'axios';
-// import { saveToken } from './authService';
 
 const apiAdminInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://petrolpe.com/api',
@@ -109,82 +108,86 @@ const refreshToken = async () => {
   return newAccessToken;
 };
 
+// apiAdminInstance.interceptors.response.use(
+//   response => response,
+//   async error => {
+//     const originalRequest = error.config;
+//     if (
+//       error.response?.status === 401 &&
+//       !originalRequest._retry
+//     ) {
+//       originalRequest._retry = true;
+//       if (isRefreshing) {
+//         return new Promise(function (resolve, reject) {
+//           failedQueue.push({ resolve, reject });
+//         })
+//           .then(token => {
+//             originalRequest.headers['Authorization'] = 'Bearer ' + token;
+//             return axios(originalRequest);
+//           })
+//            .catch(err => {
+//               // window.location.href = '/login';
+//               return Promise.reject(err);
+//             });
+//       }
+//       isRefreshing = true;
+//       try {
+//         const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`);
+//         const newToken = res.data.access_token;
+//         localStorage.setItem('auth_token', newToken);
+//         api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
+//         processQueue(null, newToken);
+//         return api(originalRequest);
+//       } catch (err) {
+//         processQueue(err, null);
+//         // window.location.href = '/login';
+//         return Promise.reject(err); 
+//       } finally {
+//         isRefreshing = false;
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
+
 apiAdminInstance.interceptors.response.use(
-  response => response,
+  res => res,
   async error => {
     const originalRequest = error.config;
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry
-    ) {
-      originalRequest._retry = true;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        })
-          .then(token => {
-            originalRequest.headers['Authorization'] = 'Bearer ' + token;
-            return axios(originalRequest);
-          })
-          .catch(err => Promise.reject(err));
+        }).then(token => {
+          originalRequest.headers.Authorization = 'Bearer ' + token;
+          return apiAdminInstance(originalRequest);
+        });
       }
+
+      originalRequest._retry = true;
       isRefreshing = true;
+      
       try {
-        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`);
-        const newToken = res.data.access_token;
-        localStorage.setItem('auth_token', newToken);
-        api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
+        const newToken = await refreshToken();
+
         processQueue(null, newToken);
-        return api(originalRequest);
+        originalRequest.headers.Authorization = 'Bearer ' + newToken;
+        
+        return apiAdminInstance(originalRequest);
       } catch (err) {
         processQueue(err, null);
+        // localStorage.removeItem('auth_token');
+        // localStorage.removeItem('refresh_token');
+        // window.location.href = '/login';
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }
     }
+
     return Promise.reject(error);
   }
 );
-
-// apiAdminInstance.interceptors.response.use(
-//   res => res,
-//   async error => {
-//     const originalRequest = error.config;
-
-//     if (error.response?.status === 401 && !originalRequest._retry) {
-//       if (isRefreshing) {
-//         return new Promise((resolve, reject) => {
-//           failedQueue.push({ resolve, reject });
-//         }).then(token => {
-//           originalRequest.headers.Authorization = 'Bearer ' + token;
-//           return apiAdminInstance(originalRequest);
-//         });
-//       }
-
-//       originalRequest._retry = true;
-//       isRefreshing = true;
-      
-//       try {
-//         const newToken = await refreshToken();
-
-//         processQueue(null, newToken);
-//         originalRequest.headers.Authorization = 'Bearer ' + newToken;
-        
-//         return apiAdminInstance(originalRequest);
-//       } catch (err) {
-//         processQueue(err, null);
-//         // localStorage.removeItem('auth_token');
-//         // localStorage.removeItem('refresh_token');
-//         // window.location.href = '/login';
-//         return Promise.reject(err);
-//       } finally {
-//         isRefreshing = false;
-//       }
-//     }
-
-//     return Promise.reject(error);
-//   }
-// );
 
 export const api = apiAdminInstance;

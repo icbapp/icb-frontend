@@ -17,6 +17,11 @@ export interface EndPointApi {
     postMultipleStatusChange: string
     postMultipleRoleChange: string
     
+    //Role & Permission
+    getAllRoles: string
+    getRolesDropdown: string
+    postRolesAddUpdate: string
+
     //School-settings
     //Email
     postEmailSetting: string
@@ -24,6 +29,7 @@ export interface EndPointApi {
     microsoftAuthTokenValide: string
     microsoftFetchUsers: string
 
+    // Announcements
     getAnnouncements: string
     addAnnouncements: string
     deleteAnnouncements: string,
@@ -50,6 +56,11 @@ const endPointApi: EndPointApi = {
     postMultipleStatusChange: 'users/status-toggle-multiple',
     postMultipleRoleChange: 'users/roles-toggle-multiple',
 
+    //Role & Permission
+    getAllRoles:'roles-all-get',
+    getRolesDropdown: 'roles-show',
+    postRolesAddUpdate: 'roles-add-update',
+
     //School-settings
     //Email
     postEmailSetting: 'email-setting',
@@ -57,6 +68,7 @@ const endPointApi: EndPointApi = {
     microsoftAuthTokenValide: '/ms-auth-token/school-token-valide',
     microsoftFetchUsers: 'auth/microsoft/fetch-users',
 
+    // Announcements
     getAnnouncements: 'announcements-get',
     addAnnouncements: 'announcements-add',
     deleteAnnouncements: 'announcements-delete',

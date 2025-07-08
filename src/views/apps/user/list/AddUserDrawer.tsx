@@ -25,6 +25,7 @@ import type { UsersType } from '@/types/apps/userTypes'
 import { toast } from 'react-toastify'
 import SaveButton from '@/comman/button/SaveButton'
 import CancelButtons from '@/comman/button/CancelButtons'
+import endPointApi from '@/utils/endPointApi'
 
 type Props = {
   open: boolean
@@ -94,7 +95,7 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers, selectedUs
 
   const fetchRoles = async () => {
     try {
-      const response = await api.get('roles')
+      const response = await api.get(`${endPointApi.getRolesDropdown}`)
 
       // const roles: RoleOption[] = response.data.data
       //   .filter((r: any) =>
