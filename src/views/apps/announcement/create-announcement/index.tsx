@@ -56,7 +56,6 @@ type Props = {
   loading: boolean
 }
 const AnnouncementCreatePage = ({ fetchUsers,selectedUser, setAnnouncementForm, announcementForm,files,setFiles, open, handleClose, description, setDescription,loading }: Props) => {
- console.log("description",description);
  
   const adminStore = useSelector((state: RootState) => state.admin)
   const [loadings, setLoadings] = useState(false)

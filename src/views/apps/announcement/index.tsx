@@ -6,9 +6,7 @@ import { useEffect, useState, useMemo } from 'react'
 // MUI Imports
 import Card from '@mui/material/Card'
 import Divider from '@mui/material/Divider'
-import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
-import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
@@ -48,11 +46,15 @@ import { getInitials } from '@/utils/getInitials'
 import tableStyles from '@core/styles/table.module.css'
 import { api } from '@/utils/axiosInstance';
 
-import { Skeleton, Tooltip } from '@mui/material';
-
+import {
+  Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Typography, Grid,  Skeleton, Tooltip,
+  OutlinedInput,
+  Paper
+} from '@mui/material'
 import AnnouncementCreatePage from './create-announcement';
 import endPointApi from '@/utils/endPointApi';
-import DeleteGialog from '@/comman/deleteDialog/DeleteGialog';
+import DeleteGialog from '@/comman/dialog/DeleteDialog';
 import ImageGallery from './ImageGallery';
 
 declare module '@tanstack/table-core' {
@@ -150,6 +152,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   });
 
   const [imagemainPopUpOpen, setImagemainPopUpOpen] = useState(false)
+  const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<UsersType[]>([])
   const [searchData, setSearchData] = useState<string>('')
@@ -359,8 +362,18 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   setDescription('')
                 }}
                 className='w-full sm:w-auto'
+                startIcon={<i className="ri-add-line" />}
               >
                 Add
+              </Button>
+             <Button
+                variant='contained'
+                onClick={() => {
+                  setIsCampaignModalOpen(true);
+                }}
+                className='w-full sm:w-auto'
+              >
+                Open
               </Button>
           </div>
         )}
@@ -500,8 +513,319 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       {imagemainPopUpOpen && (
         <ImageGallery open={imagemainPopUpOpen} setOpen={() => setImagemainPopUpOpen(false)} images={selectedUser}/>
       )}
+
+      {isCampaignModalOpen &&
+        <CampaignModal open={isCampaignModalOpen} onClose={() => setIsCampaignModalOpen(false)} />
+      }
     </>
   )
 }
 
 export default AnnouncementListPage
+
+interface CampaignModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const CampaignModal = ({ open, onClose }: CampaignModalProps) => {
+  // const [selectedRole, setSelectedRole] = useState('Parent')
+  // const [selectedYear, setSelectedYear] = useState('All Years')
+  // const [selectedClass, setSelectedClass] = useState('All Classes')
+  // const [selectedDept, setSelectedDept] = useState('All Departments')
+  // const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  // const [channel, setChannel] = useState('email')
+
+  // const userList = [
+  //   { name: 'Michael Brown', role: 'Parent' },
+  //   { name: 'Emily Davis', role: 'Teacher - Science' },
+  //   { name: 'David Wilson', role: 'Student - Grade 3' },
+  //   { name: 'Lisa Anderson', role: 'Admin' }
+  // ]
+
+  // const communicationChannels = [
+  //   { key: 'email', label: 'Email', icon: '📧' },
+  //   { key: 'whatsapp', label: 'WhatsApp', icon: '📱' },
+  //   { key: 'push', label: 'Push Notifications', icon: '🔔' },
+  //   { key: 'sms', label: 'SMS', icon: '💬' }
+  // ]
+
+  // const handleUserToggle = (name: string) => {
+  //   setSelectedUsers(prev =>
+  //     prev.includes(name) ? prev.filter(u => u !== name) : [...prev, name]
+  //   )
+  // }
+
+  const [filters, setFilters] = useState({
+    role: "Parent",
+    year: "All Years",
+    class: "All Classes",
+    department: "All Departments",
+  })
+
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [selectedChannel, setSelectedChannel] = useState("email")
+
+  const users = [
+    { name: "Michael Brown", role: "Parent" },
+    { name: "Emily Davis", role: "Teacher - Science" },
+    { name: "David Wilson", role: "Student - Grade 3" },
+    { name: "Lisa Anderson", role: "Admin" },
+    { name: "Lisa Anderson", role: "Admin" },
+    { name: "Lisa Anderson", role: "Admin" },
+    { name: "Lisa Anderson", role: "Admin" },
+    { name: "Lisa Anderson", role: "Admin" },
+    { name: "Lisa Anderson", role: "Admin" },
+    { name: "Lisa Anderson", role: "Admin" },
+    { name: "Lisa Anderson", role: "Admin" },
+    { name: "Lisa Anderson", role: "Admin" },
+  ]
+
+  const channels = [
+    { key: "email", label: "Email", icon: "📧", sub: "Send via email" },
+    { key: "whatsapp", label: "WhatsApp", icon: "💬", sub: "WhatsApp messages" },
+    { key: "push", label: "Push Notifications", icon: "🔔", sub: "Mobile app notifications" },
+    { key: "sms", label: "SMS", icon: "📱", sub: "Text messages" },
+  ]
+
+  const handleSelectAll = (e:any) => {
+    setSelectedUsers(e.target.checked ? users.map((u) => u.name) : [])
+  }
+
+  const handleUserToggle = (name:any) => {
+    setSelectedUsers((prev:any) =>
+      prev.includes(name) ? prev.filter((n:any) => n !== name) : [...prev, name]
+    )
+  }
+  return (
+    // <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    //   <DialogTitle>Launch Announcement Campaign</DialogTitle>
+    //   <DialogContent dividers>
+    //     {/* Filters */}
+    //     <Grid container spacing={2}>
+    //       <Grid item xs={6} sm={3}>
+    //         <FormControl fullWidth size="small">
+    //           <InputLabel>Role</InputLabel>
+    //           <Select 
+    //             value={selectedRole} 
+    //             onChange={e => setSelectedRole(e.target.value)}
+    //             input={<OutlinedInput label="Role" />}
+    //           >
+    //             <MenuItem value="Parent">Parent</MenuItem>
+    //             <MenuItem value="Teacher">Teacher</MenuItem>
+    //             <MenuItem value="Student">Student</MenuItem>
+    //           </Select>
+    //         </FormControl>
+    //       </Grid>
+    //       <Grid item xs={6} sm={3}>
+    //         <FormControl fullWidth size="small">
+    //           <InputLabel>Year</InputLabel>
+    //           <Select 
+    //             value={selectedYear}
+    //             onChange={e => setSelectedYear(e.target.value)}
+    //             input={<OutlinedInput label="Year" />}
+    //            >
+    //             <MenuItem value="All Years">All Years</MenuItem>
+    //             <MenuItem value="2025">2025</MenuItem>
+    //           </Select>
+    //         </FormControl>
+    //       </Grid>
+    //       <Grid item xs={6} sm={3}>
+    //         <FormControl fullWidth size="small">
+    //           <InputLabel>Class</InputLabel>
+    //           <Select 
+    //             value={selectedClass} 
+    //             onChange={e => setSelectedClass(e.target.value)}
+    //             input={<OutlinedInput label="Year" />}
+    //           >
+    //             <MenuItem value="All Classes">All Classes</MenuItem>
+    //             <MenuItem value="Grade 3">Grade 3</MenuItem>
+    //           </Select>
+    //         </FormControl>
+    //       </Grid>
+    //       <Grid item xs={6} sm={3}>
+    //         <FormControl fullWidth size="small">
+    //           <InputLabel>Department</InputLabel>
+    //           <Select value={selectedDept} onChange={e => setSelectedDept(e.target.value)}>
+    //             <MenuItem value="All Departments">All Departments</MenuItem>
+    //             <MenuItem value="Science">Science</MenuItem>
+    //           </Select>
+    //         </FormControl>
+    //       </Grid>
+    //     </Grid>
+
+    //     {/* Audience Selection */}
+    //     <Box mt={3}>
+    //       <Typography fontWeight={600}>Audience Selection</Typography>
+    //       <FormControlLabel
+    //         control={
+    //           <Checkbox
+    //             checked={selectedUsers.length === userList.length}
+    //             onChange={(e) =>
+    //               setSelectedUsers(e.target.checked ? userList.map(u => u.name) : [])
+    //             }
+    //           />
+    //         }
+    //         label="Select All"
+    //       />
+    //       {userList.map((user, index) => (
+    //         <FormControlLabel
+    //           key={index}
+    //           control={
+    //             <Checkbox
+    //               checked={selectedUsers.includes(user.name)}
+    //               onChange={() => handleUserToggle(user.name)}
+    //             />
+    //           }
+    //           label={`${user.name} (${user.role})`}
+    //         />
+    //       ))}
+    //     </Box>
+
+    //     {/* Communication Channels */}
+    //     <Box mt={3}>
+    //       <Typography fontWeight={600}>Communication Channels</Typography>
+    //       <Box display="flex" gap={2} mt={1}>
+    //         {communicationChannels.map(chan => (
+    //           <Button
+    //             key={chan.key}
+    //             variant={channel === chan.key ? 'contained' : 'outlined'}
+    //             onClick={() => setChannel(chan.key)}
+    //             startIcon={<span>{chan.icon}</span>}
+    //           >
+    //             {chan.label}
+    //           </Button>
+    //         ))}
+    //       </Box>
+    //     </Box>
+    //   </DialogContent>
+    //   <DialogActions>
+    //     <Button onClick={onClose} variant="outlined">Cancel</Button>
+    //     <Button variant="contained" onClick={() => alert('Campaign Launched!')}>
+    //       Launch Campaign
+    //     </Button>
+    //   </DialogActions>
+    // </Dialog>
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <DialogTitle fontWeight={600}>Launch Campaign</DialogTitle>
+      <DialogContent dividers>
+        {/* Filters */}
+        <Grid container spacing={2} mb={2}>
+          {Object.entries(filters).map(([label, value]) => (
+            <Grid item xs={6} sm={3} key={label}>
+              <FormControl fullWidth size="small">
+                <InputLabel>{label[0].toUpperCase() + label.slice(1)}</InputLabel>
+                <Select
+                  value={value}
+                  onChange={(e) =>
+                    setFilters({ ...filters, [label]: e.target.value })
+                  }
+                  input={<OutlinedInput label={label} />}
+                >
+                  <MenuItem value={value}>{value}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* Audience Selection */}
+       <Box mb={3}>
+        <Typography fontWeight={600} mb={2}>
+          Audience Selection
+        </Typography>
+
+        {/* Select All */}
+        <Box mb={1}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={selectedUsers.length === users.length}
+                indeterminate={selectedUsers.length > 0 && selectedUsers.length < users.length}
+                onChange={handleSelectAll}
+              />
+            }
+            label={<Typography fontWeight={500}>Select All</Typography>}
+          />
+        </Box>
+
+        {/* User List */}
+        <Box
+          sx={{
+            maxHeight: 150,
+            overflowY: 'auto',
+            border: '1px solid #e0e0e0',
+            borderRadius: 2,
+            p: 2,
+          }}
+        >
+         {users.map((user, i) => (
+          <FormControlLabel
+            key={i}
+            control={
+              <Checkbox
+                checked={selectedUsers.includes(user.name)}
+                onChange={() => handleUserToggle(user.name)}
+                sx={{ p: 0.5, mr: 1 }} // ✅ tighter padding + spacing
+              />
+            }
+            label={
+              <Box display="flex" alignItems="center">
+                <Typography>{`${user.name} (${user.role})`}</Typography>
+              </Box>
+            }
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              mb: 1,
+              m: 0
+            }}
+          />
+        ))}
+        </Box>
+        </Box>
+
+        {/* Communication Channels */}
+        <Box>
+        <Typography fontWeight={600} mb={1}>Communication Channels</Typography>
+        <Grid container spacing={2}>
+          {channels.map((channel) => (
+            <Grid item xs={6} sm={3} key={channel.key}>
+              <Box
+                onClick={() => setSelectedChannel(channel.key)}
+                sx={{
+                  cursor: 'pointer',
+                  border: selectedChannel === channel.key ? '2px solid #1976d2' : '1px solid #ccc',
+                  borderRadius: 2,
+                  height: 200,
+                  p: 2,
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: '#f5f5f5'
+                  }
+                }}
+              >
+                <Typography fontSize={30}>{channel.icon}</Typography>
+                <Typography fontWeight={600}>{channel.label}</Typography>
+                <Typography variant="caption">{channel.sub}</Typography>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+
+      </DialogContent>
+
+      <DialogActions sx={{ mt: 2 }}>
+        <Button onClick={onClose} variant="outlined">Cancel</Button>
+        <Button variant="contained" onClick={() => alert("Campaign Launched!")}>Launch Campaign</Button>
+      </DialogActions>
+    </Dialog>
+  )
+}

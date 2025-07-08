@@ -175,7 +175,7 @@ const RolesTable = () => {
         </div>
       )
     }),
-    columnHelper.accessor('title', {
+    columnHelper.accessor('description', {
       header: 'User Count',
       cell: ({ row }) => {
         const count = row.original.user_count;
