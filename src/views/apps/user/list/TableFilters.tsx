@@ -12,7 +12,27 @@ import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 import { optionCommon } from '@/utils/optionComman'
 import { Autocomplete, Box, Button, Checkbox, ListItemText, OutlinedInput, Skeleton, TextField } from '@mui/material'
+import endPointApi from '@/utils/endPointApi'
 
+const MenuProps = {
+  PaperProps: {
+    sx: {
+      maxHeight: 320, // ≈ 2 items * row height (adjust if needed)
+      overflowY: 'auto',
+      '& .MuiMenuItem-root': {
+        py: 1
+      },
+      '& .dropdown-footer': {
+        position: 'sticky',
+        bottom: 0,
+        backgroundColor: '#fff',
+        borderTop: '1px solid #e0e0e0',
+        padding: '8px 16px',
+        zIndex: 1
+      }
+    }
+  }
+}
 export interface TableFiltersProps {
   role: string
   setRole: (role: string) => void
@@ -26,14 +46,14 @@ export interface TableFiltersProps {
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
-  },
-};
+// const MenuProps = {
+//   PaperProps: {
+//     style: {
+//       maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+//       width: 250,
+//     },
+//   },
+// };
 
 const TableFilters = ({ role, setRole, status, setStatus,roleName, setRoleName, handleOpenMultipleRoleDialog }: TableFiltersProps) => {
   const [rolesList, setRolesList] = useState<{ id: string | number; name: string }[]>([])
@@ -43,7 +63,7 @@ const TableFilters = ({ role, setRole, status, setStatus,roleName, setRoleName, 
     const fetchRoles = async () => {
       try {
         setLoading(true)
-        const response = await api.get('roles')
+        const response = await api.get(`${endPointApi.getRolesDropdown}`)
         const roles = response.data.data.filter((item: any) => item.name !== 'Super Admin')
         setRolesList(roles)
       } catch (err) {
@@ -153,7 +173,7 @@ const TableFilters = ({ role, setRole, status, setStatus,roleName, setRoleName, 
                   ))}
 
                   {/* Save Button inside dropdown */}
-                  <Box px={2} py={1} borderTop="1px solid #e0e0e0">
+                   <Box className="dropdown-footer">
                     <Button
                       variant="contained"
                       color="primary"
@@ -161,6 +181,7 @@ const TableFilters = ({ role, setRole, status, setStatus,roleName, setRoleName, 
                       size="small"
                       onClick={() => {
                         handleOpenMultipleRoleDialog()
+                        document.activeElement instanceof HTMLElement && document.activeElement.blur()
                       }}
                     >
                       Save

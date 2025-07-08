@@ -139,7 +139,6 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const adminStore = useSelector((state: RootState) => state.admin)
   const [statuConnected, setStatusConnected] = useState(0);
   const [roleName, setRoleName] = useState<{ id: string | number; name: string }[]>([]);
-
   useEffect(() => {
     api.get(`${endPointApi.microsoftAuthTokenValide}`)
       .then((response) => {
@@ -345,20 +344,17 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                     size="small"
                     onClick={() => { setAddUserOpen(true); editUser(row.original.id) }}
                   >
-                    {/* <Link
-                      href={{
-                        pathname: getLocalizedUrl('/pages/account-setting-data', locale as Locale),
-                      }}
-                      className="flex"
-                    > */}
-                    <i className="ri-edit-box-line text-textSecondary" />
-                    {/* </Link> */}
+                    <Tooltip title="Edit">
+                      <i className="ri-edit-box-line text-textSecondary" />
+                    </Tooltip>
                   </IconButton>
                 )}
 
                 {hasPermission('user-management', 'user-management-delete') && (
                   <IconButton size='small' onClick={() => { setDeleteOpen(true); handleOpenDeleteDialog(row.original.id, "0") }}>
-                    <i className='ri-delete-bin-7-line text-textSecondary' />
+                    <Tooltip title="Delete">
+                      <i className='ri-delete-bin-7-line text-textSecondary' />
+                    </Tooltip>
                   </IconButton>
                 )}
               </>
@@ -417,19 +413,23 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     }
   }
 
-  const fetchUsers = async (pageIndex = 0, perPage = 10) => {
+  const fetchUsers = async () => {
     try {
       setLoading(true)
       const response = await api.get(`${endPointApi.getUser}`, {
         params: {
           role_id: role,
           search: searchData,
-          per_page: perPage,
-          page: pageIndex + 1,
+          per_page: rowsPerPage.toString(),
+          page: page + 1,
           status: status || '',
           id: '',
         }
       })
+      if(response.data.message === "Data not found for this User") {
+        toast.error("Data not found for this User")
+        setData([])
+      }
       const users = response.data.users.data.map((user: {
         id: number;
         full_name: string;
@@ -454,7 +454,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
       setTotalRows(response.data.users.total)
       setTotalUser(response.data)
-      setData(users)
+      setData(users || [])
 
       if (response.data.message === "Data not found for this User") {
         toast.error("Data not found for this User")
@@ -471,7 +471,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   }
 
   useEffect(() => {
-    fetchUsers(page, rowsPerPage)
+    fetchUsers()
   }, [role, status, searchData, page, rowsPerPage])
 
   const editUser = async (id: number) => {
@@ -666,7 +666,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       </Grid>
 
       <Card>
-        {/* <CardHeader title='Filters' className='pbe-4' /> */}
+        <CardHeader title='Filters' className='pbe-4' />
         <TableFilters
           role={role}
           setRole={setRole}

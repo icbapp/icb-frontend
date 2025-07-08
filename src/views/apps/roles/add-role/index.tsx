@@ -91,7 +91,7 @@ const RoleFormPage = () => {
         school_id: adminStore.tenant_id.toString() || ''
       }
 
-      const response = await api.post('/permissions-get', payload)
+      const response = await api.post(`${endPointApi.postPermissionsGet}`, payload)
 
       if (response.status === 200) {
         setPermissionsData(response.data.data)
@@ -179,7 +179,7 @@ const RoleFormPage = () => {
 
         if ((loginStore?.super_admin as unknown as boolean) !== true) {
           try {
-            const res = await api.post('get-role-permissions', formData, {
+            const res = await api.post(`${endPointApi.postRolePermissionsGet}`, formData, {
               headers: {
                 'Content-Type': 'multipart/form-data',
               },

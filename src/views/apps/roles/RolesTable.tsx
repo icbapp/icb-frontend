@@ -284,14 +284,14 @@ const RolesTable = () => {
   const getAvatar = ({ avatar, fullName }: Pick<UsersType, 'avatar' | 'fullName'>) =>
     avatar ? <CustomAvatar src={avatar} size={34} /> : <CustomAvatar>{getInitials(fullName)}</CustomAvatar>
 
-  const fetchUsers = async (pageIndex = 0, perPage = 10) => {
+  const fetchUsers = async () => {
     try {
       setLoading(true)
       const formData = new FormData();
 
       formData.append('tenant_id', loginStore.tenant_id);
-      formData.append('per_page', perPage.toString());
-      formData.append('page', pageIndex + 1);
+      formData.append('per_page', rowsPerPage.toString());
+      formData.append('page', page + 1);
 
       // const response = await api.post('roles-all-get', formData, {
       const response = await api.post(`${endPointApi.getAllRoles}`,formData,{
@@ -340,7 +340,7 @@ const RolesTable = () => {
   }
 
   useEffect(() => {
-    fetchUsers(page, rowsPerPage)
+    fetchUsers()
   }, [page, rowsPerPage])
 
   const handleOpenDeleteDialog = (id: number, status: string) => {

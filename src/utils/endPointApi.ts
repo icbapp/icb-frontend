@@ -21,6 +21,8 @@ export interface EndPointApi {
     getAllRoles: string
     getRolesDropdown: string
     postRolesAddUpdate: string
+    postPermissionsGet: string
+    postRolePermissionsGet: string
 
     //School-settings
     //Email
@@ -60,6 +62,8 @@ const endPointApi: EndPointApi = {
     getAllRoles:'roles-all-get',
     getRolesDropdown: 'roles-show',
     postRolesAddUpdate: 'roles-add-update',
+    postPermissionsGet: 'permissions-get',
+    postRolePermissionsGet: 'get-role-permissions',
 
     //School-settings
     //Email
