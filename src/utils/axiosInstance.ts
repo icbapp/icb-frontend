@@ -177,9 +177,9 @@ apiAdminInstance.interceptors.response.use(
         return apiAdminInstance(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        // localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_token');
         // localStorage.removeItem('refresh_token');
-        // window.location.href = '/login';
+        window.location.href = '/login';
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

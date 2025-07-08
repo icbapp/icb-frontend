@@ -118,10 +118,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       const formData = new FormData();
       
       formData.append('type', 'myschool');
+    //   setLoading(true)
       // const response = await axios.post(`https://masteradmin.icbapp.site/api/`,formData)
       const response = await axios.post(`/api/school`, formData);
       if(response.data.status === 200) {
         dispatch(setAdminInfo(response.data.data))
+        setLoading(false)
       }
     }
 
