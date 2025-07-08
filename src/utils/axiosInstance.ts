@@ -90,6 +90,7 @@ const refreshToken = async () => {
 
   const res = await axios.post(
     `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+    {}, // No body data
     {
       headers: {
         Authorization: `Bearer ${expiredAccessToken}`
@@ -100,7 +101,7 @@ const refreshToken = async () => {
   const newAccessToken = res.data.access_token;
   localStorage.setItem('auth_token', newAccessToken);
 
-  // Optionally: save new refresh_token if returned
+  // Optionally store refresh_token if returned
   if (res.data.refresh_token) {
     localStorage.setItem('refresh_token', res.data.refresh_token);
   }
@@ -108,45 +109,82 @@ const refreshToken = async () => {
   return newAccessToken;
 };
 
-
 apiAdminInstance.interceptors.response.use(
-  res => res,
+  response => response,
   async error => {
     const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = 'Bearer ' + token;
-          return apiAdminInstance(originalRequest);
-        });
-      }
-
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
+      if (isRefreshing) {
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(token => {
+            originalRequest.headers['Authorization'] = 'Bearer ' + token;
+            return axios(originalRequest);
+          })
+          .catch(err => Promise.reject(err));
+      }
       isRefreshing = true;
-
       try {
-        const newToken = await refreshToken();
-
+        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`);
+        const newToken = res.data.access_token;
+        localStorage.setItem('auth_token', newToken);
+        api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
         processQueue(null, newToken);
-        originalRequest.headers.Authorization = 'Bearer ' + newToken;
-        
-        return apiAdminInstance(originalRequest);
+        return api(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        // localStorage.removeItem('auth_token');
-        // localStorage.removeItem('refresh_token');
-        // window.location.href = '/login';
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }
     }
-
     return Promise.reject(error);
   }
 );
+
+// apiAdminInstance.interceptors.response.use(
+//   res => res,
+//   async error => {
+//     const originalRequest = error.config;
+
+//     if (error.response?.status === 401 && !originalRequest._retry) {
+//       if (isRefreshing) {
+//         return new Promise((resolve, reject) => {
+//           failedQueue.push({ resolve, reject });
+//         }).then(token => {
+//           originalRequest.headers.Authorization = 'Bearer ' + token;
+//           return apiAdminInstance(originalRequest);
+//         });
+//       }
+
+//       originalRequest._retry = true;
+//       isRefreshing = true;
+      
+//       try {
+//         const newToken = await refreshToken();
+
+//         processQueue(null, newToken);
+//         originalRequest.headers.Authorization = 'Bearer ' + newToken;
+        
+//         return apiAdminInstance(originalRequest);
+//       } catch (err) {
+//         processQueue(err, null);
+//         // localStorage.removeItem('auth_token');
+//         // localStorage.removeItem('refresh_token');
+//         // window.location.href = '/login';
+//         return Promise.reject(err);
+//       } finally {
+//         isRefreshing = false;
+//       }
+//     }
+
+//     return Promise.reject(error);
+//   }
+// );
 
 export const api = apiAdminInstance;
