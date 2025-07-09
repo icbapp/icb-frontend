@@ -42,6 +42,8 @@ apiAdminInstance.interceptors.response.use(
     if (response.status === 401) {
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
+    }else if (response.status === 406) {
+      localStorage.setItem('continue', 1);
     }
     return Promise.reject(error);
   }
@@ -83,14 +85,14 @@ apiAdminInstance.interceptors.response.use(
 //   const expiredAccessToken = localStorage.getItem('auth_token');
 //   if (!expiredAccessToken) throw new Error('No access token to refresh');
 
-//   const res = await axios.post(
-//     `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-//     {}, // No body data
-//     {
-//       headers: {
-//         Authorization: `Bearer ${expiredAccessToken}`
-//       }
-//     }
+  // const res = await axios.post(
+  //   `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+  //   {}, // No body data
+  //   {
+  //     headers: {
+  //       Authorization: `Bearer ${expiredAccessToken}`
+  //     }
+  //   }
 //   );
 
 //   const newAccessToken = res.data.access_token;
