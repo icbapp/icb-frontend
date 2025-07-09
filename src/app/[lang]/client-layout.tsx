@@ -3,7 +3,7 @@
 import Loader from '@/components/Loader';
 import { resetAdminInfo, setAdminInfo } from '@/redux-store/slices/admin';
 import axios, { AxiosResponse } from 'axios';
-import { usePathname, useRouter, useParams } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux-store';
@@ -30,10 +30,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     const [loading, setLoading] = useState<boolean>(false);
     const [adminData, setAdminData] = useState<{ name: string; favicon: string }>({ name: '', favicon: '/favicon.ico' });
     const pathname = usePathname();
-    const router = useRouter()
     const { lang: locale } = useParams()
     const adminStore = useSelector((state: RootState) => state.admin)
-    
+
     useEffect(() => {
         if (typeof window === 'undefined' || !window.location) return;
         const host = window.location.hostname;
@@ -98,9 +97,17 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         if (!adminStore.name && !adminStore.f_logo) return
 
         // Update title only if it's different
-        if (document.title !== adminStore.name) {
-            document.title = adminStore.name
-        }
+        // if (document.title !== adminStore.name) {
+        //     document.title = adminStore.name
+        // }
+        const cleaned = pathname.replace(/^\/en\//, '/').replace(/^\/apps\//, '/')
+        const formattedPath = cleaned
+        .split('/')
+        .filter(Boolean)
+        .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+        .join(' / ') || 'Home'
+
+        document.title = `${formattedPath}`
 
         // Update f_logo dynamically
         let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']")
