@@ -426,7 +426,7 @@ const LoginFormSkeleton = () => {
 
       {/* Remember Me Checkbox */}
       <Box className='flex justify-start items-center gap-2'>
-        <Skeleton variant="circular" width={20} height={20} />
+        <Skeleton sx={{ borderRadius: 2 }} width={20} height={35} />
         <Skeleton width={100} height={20} />
       </Box>
 
