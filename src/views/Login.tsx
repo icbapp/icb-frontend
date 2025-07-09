@@ -154,7 +154,7 @@ const Login = ({ mode }: { mode: Mode }) => {
             const rolesResponse = await api.get(`${endPointApi.getRole}?id=${response.data.data.id}`);
             dispatch(setUserPermissionInfo(rolesResponse.data.roles));
           }
-          setDisableBtn(true);
+          setDisableBtn(false);
 
         // } else {
         //   const message = response?.data?.message || 'Login failed';
@@ -165,12 +165,15 @@ const Login = ({ mode }: { mode: Mode }) => {
         const message = error?.response?.data?.message || 'Username or Password is incorrect';
         if (error?.response?.status === 404) {
           toast.error(message);
+          setDisableBtn(false);
         } else {
           toast.error(message);
+          setDisableBtn(false);
         }
       })
       .finally(() => {
         setLoading(false);
+        setDisableBtn(false);
       });
 
   }
