@@ -291,7 +291,7 @@ const RolesTable = () => {
 
       formData.append('tenant_id', loginStore.tenant_id);
       formData.append('per_page', rowsPerPage.toString());
-      formData.append('page', page + 1);
+      formData.append('page', (page + 1).toString());
 
       // const response = await api.post('roles-all-get', formData, {
       const response = await api.post(`${endPointApi.getAllRoles}`,formData,{

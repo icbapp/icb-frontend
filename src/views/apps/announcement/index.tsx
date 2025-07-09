@@ -208,23 +208,28 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         cell: ({ row }) => (
           <div className='flex items-center'>
               <>
+                <Tooltip title="Doc">
                   <IconButton
                     size="small"
                     onClick={() => {setImagemainPopUpOpen(true); openPopUp(Number(row.original.id))}}
                     disabled={(row.original.attachments?.length ?? 0) > 0 ? false : true}
                   >
-                    <i className="ri-multi-image-line text-textSecondary" />
+                    <i className="ri-multi-image-line text-info" />
                   </IconButton>
+                </Tooltip>
+                <Tooltip title="Edit">
                   <IconButton
                     size="small"
                     onClick={() => {setAddOpen(true); editUser(Number(row.original.id))}}
                   >
                     <i className="ri-edit-box-line text-textSecondary" />
                   </IconButton>
-
+                </Tooltip>
+                <Tooltip title="Delete">
                   <IconButton size='small' onClick={() => handleDeleteClick(Number(row.original.id))}>
                     <i className='ri-delete-bin-7-line text-textSecondary' />
                   </IconButton>
+                  </Tooltip>
               </>
           </div>
         ),

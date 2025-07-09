@@ -1,3 +1,7 @@
+export interface ShortFileNameOptions {
+  filename: string;
+}
+
 const isToday = (date: Date | string) => {
   const today = new Date()
 
@@ -18,3 +22,12 @@ export const formatDateToMonthShort = (value: Date | string, toTimeForCurrentDay
 
   return new Intl.DateTimeFormat('en-US', formatting).format(new Date(value))
 }
+
+export const getShortFileName = (filename: string): string => {
+  if (!filename) return '';
+  const parts = filename.split('.');
+  const ext = parts.pop(); // get extension
+  const base = parts.join('.'); // get name without extension
+  const shortBase = base.length > 50 ? base.slice(0, 50) + '...' : base;
+  return `${shortBase}.${ext}`;
+};

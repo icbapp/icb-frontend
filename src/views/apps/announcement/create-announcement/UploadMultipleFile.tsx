@@ -27,6 +27,8 @@ import AppReactDropzone from '@/libs/styles/AppReactDropzone'
 import Box from '@mui/material/Box'
 import endPointApi from '@/utils/endPointApi'
 import { api } from '@/utils/axiosInstance'
+import { toast } from 'react-toastify'
+import { getShortFileName } from '../../chat/utils'
 
 type FileProp = {
   file_path: any
@@ -111,7 +113,12 @@ const renderFilePreview = (file: FileProp | any) => {
 
 const handleRemoveFile = (fileToRemove: FileProp) => {
   if (fileToRemove.id){
-    api.delete(`${endPointApi.deleteImageAnnouncements}/${fileToRemove.id}`)
+   api.delete(`${endPointApi.deleteImageAnnouncements}/${fileToRemove.id}`)
+   .then((response) => {
+     if(response.data.status === 200){
+       toast.success("File deleted successfully!");
+     }
+   })  
   }
    
   setFiles(prevFiles =>
@@ -127,7 +134,7 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
         <div className='file-preview'>{renderFilePreview(file)}</div>
         <div>
           <Typography className='file-name font-medium' color='text.primary'>
-            {file.name || file.file_path?.split('/').pop()}
+           {getShortFileName(file.name || file.file_path?.split('/').pop())}
             </Typography>
             {/* <Typography className='file-size' variant='body2'>
             {file.size
