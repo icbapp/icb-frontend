@@ -78,6 +78,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const adminStore = useSelector((state: RootState) => state.admin)
 
   const [loading, setLoading] = useState(false)
+  const [disableBtn, setDisableBtn] = useState(false)
   const [bgUrl, setBgUrl] = useState<string>('')
 
   const dispatch = useDispatch();
@@ -125,7 +126,7 @@ const Login = ({ mode }: { mode: Mode }) => {
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
 
-    // setLoading(true);
+    setDisableBtn(true);
     const formData = new FormData();
     formData.append('username', data.username);
     formData.append('password', data.password);
@@ -153,6 +154,8 @@ const Login = ({ mode }: { mode: Mode }) => {
             const rolesResponse = await api.get(`${endPointApi.getRole}?id=${response.data.data.id}`);
             dispatch(setUserPermissionInfo(rolesResponse.data.roles));
           }
+          setDisableBtn(true);
+
         // } else {
         //   const message = response?.data?.message || 'Login failed';
         //   toast.error(message);
@@ -179,50 +182,61 @@ const Login = ({ mode }: { mode: Mode }) => {
   }, [adminStore])
 
     const firstApiCall = async () => {
-  try {
-    const formData = new FormData();
-    formData.append('type', 'myschool');
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append('type', 'myschool');
 
-    const response = await axios.post('/api/school', formData);
+      const response = await axios.post('/api/school', formData);
 
-    if (response.data?.status === 200) {
-      dispatch(setAdminInfo(response.data.data));
-    } else {
-      console.error('Unexpected response:', response.data);
+      if (response.data?.status === 200) {
+        dispatch(setAdminInfo(response.data.data));
+        setLoading(false);
+      } else {
+        console.error('Unexpected response:', response.data);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('❌ API call failed:', error);
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('❌ API call failed:', error);
-  }
-};
+  };
 
-
-    useEffect(() => {
-        firstApiCall();
-    }, []);
+  useEffect(() => {
+      firstApiCall();
+  }, []);
 
   return (
     <div className='flex bs-full justify-center'
     >
       {/* {loading && <Loader />} */}
-      <div
-        style={{
-          width: '100vw',
-          height: '100vh',
-          backgroundImage: `url(${bgUrl})`,
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-        }}
-        className={classnames(
-          'flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative max-md:hidden',
-          {
-            'border-ie': settings.skin === 'bordered'
-          }
-        )}
-      >
+      {/* {loading || !adminStore?.background_image ? (
+        <Skeleton
+          variant="rectangular"
+          width="100vw"
+          height="100vh"
+        />
+          ) : ( */}
+        <div
+          style={{
+            width: '100vw',
+            height: '100vh',
+            backgroundImage: `url(${adminStore?.background_image})`,
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+          }}
+          className={classnames(
+            'flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative max-md:hidden',
+            {
+              'border-ie': settings.skin === 'bordered'
+            }
+          )}
+        >
 
-        {/* <img src={authBackground} className='absolute bottom-[4%] z-[-1] is-full max-md:hidden' /> */}
-      </div>
+          {/* <img src={authBackground} className='absolute bottom-[4%] z-[-1] is-full max-md:hidden' /> */}
+        </div>
+      {/* )} */}
       <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
         {/* <div className='absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]'>
           <Logo />
@@ -238,11 +252,7 @@ const Login = ({ mode }: { mode: Mode }) => {
               />
             ) : (
               <img
-                src={adminStore?.l_logo}
-                onError={(e) => {
-                  e.currentTarget.onerror = null // prevent infinite loop
-                  e.currentTarget.src = '/default-logo.png' // your fallback image path
-                }}
+                src={adminStore?.l_logo || ''}
                 className="max-bs-[73px] max-is-full bs-auto"
               />
             )}
@@ -321,8 +331,6 @@ const Login = ({ mode }: { mode: Mode }) => {
                   error={!!errors.username}
                   helperText={errors?.username?.message}
                 />
-
-
               )}
             />
             <Controller
@@ -365,7 +373,7 @@ const Login = ({ mode }: { mode: Mode }) => {
               <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me ' />
 
             </div>
-            <Button disabled={loading} fullWidth variant='contained' type='submit'>
+            <Button disabled={disableBtn} fullWidth variant='contained' type='submit'>
               Log In
             </Button>
 
