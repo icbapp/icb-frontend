@@ -37,7 +37,7 @@ import { getLocalizedUrl } from '@/utils/i18n'
 import { saveToken } from '@/utils/tokenManager'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
-import { Checkbox, FormControlLabel, Skeleton } from '@mui/material'
+import { Box, Checkbox, FormControlLabel, Skeleton } from '@mui/material'
 import { toast } from 'react-toastify'
 import { setLoginInfo } from '@/redux-store/slices/login'
 import { setUserPermissionInfo } from '@/redux-store/slices/userPermission'
@@ -238,9 +238,7 @@ const Login = ({ mode }: { mode: Mode }) => {
         </div>
       {/* )} */}
       <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
-        {/* <div className='absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]'>
-          <Logo />
-        </div> */}
+ 
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset]'>
           <div className='self-center m-5 "w-[50px]"'>
             {loading || !adminStore?.l_logo ? (
@@ -258,144 +256,148 @@ const Login = ({ mode }: { mode: Mode }) => {
             )}
           </div>
 
-          <div>
-            <Typography variant='h5'>
-              {adminStore && `Welcome to ${adminStore?.name}! 👋🏻`}
-            </Typography>
-          </div>
-          <form
-            noValidate
-            action={() => { }}
-            autoComplete='off'
-            onSubmit={handleSubmit(onSubmit)}
-            className='flex flex-col gap-5'
-          >
-
-            <Controller
-              name='username'
-              control={control}
-              // rules={{ required: true }}
-
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  autoFocus
-                  type="username"
-                  label="Username"
-                  value={field.value ?? ''} // this prevents the warning!
-                  onChange={(e) => {
-                    field.onChange(e.target.value)
-
-                    errorState !== null && setErrorState(null)
-                  }}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              height: '100%',
-                              backgroundColor: 'var(--mui-palette-primary-main)',
-                              color: '#fff !important',
-                              fontWeight: 600,
-                              padding: '15px 12px',
-                              borderTopRightRadius: '8px',
-                              borderBottomRightRadius: '8px'
-                            }}
-                          >
-                            {adminStore?.tenant_id || 'School_ID'}
-                          </span>
-                        </InputAdornment>
-                      )
-                    }
-                  }}
-                  sx={{
-                    '& .MuiInputBase-root': {
-                      pl: 0, // ✅ Removes left padding from input container
-                      borderRadius: '8px',
-                      paddingInlineEnd: '0px !important',
-                    },
-                    '& input': {
-                      pl: 0 // ✅ Removes padding from actual input field
-                    },
-                    '& .mui-4d4ugy-MuiInputAdornment-root':{
-                      color: '#fff'
-                    },
-                    '& .mui-pfniu1':{
-                      color: '#fff'
-                    }
-                  }}
-                  error={!!errors.username}
-                  helperText={errors?.username?.message}
-                />
-              )}
-            />
-            <Controller
-              name='password'
-              control={control}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  value={field.value ?? ''} // this prevents the warning!
-                  label='Password'
-                  id='login-password'
-                  type={isPasswordShown ? 'text' : 'password'}
-                  onChange={e => {
-                    field.onChange(e.target.value)
-                    errorState !== null && setErrorState(null)
-                  }}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <IconButton
-                            edge='end'
-                            onClick={handleClickShowPassword}
-                            onMouseDown={e => e.preventDefault()}
-                            aria-label='toggle password visibility'
-                          >
-                            <i className={isPasswordShown ? 'ri-eye-line' : 'ri-eye-off-line'} />
-                          </IconButton>
-                        </InputAdornment>
-                      )
-                    }
-                  }}
-                  {...(errors.password && { error: true, helperText: errors.password.message })}
-                />
-              )}
-            />
-            <div className='flex justify-start items-center flex-wrap gap-x-3 gap-y-1'>
-              <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me ' />
-
-            </div>
-            <Button disabled={disableBtn} fullWidth variant='contained' type='submit'>
-              Log In
-            </Button>
-
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <Typography
-                className=''
-                color=''
-                component={Link}
-                href={getLocalizedUrl('/forgot-username', locale as Locale)}
-              >
-                Forgot Username?
-              </Typography>
-              <Typography
-                className=''
-                color=''
-                component={Link}
-                href={getLocalizedUrl('/forgot-password', locale as Locale)}
-              >
-                Forgot Password?
+          {loading ? <LoginFormSkeleton /> : (
+          <>
+            <div>
+              <Typography variant='h5'>
+                {adminStore && `Welcome to ${adminStore?.name}! 👋🏻`}
               </Typography>
             </div>
-          </form>
+            <form
+              noValidate
+              action={() => { }}
+              autoComplete='off'
+              onSubmit={handleSubmit(onSubmit)}
+              className='flex flex-col gap-5'
+            >
+
+              <Controller
+                name='username'
+                control={control}
+                // rules={{ required: true }}
+
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    autoFocus
+                    type="username"
+                    label="Username"
+                    value={field.value ?? ''} // this prevents the warning!
+                    onChange={(e) => {
+                      field.onChange(e.target.value)
+
+                      errorState !== null && setErrorState(null)
+                    }}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                height: '100%',
+                                backgroundColor: 'var(--mui-palette-primary-main)',
+                                color: '#fff !important',
+                                fontWeight: 600,
+                                padding: '15px 12px',
+                                borderTopRightRadius: '8px',
+                                borderBottomRightRadius: '8px'
+                              }}
+                            >
+                              {adminStore?.tenant_id || 'School_ID'}
+                            </span>
+                          </InputAdornment>
+                        )
+                      }
+                    }}
+                    sx={{
+                      '& .MuiInputBase-root': {
+                        pl: 0, // ✅ Removes left padding from input container
+                        borderRadius: '8px',
+                        paddingInlineEnd: '0px !important',
+                      },
+                      '& input': {
+                        pl: 0 // ✅ Removes padding from actual input field
+                      },
+                      '& .mui-4d4ugy-MuiInputAdornment-root':{
+                        color: '#fff'
+                      },
+                      '& .mui-pfniu1':{
+                        color: '#fff'
+                      }
+                    }}
+                    error={!!errors.username}
+                    helperText={errors?.username?.message}
+                  />
+                )}
+              />
+              <Controller
+                name='password'
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    value={field.value ?? ''} // this prevents the warning!
+                    label='Password'
+                    id='login-password'
+                    type={isPasswordShown ? 'text' : 'password'}
+                    onChange={e => {
+                      field.onChange(e.target.value)
+                      errorState !== null && setErrorState(null)
+                    }}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position='end'>
+                            <IconButton
+                              edge='end'
+                              onClick={handleClickShowPassword}
+                              onMouseDown={e => e.preventDefault()}
+                              aria-label='toggle password visibility'
+                            >
+                              <i className={isPasswordShown ? 'ri-eye-line' : 'ri-eye-off-line'} />
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }
+                    }}
+                    {...(errors.password && { error: true, helperText: errors.password.message })}
+                  />
+                )}
+              />
+              <div className='flex justify-start items-center flex-wrap gap-x-3 gap-y-1'>
+                <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me ' />
+
+              </div>
+              <Button disabled={disableBtn} fullWidth variant='contained' type='submit'>
+                Log In
+              </Button>
+
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <Typography
+                  className=''
+                  color=''
+                  component={Link}
+                  href={getLocalizedUrl('/forgot-username', locale as Locale)}
+                >
+                  Forgot Username?
+                </Typography>
+                <Typography
+                  className=''
+                  color=''
+                  component={Link}
+                  href={getLocalizedUrl('/forgot-password', locale as Locale)}
+                >
+                  Forgot Password?
+                </Typography>
+              </div>
+            </form>
+          </>
+          )}
         </div>
       </div>
       {/* <ToastsCustom /> */}
@@ -404,3 +406,35 @@ const Login = ({ mode }: { mode: Mode }) => {
 }
 
 export default Login
+
+const LoginFormSkeleton = () => {
+  return (
+    <Box className='flex flex-col gap-5'>
+      {/* Welcome message */}
+      <Typography variant='h5'>
+        <Skeleton width={300} height={32} />
+      </Typography>
+
+      {/* Username Input Skeleton */}
+      <Skeleton variant="rounded" height={56} />
+
+      {/* Password Input Skeleton */}
+      <Skeleton variant="rounded" height={56} />
+
+      {/* Remember Me Checkbox */}
+      <Box className='flex justify-start items-center gap-2'>
+        <Skeleton variant="circular" width={20} height={20} />
+        <Skeleton width={100} height={20} />
+      </Box>
+
+      {/* Login Button */}
+      <Skeleton variant="rounded" width="100%" height={44} />
+
+      {/* Links (Forgot Username / Password) */}
+      <Box className='flex justify-between gap-2'>
+        <Skeleton width={120} height={20} />
+        <Skeleton width={120} height={20} />
+      </Box>
+    </Box>
+  )
+}
