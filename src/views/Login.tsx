@@ -222,6 +222,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   useEffect(() => {
       firstApiCall();
   }, []);
+console.log("1212122121");
 
   return (
     <div className='flex bs-full justify-center'
