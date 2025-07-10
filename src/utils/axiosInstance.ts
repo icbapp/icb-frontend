@@ -5,6 +5,8 @@ const baseURL =
   window.location.hostname === process.env.DOMAIN_PRODUCTION
     ? process.env.NEXT_PUBLIC_API_URL
     : process.env.NEXT_PUBLIC_API_URL_STAGING;
+console.log("process.env.DOMAIN_PRODUCTION",process.env.DOMAIN_PRODUCTION);
+console.log("baseURL",baseURL);
 
 const apiAdminInstance = axios.create({
   baseURL,
