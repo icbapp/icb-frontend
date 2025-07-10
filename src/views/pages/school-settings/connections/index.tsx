@@ -103,7 +103,8 @@ const socialAccountsArr: SocialAccountsType[] = [
 
 const Connections = () => {
   const loginStore = useSelector((state: RootState) => state.login);
-  
+  const adminStore = useSelector((state: RootState) => state.admin)
+
   const [statuConnected, setStatusConnected] = useState(0);
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -111,8 +112,8 @@ const Connections = () => {
   const redirectTo = async() =>{
     const response = await api.get('ms-auth/redirect', {
       params: {
-        school_id: 11,
-        tenant_id: "myschool"
+        school_id: adminStore?.school_id?.toString(),
+        tenant_id: adminStore?.tenant_id?.toString()
       }
     });
     // window.open(response.data.redirect_url);
