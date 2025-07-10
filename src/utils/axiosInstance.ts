@@ -1,7 +1,13 @@
 import axios from 'axios'
 
+const baseURL =
+  typeof window !== 'undefined' &&
+  window.location.hostname === 'icb-frontend-production.vercel.app'
+    ? process.env.NEXT_PUBLIC_API_URL
+    : 'https://petrolpe.com/api';
+
 const apiAdminInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://petrolpe.com/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -51,13 +57,6 @@ apiAdminInstance.interceptors.response.use(
 
 
 // import axios from 'axios';
-
-// const apiAdminInstance = axios.create({
-//   baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://petrolpe.com/api',
-//   headers: {
-//     'Content-Type': 'application/json'
-//   }
-// });
 
 // apiAdminInstance.interceptors.request.use(config => {
 //   const token = localStorage.getItem('auth_token');
