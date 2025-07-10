@@ -125,6 +125,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
+        console.log("222222");
 
     setDisableBtn(true);
     const formData = new FormData();
@@ -163,12 +164,16 @@ const Login = ({ mode }: { mode: Mode }) => {
       })
       .catch((error) => {
         const message = error?.response?.data?.message || 'Username or Password is incorrect';
+        console.log("000000");
+
         if (error?.response?.status === 404) {
           toast.error(message);
           setDisableBtn(false);
+          setLoading(false);
         } else {
           toast.error(message);
           setDisableBtn(false);
+          setLoading(false);
         }
       })
       .finally(() => {
@@ -222,6 +227,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   // useEffect(() => {
   //     firstApiCall();
   // }, []);
+console.log("111111");
 
   return (
     <div className='flex bs-full justify-center'
