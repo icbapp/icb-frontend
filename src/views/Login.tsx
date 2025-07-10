@@ -188,7 +188,9 @@ const Login = ({ mode }: { mode: Mode }) => {
     try {
       setLoading(true);
       const formData = new FormData();
-      formData.append('type', 'myschool');
+    const hostNameData = window.location.hostname == "icb-frontend-production.vercel.app" ? "icbschool" : "myschool";
+
+      formData.append('type', hostNameData);
 
       const response = await axios.post('/api/school', formData);
 
