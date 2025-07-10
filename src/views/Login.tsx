@@ -283,7 +283,7 @@ console.log("111111");
           <>
             <div>
               <Typography variant='h5'>
-                {adminStore && `Welcome to ${adminStore?.name}! 👋🏻`}
+                {adminStore && `Welcome000 to ${adminStore?.name}! 👋🏻`}
               </Typography>
             </div>
             <form
