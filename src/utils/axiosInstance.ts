@@ -1,11 +1,6 @@
 import axios from 'axios'
 
-const baseURL =
-  typeof window !== 'undefined' &&
-  window.location.hostname === process.env.DOMAIN_PRODUCTION
-    ? process.env.NEXT_PUBLIC_API_URL
-    : process.env.NEXT_PUBLIC_API_URL_STAGING;
-console.log("process.env.DOMAIN_PRODUCTION",process.env.DOMAIN_PRODUCTION);
+const baseURL = process.env.API_URL;
 console.log("baseURL",baseURL);
 
 const apiAdminInstance = axios.create({
