@@ -194,10 +194,10 @@ const Login = ({ mode }: { mode: Mode }) => {
     // setLoading(true);
     const hostNameParts = window.location.hostname.split('.');
     const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
-    const baseURL = process.env.API_URL;
+    const baseURL = process.env.NEXT_PUBLIC_API_URLv;
 
     if (!baseURL) {
-      throw new Error('API_URL is not defined');
+      throw new Error('NEXT_PUBLIC_API_URLv is not defined');
     }
 
     const formData = new URLSearchParams();
