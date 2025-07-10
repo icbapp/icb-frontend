@@ -122,7 +122,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     // setLoading(true);
     const hostNameParts = window.location.hostname.split('.');
     const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
-    const baseURL = process.env.API_URL;
+    const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
     if (!baseURL) {
       throw new Error('API_URL is not defined')
