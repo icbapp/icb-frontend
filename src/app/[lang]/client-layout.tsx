@@ -32,7 +32,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     const pathname = usePathname();
     const { lang: locale } = useParams()
     const adminStore = useSelector((state: RootState) => state.admin)
-    console.log("window.location",window.location);
 
     useEffect(() => {
         if (typeof window === 'undefined' || !window.location) return;
@@ -120,23 +119,32 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         }
     }, [adminStore, pathname])
 
-  const firstApiCall = async () => {
-    const formData = new FormData();
-    const hostNameData = window.location.hostname == "icb-frontend-production.vercel.app" ? "icbschool" : "myschool";
+const firstApiCall = async () => {
+  const hostNameData = window.location.hostname === "icbrisbane.vercel.app" ? "icbrisbane" : "myschool";
+//   const baseURL = window.location.hostname === process.env.DOMAIN_PRODUCTION
+//     ? process.env.NEXT_PUBLIC_API_URL ?? ''
+//     : process.env.NEXT_PUBLIC_API_URL_STAGING ?? '';
 
-      formData.append('type', hostNameData);
-    //   setLoading(true)
-      // const response = await axios.post(`https://masteradmin.icbapp.site/api/`,formData)
-      const response = await axios.post(`/api/school`, formData);
-      if(response.data.status === 200) {
-        dispatch(setAdminInfo(response.data.data))
-        setLoading(false)
-      }
-    }
+        // const formdata = new FormData();
+        // formdata.append("type", hostNameData);
 
-    useEffect(() => {
-        firstApiCall();
-    }, []);
+        // const requestOptions = {
+        // method: "POST",
+        // body: formdata,
+        // redirect: "follow" as RequestRedirect
+        // };
+
+        // fetch("https://petrolpe.com/api/", requestOptions)
+        // .then((response:any) => {
+        //     dispatch(setAdminInfo(response.data.data))
+        //     setLoading(false)})
+        // .then((result) => console.log(result))
+        // .catch((error) => console.error(error));
+}
+
+    // useEffect(() => {
+    //     firstApiCall();
+    // }, []);
 
     return (
         <>

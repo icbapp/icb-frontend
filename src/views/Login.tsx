@@ -185,26 +185,38 @@ const Login = ({ mode }: { mode: Mode }) => {
   }, [adminStore])
 
     const firstApiCall = async () => {
-    try {
-      setLoading(true);
-      const formData = new FormData();
-      const hostNameData = window.location.hostname == "icb-frontend-production.vercel.app" ? "icbschool" : "myschool";
+    // try {
+    setLoading(true);
+    const hostNameData = window.location.hostname == "icbrisbane.vercel.app" ? "icbrisbane" : "myschool";
+    const baseURL =
+    typeof window !== 'undefined' &&
+    window.location.hostname === process.env.DOMAIN_PRODUCTION
+    ? process.env.NEXT_PUBLIC_API_URL ?? ''
+    : process.env.NEXT_PUBLIC_API_URL_STAGING ?? ''
 
+      const formData = new URLSearchParams();
       formData.append('type', hostNameData);
 
-      const response = await axios.post('/api/school', formData);
+      try {
+        const res = await fetch(baseURL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData.toString()
+        });
 
-      if (response.data?.status === 200) {
-        dispatch(setAdminInfo(response.data.data));
-        setLoading(false);
-      } else {
-        console.error('Unexpected response:', response.data);
-        setLoading(false);
+        const data = await res.json(); // 🔥 YOU MISSED THIS
+        console.log("✅ Final Parsed Response:", data);
+
+        if (data.status === 200) {
+          dispatch(setAdminInfo(data.data));
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("❌ Error calling API", error);
       }
-    } catch (error) {
-      console.error('❌ API call failed:', error);
-      setLoading(false);
-    }
+  
   };
 
   useEffect(() => {

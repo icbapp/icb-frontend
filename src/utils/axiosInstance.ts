@@ -2,9 +2,9 @@ import axios from 'axios'
 
 const baseURL =
   typeof window !== 'undefined' &&
-  window.location.hostname === 'icb-frontend-production.vercel.app'
+  window.location.hostname === process.env.DOMAIN_PRODUCTION
     ? process.env.NEXT_PUBLIC_API_URL
-    : 'https://petrolpe.com/api';
+    : process.env.NEXT_PUBLIC_API_URL_STAGING;
 
 const apiAdminInstance = axios.create({
   baseURL,
