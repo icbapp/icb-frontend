@@ -121,7 +121,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
  const firstApiCall = async () => {
     // try {
-    setLoading(true);
+    // setLoading(true);
     const hostNameData = window.location.hostname == "icbrisbane.vercel.app" ? "icbrisbane" : "myschool";
     const baseURL =
     typeof window !== 'undefined' &&
@@ -146,7 +146,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
         if (data.status === 200) {
           dispatch(setAdminInfo(data.data));
-          setLoading(false);
+        //   setLoading(false);
         }
       } catch (error) {
         console.error("❌ Error calling API", error);
