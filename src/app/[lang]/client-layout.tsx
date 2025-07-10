@@ -42,7 +42,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     const getAdminData = async () => {
         try {
 
-            setLoading(true);
+            // setLoading(true);
             // const formData = new FormData();
             // const data = response.data.data;
         //   const response = await axios.post('https://masteradmin.icbapp.site/api',formData)
