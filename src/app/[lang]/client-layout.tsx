@@ -89,7 +89,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
     useEffect(() => {
 
-        getAdminData();
+        // getAdminData();
     }, []);
 
     useEffect(() => {
@@ -123,6 +123,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const firstApiCall = async () => {
     const formData = new FormData();
     const hostNameData = window.location.hostname == "icb-frontend-production.vercel.app" ? "icbschool" : "myschool";
+    console.log("hostNameData",hostNameData);
 
       formData.append('type', hostNameData);
     //   setLoading(true)
