@@ -32,6 +32,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     const pathname = usePathname();
     const { lang: locale } = useParams()
     const adminStore = useSelector((state: RootState) => state.admin)
+    console.log("window.location",window.location);
 
     useEffect(() => {
         if (typeof window === 'undefined' || !window.location) return;
