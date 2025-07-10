@@ -119,32 +119,44 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         }
     }, [adminStore, pathname])
 
-const firstApiCall = async () => {
-  const hostNameData = window.location.hostname === "icbrisbane.vercel.app" ? "icbrisbane" : "myschool";
-//   const baseURL = window.location.hostname === process.env.DOMAIN_PRODUCTION
-//     ? process.env.NEXT_PUBLIC_API_URL ?? ''
-//     : process.env.NEXT_PUBLIC_API_URL_STAGING ?? '';
+ const firstApiCall = async () => {
+    // try {
+    setLoading(true);
+    const hostNameData = window.location.hostname == "icbrisbane.vercel.app" ? "icbrisbane" : "myschool";
+    const baseURL =
+    typeof window !== 'undefined' &&
+    window.location.hostname === process.env.DOMAIN_PRODUCTION
+    ? process.env.NEXT_PUBLIC_API_URL ?? ''
+    : process.env.NEXT_PUBLIC_API_URL_STAGING ?? ''
 
-        // const formdata = new FormData();
-        // formdata.append("type", hostNameData);
+      const formData = new URLSearchParams();
+      formData.append('type', hostNameData);
 
-        // const requestOptions = {
-        // method: "POST",
-        // body: formdata,
-        // redirect: "follow" as RequestRedirect
-        // };
+      try {
+        const res = await fetch(baseURL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData.toString()
+        });
 
-        // fetch("https://petrolpe.com/api/", requestOptions)
-        // .then((response:any) => {
-        //     dispatch(setAdminInfo(response.data.data))
-        //     setLoading(false)})
-        // .then((result) => console.log(result))
-        // .catch((error) => console.error(error));
-}
+        const data = await res.json(); // 🔥 YOU MISSED THIS
+        console.log("✅ Final Parsed Response:", data);
 
-    // useEffect(() => {
-    //     firstApiCall();
-    // }, []);
+        if (data.status === 200) {
+          dispatch(setAdminInfo(data.data));
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("❌ Error calling API", error);
+      }
+  
+  };
+
+  useEffect(() => {
+      firstApiCall();
+  }, []);
 
     return (
         <>
