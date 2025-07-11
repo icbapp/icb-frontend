@@ -281,7 +281,7 @@ const Login = ({ mode }: { mode: Mode }) => {
           <>
             <div>
               <Typography variant='h5'>
-                {adminStore && `Welcome to ${adminStore?.name}! 👋🏻`}
+                {adminStore && `Welcome00 to ${adminStore?.name}! 👋🏻`}
               </Typography>
             </div>
             <form
