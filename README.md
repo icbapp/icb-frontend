@@ -110,7 +110,7 @@ GOOGLE_CLIENT_SECRET=
 # ---------------------------------------------------------------------
 # API (used in frontend/backend calls)
 # ---------------------------------------------------------------------
-API_URL=https://masteradmin.icbapp.site/api/
+NEXT_PUBLIC_APP_URL=https://masteradmin.icbapp.site/api/
 NEXT_PUBLIC_API_URL=https://masteradmin.icbapp.site/api/
 
 # ---------------------------------------------------------------------
@@ -145,8 +145,8 @@ DATABASE_URL=
 # -----------------------------------------------------------------------------
 # API
 # -----------------------------------------------------------------------------
-API_URL=https://masteradmin.icbapp.site/api/
-NEXT_PUBLIC_API_URL=${API_URL}
+NEXT_PUBLIC_APP_URL=https://masteradmin.icbapp.site/api/
+NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_APP_URL}
 
 
 

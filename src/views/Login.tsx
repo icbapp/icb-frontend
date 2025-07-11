@@ -125,7 +125,6 @@ const Login = ({ mode }: { mode: Mode }) => {
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
-        console.log("222222");
 
     setDisableBtn(true);
     const formData = new FormData();
@@ -164,7 +163,6 @@ const Login = ({ mode }: { mode: Mode }) => {
       })
       .catch((error) => {
         const message = error?.response?.data?.message || 'Username or Password is incorrect';
-        console.log("000000");
 
         if (error?.response?.status === 404) {
           toast.error(message);
@@ -194,10 +192,10 @@ const Login = ({ mode }: { mode: Mode }) => {
     // setLoading(true);
     const hostNameParts = window.location.hostname.split('.');
     const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
-    const baseURL = process.env.API_URL;
+    const baseURL = process.env.NEXT_PUBLIC_APP_URL;
 
     if (!baseURL) {
-      throw new Error('API_URL is not defined');
+      throw new Error('NEXT_PUBLIC_APP_URL is not defined');
     }
 
     const formData = new URLSearchParams();
@@ -228,8 +226,6 @@ const Login = ({ mode }: { mode: Mode }) => {
   useEffect(() => {
       firstApiCall();
   }, []);
-
-console.log("111111");
 
   return (
     <div className='flex bs-full justify-center'
