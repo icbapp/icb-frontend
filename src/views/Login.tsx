@@ -191,7 +191,10 @@ const Login = ({ mode }: { mode: Mode }) => {
     // try {
     // setLoading(true);
     const hostNameParts = window.location.hostname.split('.');
+    console.log("hostNameParts",hostNameParts);
     const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'myschool';
+    console.log("hostNameData",hostNameData);
+    
     const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
     if (!baseURL) {
@@ -281,7 +284,7 @@ const Login = ({ mode }: { mode: Mode }) => {
           <>
             <div>
               <Typography variant='h5'>
-                {adminStore && `Welcome00 to ${adminStore?.name}! 👋🏻`}
+                {adminStore && `Welcome to ${adminStore?.name}! 👋🏻`}
               </Typography>
             </div>
             <form
