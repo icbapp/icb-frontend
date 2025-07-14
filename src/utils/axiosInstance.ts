@@ -1,7 +1,6 @@
 import axios from 'axios'
 
 const baseURL = process.env.NEXT_PUBLIC_APP_URL;
-console.log("baseURL",baseURL);
 
 const apiAdminInstance = axios.create({
   baseURL,

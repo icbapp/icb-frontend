@@ -141,7 +141,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       })
 
       const data = await res.json() // 🔥 YOU MISSED THIS
-      console.log('✅ Final Parsed Response:', data)
+      // console.log('✅ Final Parsed Response:', data)
 
       if (data.status === 200) {
         dispatch(setAdminInfo(data.data))

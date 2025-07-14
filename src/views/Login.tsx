@@ -191,9 +191,7 @@ const Login = ({ mode }: { mode: Mode }) => {
     // try {
     // setLoading(true);
     const hostNameParts = window.location.hostname.split('.');
-    console.log("hostNameParts",hostNameParts);
     const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
-    console.log("hostNameData",hostNameData);
     
     const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
