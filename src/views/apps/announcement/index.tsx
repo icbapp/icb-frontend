@@ -6,29 +6,16 @@ import { useEffect, useState, useMemo } from 'react'
 // MUI Imports
 import Card from '@mui/material/Card'
 import Divider from '@mui/material/Divider'
-import TextField from '@mui/material/TextField'
 import IconButton from '@mui/material/IconButton'
 import { styled } from '@mui/material/styles'
-import TablePagination from '@mui/material/TablePagination'
-import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
-import classnames from 'classnames'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
 
 import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getFilteredRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFacetedMinMaxValues,
-  getPaginationRowModel,
-  getSortedRowModel
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
@@ -49,13 +36,13 @@ import { api } from '@/utils/axiosInstance';
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Typography, Grid,  Skeleton, Tooltip,
-  OutlinedInput,
-  Paper
+  OutlinedInput
 } from '@mui/material'
 import AnnouncementCreatePage from './create-announcement';
 import endPointApi from '@/utils/endPointApi';
 import DeleteGialog from '@/comman/dialog/DeleteDialog';
 import ImageGallery from './ImageGallery';
+import ReactTable from '@/comman/table/ReactTable';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -77,6 +64,9 @@ type UserCount = {
   title: string
   description: string
   status: 'active' | 'inactive'
+  number_of_campaigns?: number
+  updated_by?: string
+  created_by?: string
   created_at?: string
   updated_at?: string
   attachments?: File[]
@@ -91,57 +81,12 @@ interface AnnouncementForm {
   attachments: File[];
 }
 
-const Icon = styled('i')({})
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
-
-  // Store the itemRank info
-  addMeta({
-    itemRank
-  })
-
-  // Return if the item should be filtered in/out
-  return itemRank.passed
-}
-
-const DebouncedInput = ({
-  value: initialValue,
-  onChange,
-  debounce = 500,
-  ...props
-}: {
-  value: string | number
-  onChange: (value: string | number) => void
-  debounce?: number
-} & Omit<TextFieldProps, 'onChange'>) => {
-  // States
-  const [value, setValue] = useState(initialValue)
-
-  useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
-
-    return () => clearTimeout(timeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
-
-  return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
-}
-
 // Column Definitions
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
 const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const permissions = useSelector((state: RootState) => state.sidebarPermission)
-  const adminStore = useSelector((state: RootState) => state.admin)
  
    const [announcementForm, setAnnouncementForm] = useState<AnnouncementForm>({
     title: '',
@@ -153,22 +98,20 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const [imagemainPopUpOpen, setImagemainPopUpOpen] = useState(false)
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false)
-  const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<UsersType[]>([])
-  const [searchData, setSearchData] = useState<string>('')
   const [selectedUser, setSelectedUser] = useState<any>(null); // ideally type this
   const [loading, setLoading] = useState(false)
   const [loaderMain, setloaderMain] = useState(false)
-  const [totalRows, setTotalRows] = useState<UserCount>({ active_count: 0, inactive_count: 0 });
-  const [paginationInfo, setPaginationInfo] = useState({
-    page: 0,
-    perPage: 10
-  })
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number>('') // default 0 instead of null
   const [addOpen, setAddOpen] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [description, setDescription] = useState('')
+  const [totalRows, setTotalRows] = useState(0);
+    const [paginationInfo, setPaginationInfo] = useState({
+    page: 0,
+    perPage: 10
+  })
 
   const openPopUp = (id: number) => {
     const selectedData = data.find((item) => item.id === id);
@@ -178,99 +121,107 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   }  
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
-    () => [
-      columnHelper.accessor('title', {
-        header: 'title',
-        cell: ({ row }) => <Typography>{row.original.title}</Typography>
-      }), 
-      columnHelper.accessor('description', {
-        header: 'description',
-        // cell: ({ row }) => <Typography>{row.original.description}</Typography>
-         cell: ({ row }) => {
-          const htmlToText = (html: string): string => {
-            const temp = document.createElement('div')
-            temp.innerHTML = html
-            return temp.textContent || temp.innerText || ''
-          }
+  () => [
+    columnHelper.accessor('title', {
+      header: 'Title',
+      cell: ({ row }) => <Typography>{row.original.title}</Typography>
+    }),
 
-          const text = htmlToText(row.original.description || '')
-          const truncated = text.length > 30 ? `${text.slice(0, 30)}...` : text
+    columnHelper.accessor('description', {
+      header: 'Description',
+      cell: ({ row }) => {
+        const htmlToText = (html: string): string => {
+          const temp = document.createElement('div')
+          temp.innerHTML = html
+          return temp.textContent || temp.innerText || ''
+        }
 
-           return (
-            <Tooltip title={text} arrow placement="bottom-start">
-              <Typography noWrap>{truncated}</Typography>
-            </Tooltip>
-          )
-}
-      }), 
-      columnHelper.accessor('action', {
-        header: 'Action',
-        cell: ({ row }) => (
-          <div className='flex items-center'>
-              <>
-                <Tooltip title="Doc">
-                  <IconButton
-                    size="small"
-                    onClick={() => {setImagemainPopUpOpen(true); openPopUp(Number(row.original.id))}}
-                    disabled={(row.original.attachments?.length ?? 0) > 0 ? false : true}
-                  >
-                    <i className="ri-multi-image-line text-info" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Edit">
-                  <IconButton
-                    size="small"
-                    onClick={() => {setAddOpen(true); editUser(Number(row.original.id))}}
-                  >
-                    <i className="ri-edit-box-line text-textSecondary" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Delete">
-                  <IconButton size='small' onClick={() => handleDeleteClick(Number(row.original.id))}>
-                    <i className='ri-delete-bin-7-line text-textSecondary' />
-                  </IconButton>
-                  </Tooltip>
-              </>
-          </div>
-        ),
-        enableSorting: false
-      })
+        const text = htmlToText(row.original.description || '')
+        const truncated = text.length > 30 ? `${text.slice(0, 30)}...` : text
 
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, permissions]
-  )
-
-  const table = useReactTable({
-    data: data as UsersType[],
-    columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
-    state: {
-      rowSelection,
-      globalFilter: searchData,
-      pagination: {
-        pageIndex: paginationInfo.page,
-        pageSize: paginationInfo.perPage
+        return (
+          <Tooltip title={text} arrow placement='bottom-start'>
+            <Typography noWrap>{truncated}</Typography>
+          </Tooltip>
+        )
       }
-    },
-    manualPagination: true,
-    enableRowSelection: true, //enable row selection for all rows
-    // enableRowSelection: row => row.original.age > 18, // or enable row selection conditionally per row
-    globalFilterFn: fuzzyFilter,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setSearchData,
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    getRowId: (row) => row.id
-  })
+    }),
 
+    columnHelper.accessor('status', {
+      header: 'Status',
+      // cell: ({ row }) => <Typography>{row.original.status}</Typography>
+    }),
+
+    columnHelper.accessor('number_of_campaigns', {
+      header: 'Number of Campaigns',
+      // cell: ({ row }) => <Typography>{row.original.number_of_campaigns}</Typography>
+    }),
+
+    columnHelper.accessor('created_at', {
+      header: 'Created At',
+      cell: ({ row }) => <Typography>{row.original.created_at}</Typography>
+    }),
+
+    columnHelper.accessor('created_by', {
+      header: 'Created By',
+      // cell: ({ row }) => <Typography>{row.original.created_by}</Typography>
+    }),
+
+    columnHelper.accessor('updated_at', {
+      header: 'Updated At',
+      cell: ({ row }) => <Typography>{row.original.updated_at}</Typography>
+    }),
+
+    columnHelper.accessor('updated_by', {
+      header: 'Updated By',
+      // cell: ({ row }) => <Typography>{row.original.updated_by}</Typography>
+    }),
+
+    columnHelper.accessor('action', {
+      header: 'Action',
+      cell: ({ row }) => (
+        <div className='flex items-center gap-1'>
+          <>
+            <Tooltip title='Doc'>
+              <IconButton
+                size='small'
+                onClick={() => {
+                  setImagemainPopUpOpen(true)
+                  openPopUp(Number(row.original.id))
+                }}
+                disabled={(row.original.attachments?.length ?? 0) === 0}
+              >
+                <i className='ri-multi-image-line text-info' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Edit'>
+              <IconButton
+                size='small'
+                onClick={() => {
+                  setAddOpen(true)
+                  editUser(Number(row.original.id))
+                }}
+              >
+                <i className='ri-edit-box-line text-textSecondary' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Delete'>
+              <IconButton
+                size='small'
+                onClick={() => handleDeleteClick(Number(row.original.id))}
+              >
+                <i className='ri-delete-bin-7-line text-textSecondary' />
+              </IconButton>
+            </Tooltip>
+          </>
+        </div>
+      ),
+      enableSorting: false,
+      enableColumnFilter: false
+    })
+  ],
+  [data, permissions]
+)
   const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName'>) => {
     const { avatar, fullName } = params
 
@@ -288,17 +239,24 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const fetchUsers = async () => {
     setloaderMain(true)
     try {
-      const res = await api.get(`${endPointApi.getAnnouncements}`)
+      const res = await api.get(`${endPointApi.getAnnouncements}`, {
+        params: {
+          per_page: paginationInfo.perPage.toString(),
+          page: paginationInfo.page + 1,
+          id: '',
+        }
+      })
+      setTotalRows(res.data.data.total)
       setData(res.data.data.data);
       setloaderMain(false) 
     } catch (err) {
-      console.error('Token refresh error:', err);
+      setloaderMain(false)
     }
   }
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [paginationInfo.page, paginationInfo.perPage])
 
   const handleDeleteClick = (id: number) => {
   setSelectedUserId(id)
@@ -411,89 +369,21 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         ) : (
           // Your real table goes here when loading = false
           <div className='overflow-x-auto'>
-            <table className={tableStyles.table}>
-              <thead>
-                {table.getHeaderGroups().map(headerGroup => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map(header => (
-                      <th key={header.id}>
-                        {header.isPlaceholder ? null : (
-                          <>
-                            <div
-                              className={classnames({
-                                'flex items-center': header.column.getIsSorted(),
-                                'cursor-pointer select-none': header.column.getCanSort()
-                              })}
-                              onClick={header.column.getToggleSortingHandler()}
-                            >
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              {{
-                                asc: <i className='ri-arrow-up-s-line text-xl' />,
-                                desc: <i className='ri-arrow-down-s-line text-xl' />
-                              }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                            </div>
-                          </>
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              {table.getFilteredRowModel().rows.length === 0 ? (
-                <tbody>
-                  <tr>
-                    <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                      No data available
-                    </td>
-                  </tr>
-                </tbody>
-              ) : (
-                <tbody>
-                  {table
-                    .getRowModel()
-                    .rows.slice(0, table.getState().pagination.pageSize)
-                    .map(row => {
-                      return (
-                        <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                          {row.getVisibleCells().map(cell => (
-                            <td key={cell.id}>
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                          ))}
-                        </tr>
-                      )
-                    })}
-                </tbody>
-              )}
-            </table>
+            <ReactTable 
+              data={data} 
+              columns={columns}
+              count={totalRows}
+              page={paginationInfo.page}
+              rowsPerPage={paginationInfo.perPage}
+              onPageChange={(_, newPage) =>
+                setPaginationInfo(prev => ({ ...prev, page: newPage }))
+              }
+              onRowsPerPageChange={newSize =>
+                setPaginationInfo({ page: 0, perPage: newSize })
+              }
+            />
           </div>
         )}
-
-        <TablePagination
-          component='div'
-          rowsPerPageOptions={[10, 25, 50]}
-          className='border-bs'
-          count={totalRows.active_count + totalRows.inactive_count}
-          page={paginationInfo.page}
-          rowsPerPage={paginationInfo.perPage}
-          SelectProps={{ inputProps: { 'aria-label': 'rows per page' } }}
-          onPageChange={(_, page) => {
-            setPaginationInfo(prev => ({
-              ...prev,
-              page
-            }))
-            table.setPageIndex(page)
-          }}
-          onRowsPerPageChange={e => {
-            const newSize = Number(e.target.value)
-            setPaginationInfo({
-              page: 0,
-              perPage: newSize
-            })
-            table.setPageSize(newSize)
-            table.setPageIndex(0)
-          }}
-        />
       </Card>
 
       <AnnouncementCreatePage
