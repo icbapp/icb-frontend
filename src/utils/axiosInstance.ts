@@ -41,12 +41,12 @@ apiAdminInstance.interceptors.response.use(
     const { response } = error;
     console.log("throw", response);
   
-    // if (response.status === 401) {
-    //   localStorage.removeItem('auth_token');
-    //   window.location.href = '/login';
-    // }else if (response.status === 406) {
-    //   localStorage.setItem('continue', 1);
-    // }
+    if (response.status === 401) {
+      localStorage.removeItem('auth_token');
+      window.location.href = '/login';
+    }else if (response.status === 406) {
+      localStorage.setItem('continue', 1);
+    }
     return Promise.reject(error);
   }
 );
