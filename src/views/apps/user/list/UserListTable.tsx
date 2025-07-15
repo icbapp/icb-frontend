@@ -538,9 +538,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       )
 
       setTotalRows(response.data.users.total)
-      setTotalUser(response.data)
       setData(users || [])
-
+      getUserCount()
       if (response.data.message === 'Data not found for this User') {
         toast.error('Data not found for this User')
         setData([])
@@ -557,6 +556,14 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     fetchUsers()
   }, [role, status, searchData, page, rowsPerPage])
 
+  useEffect(() => {
+     getUserCount()
+  },[role, status])
+
+  const getUserCount = () => {
+     api.get(`${endPointApi.getUserCount}`)
+     .then(res => setTotalUser(res.data.data))
+  }
   const editUser = async (id: number) => {
     setSelectedUser(id)
     const response = await api.get(`${endPointApi.getUser}`, {
@@ -589,6 +596,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       if (response.data?.status === 200) {
         fetchUsers() // refresh the list after update
         setSelectedUserIds([])
+        getUserCount()
       }
     } catch (error: any) {
       return null
@@ -702,7 +710,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                   {loading ? (
                     <Skeleton variant='text' width={60} height={40} />
                   ) : (
-                    <Typography variant='h4'>{totalUser.active_count}</Typography>
+                    <Typography variant='h4'>{totalUser.active_count - 1}</Typography>
                   )}
                 </div>
                 {loading ? (
