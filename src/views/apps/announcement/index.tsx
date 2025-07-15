@@ -43,6 +43,9 @@ import endPointApi from '@/utils/endPointApi';
 import DeleteGialog from '@/comman/dialog/DeleteDialog';
 import ImageGallery from './ImageGallery';
 import ReactTable from '@/comman/table/ReactTable';
+import { getLocalizedUrl } from '@/utils/i18n';
+import { useParams, useRouter } from 'next/navigation';
+import { Locale } from '@/configs/i18n';
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -73,13 +76,6 @@ type UserCount = {
   action?: string
 }
 
-interface AnnouncementForm {
-  title: string;
-  description: string;
-  status: string;
-  category: string;
-  attachments: File[];
-}
 
 // Column Definitions
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
@@ -87,31 +83,23 @@ const columnHelper = createColumnHelper<UsersTypeWithAction>()
 const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const permissions = useSelector((state: RootState) => state.sidebarPermission)
- 
-   const [announcementForm, setAnnouncementForm] = useState<AnnouncementForm>({
-    title: '',
-    description: '',
-    status: '',
-    category: '',
-    attachments: [] as File[],
-  });
+  const router = useRouter()
+  const { lang: locale } = useParams()
 
   const [imagemainPopUpOpen, setImagemainPopUpOpen] = useState(false)
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false)
   const [data, setData] = useState<UsersType[]>([])
   const [selectedUser, setSelectedUser] = useState<any>(null); // ideally type this
-  const [loading, setLoading] = useState(false)
   const [loaderMain, setloaderMain] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<number>('') // default 0 instead of null
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [addOpen, setAddOpen] = useState(false)
-  const [files, setFiles] = useState<File[]>([])
-  const [description, setDescription] = useState('')
   const [totalRows, setTotalRows] = useState(0);
     const [paginationInfo, setPaginationInfo] = useState({
     page: 0,
     perPage: 10
   })
+  const [loading, setLoading] = useState(false)
 
   const openPopUp = (id: number) => {
     const selectedData = data.find((item) => item.id === id);
@@ -263,20 +251,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   setDeleteOpen(true)
 }
   const editUser = async (id:number) => {
-    setSelectedUser(id)
-    setLoading(true)
-    const response = await api.get(`${endPointApi.getAnnouncements}`,{ 
-        params: {
-        id: id || '',
-    }})
-    if(response){
-        setAnnouncementForm(response.data.data)
-        setDescription(response.data.data.description)
-        setLoading(false)
-    }
-    // if(response.data.message === "User fetched successfully"){
-    // setEditUserData(response.data)
-    // }
+    router.push(`${getLocalizedUrl('/apps/announcement/add-announcement', locale as Locale)}?id=${id}`)
   }
 
   const deleteUser = async (id: number) => {
@@ -313,16 +288,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
              <Button
                 variant='contained'
                 onClick={() => {
-                  setAddOpen(true);
-                  setAnnouncementForm({ 
-                  title: '',
-                  description: '',
-                  status: '',
-                  category: '',
-                  attachments: [] as File[]});
-                  setFiles([])
-                  setSelectedUser(null)
-                  setDescription('')
+                  router.replace(getLocalizedUrl('/apps/announcement/add-announcement', locale as Locale));
                 }}
                 className='w-full sm:w-auto'
                 startIcon={<i className="ri-add-line" />}
@@ -386,7 +352,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         )}
       </Card>
 
-      <AnnouncementCreatePage
+      {/* <AnnouncementCreatePage
         announcementForm={announcementForm}
         setAnnouncementForm={setAnnouncementForm}
         files={files}
@@ -399,7 +365,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         description={description}
         setDescription={setDescription}
         loading={loading}
-      />
+      /> */}
 
       {deleteOpen && (
         <DeleteGialog open={deleteOpen} setOpen={setDeleteOpen} type={'delete-order'} onConfirm={() => deleteUser(selectedUserId)} selectedDeleteStatus='' />
@@ -493,114 +459,7 @@ const CampaignModal = ({ open, onClose }: CampaignModalProps) => {
     )
   }
   return (
-    // <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-    //   <DialogTitle>Launch Announcement Campaign</DialogTitle>
-    //   <DialogContent dividers>
-    //     {/* Filters */}
-    //     <Grid container spacing={2}>
-    //       <Grid item xs={6} sm={3}>
-    //         <FormControl fullWidth size="small">
-    //           <InputLabel>Role</InputLabel>
-    //           <Select 
-    //             value={selectedRole} 
-    //             onChange={e => setSelectedRole(e.target.value)}
-    //             input={<OutlinedInput label="Role" />}
-    //           >
-    //             <MenuItem value="Parent">Parent</MenuItem>
-    //             <MenuItem value="Teacher">Teacher</MenuItem>
-    //             <MenuItem value="Student">Student</MenuItem>
-    //           </Select>
-    //         </FormControl>
-    //       </Grid>
-    //       <Grid item xs={6} sm={3}>
-    //         <FormControl fullWidth size="small">
-    //           <InputLabel>Year</InputLabel>
-    //           <Select 
-    //             value={selectedYear}
-    //             onChange={e => setSelectedYear(e.target.value)}
-    //             input={<OutlinedInput label="Year" />}
-    //            >
-    //             <MenuItem value="All Years">All Years</MenuItem>
-    //             <MenuItem value="2025">2025</MenuItem>
-    //           </Select>
-    //         </FormControl>
-    //       </Grid>
-    //       <Grid item xs={6} sm={3}>
-    //         <FormControl fullWidth size="small">
-    //           <InputLabel>Class</InputLabel>
-    //           <Select 
-    //             value={selectedClass} 
-    //             onChange={e => setSelectedClass(e.target.value)}
-    //             input={<OutlinedInput label="Year" />}
-    //           >
-    //             <MenuItem value="All Classes">All Classes</MenuItem>
-    //             <MenuItem value="Grade 3">Grade 3</MenuItem>
-    //           </Select>
-    //         </FormControl>
-    //       </Grid>
-    //       <Grid item xs={6} sm={3}>
-    //         <FormControl fullWidth size="small">
-    //           <InputLabel>Department</InputLabel>
-    //           <Select value={selectedDept} onChange={e => setSelectedDept(e.target.value)}>
-    //             <MenuItem value="All Departments">All Departments</MenuItem>
-    //             <MenuItem value="Science">Science</MenuItem>
-    //           </Select>
-    //         </FormControl>
-    //       </Grid>
-    //     </Grid>
-
-    //     {/* Audience Selection */}
-    //     <Box mt={3}>
-    //       <Typography fontWeight={600}>Audience Selection</Typography>
-    //       <FormControlLabel
-    //         control={
-    //           <Checkbox
-    //             checked={selectedUsers.length === userList.length}
-    //             onChange={(e) =>
-    //               setSelectedUsers(e.target.checked ? userList.map(u => u.name) : [])
-    //             }
-    //           />
-    //         }
-    //         label="Select All"
-    //       />
-    //       {userList.map((user, index) => (
-    //         <FormControlLabel
-    //           key={index}
-    //           control={
-    //             <Checkbox
-    //               checked={selectedUsers.includes(user.name)}
-    //               onChange={() => handleUserToggle(user.name)}
-    //             />
-    //           }
-    //           label={`${user.name} (${user.role})`}
-    //         />
-    //       ))}
-    //     </Box>
-
-    //     {/* Communication Channels */}
-    //     <Box mt={3}>
-    //       <Typography fontWeight={600}>Communication Channels</Typography>
-    //       <Box display="flex" gap={2} mt={1}>
-    //         {communicationChannels.map(chan => (
-    //           <Button
-    //             key={chan.key}
-    //             variant={channel === chan.key ? 'contained' : 'outlined'}
-    //             onClick={() => setChannel(chan.key)}
-    //             startIcon={<span>{chan.icon}</span>}
-    //           >
-    //             {chan.label}
-    //           </Button>
-    //         ))}
-    //       </Box>
-    //     </Box>
-    //   </DialogContent>
-    //   <DialogActions>
-    //     <Button onClick={onClose} variant="outlined">Cancel</Button>
-    //     <Button variant="contained" onClick={() => alert('Campaign Launched!')}>
-    //       Launch Campaign
-    //     </Button>
-    //   </DialogActions>
-    // </Dialog>
+   
       <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle fontWeight={600}>Launch Campaign</DialogTitle>
       <DialogContent dividers>

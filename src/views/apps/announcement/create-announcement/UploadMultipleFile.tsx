@@ -42,7 +42,6 @@ type FileProp = {
 interface UploadMultipleFileProps {
   files: FileProp[];
   setFiles: React.Dispatch<React.SetStateAction<FileProp[]>>;
-  fetchUsers: () => void
 }
 // Styled Dropzone Component
 const Dropzone = styled(AppReactDropzone)<BoxProps>(({ theme }) => ({
