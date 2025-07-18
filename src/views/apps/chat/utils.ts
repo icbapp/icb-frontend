@@ -28,6 +28,6 @@ export const getShortFileName = (filename: string): string => {
   const parts = filename.split('.');
   const ext = parts.pop(); // get extension
   const base = parts.join('.'); // get name without extension
-  const shortBase = base.length > 50 ? base.slice(0, 50) + '...' : base;
+  const shortBase = base.length > 50 ? base.slice(0, 20) + '...' : base;
   return `${shortBase}.${ext}`;
 };

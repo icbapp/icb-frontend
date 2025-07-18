@@ -111,22 +111,17 @@ const ReactTable = ({
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <th key={header.id}>
+                  <th
+                    key={header.id}
+                    className="h-[42px] text-xs"
+                  >
                     {!header.isPlaceholder && (
-                      <>
-                        <div
-                          className={classnames({
-                            'flex items-center': header.column.getIsSorted(),
-                            'cursor-pointer select-none': header.column.getCanSort()
-                          })}
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </div>
-                       {header.column.getCanFilter() && header.column.id !== 'action' && (
-                          <Filter column={header.column} table={table} />
-                        )}
-                      </>
+                      <div
+                        className="flex justify-center items-center"
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </div>
                     )}
                   </th>
                 ))}

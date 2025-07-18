@@ -41,33 +41,33 @@ const connectedAccountsArr: ConnectedAccountsType[] = [
   {
     checked: true,
     title: 'Google',
-    logo: '/images/logos/google.png',
+    logo: '/images/avatars/1.png',
     subtitle: 'Calendar and Contacts'
   },
-  {
-    checked: false,
-    title: 'Slack',
-    logo: '/images/logos/slack.png',
-    subtitle: 'Communications'
-  },
-  {
-    checked: true,
-    title: 'Github',
-    logo: '/images/logos/github.png',
-    subtitle: 'Manage your Git repositories'
-  },
-  {
-    checked: true,
-    title: 'Mailchimp',
-    subtitle: 'Email marketing service',
-    logo: '/images/logos/mailchimp.png'
-  },
-  {
-    title: 'Asana',
-    checked: false,
-    subtitle: 'Task Communication',
-    logo: '/images/logos/asana.png'
-  }
+  // {
+  //   checked: false,
+  //   title: 'Slack',
+  //   logo: '/images/logos/slack.png',
+  //   subtitle: 'Communications'
+  // },
+  // {
+  //   checked: true,
+  //   title: 'Github',
+  //   logo: '/images/logos/github.png',
+  //   subtitle: 'Manage your Git repositories'
+  // },
+  // {
+  //   checked: true,
+  //   title: 'Mailchimp',
+  //   subtitle: 'Email marketing service',
+  //   logo: '/images/logos/mailchimp.png'
+  // },
+  // {
+  //   title: 'Asana',
+  //   checked: false,
+  //   subtitle: 'Task Communication',
+  //   logo: '/images/logos/asana.png'
+  // }
 ]
 
 const socialAccountsArr: SocialAccountsType[] = [
@@ -108,7 +108,8 @@ const Connections = () => {
   const [statuConnected, setStatusConnected] = useState(0);
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
-
+  const [checked, setChecked] = useState(true)
+console.log('checked', checked)
   const redirectTo = async() =>{
     const response = await api.get('ms-auth/redirect', {
       params: {
@@ -186,6 +187,10 @@ const sessionState = params.get('session_state');
     })
   }, [cleanCode]);
 
+  const handleChange = (event) => {
+    const isChecked = event.target.checked
+    setChecked(isChecked)
+  }
   return (
     <>
     <Card>
@@ -260,6 +265,31 @@ const sessionState = params.get('session_state');
                       </CustomIconButton>
                     </div> 
                   ))}
+          </CardContent>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <CardHeader
+            title='Connecte'
+            subheader='Display content from your connected accounts on your site'
+          />
+          <CardContent className='flex flex-col gap-4'>
+            {console.log("connectedAccountsArr", connectedAccountsArr)}
+            
+            {connectedAccountsArr.map((item, index) => (
+              <div key={index} className='flex items-center justify-between gap-4'>
+                <div className='flex flex-grow items-center gap-4'>
+                  <img height={32} width={32} src={item.logo} alt={item.title} />
+                  <div className='flex-grow'>
+                    <Typography className='font-medium' color='text.primary'>
+                      {item.title}
+                    </Typography>
+                    <Typography variant='body2'>{item.subtitle}</Typography>
+                  </div>
+                </div>
+                <Switch checked={checked}
+      onChange={handleChange} />
+              </div>
+            ))}
           </CardContent>
         </Grid>
       </Grid>
