@@ -131,3 +131,9 @@ code {
   background-color: rgb(var(--mui-palette-info-mainChannel) / 0.08);
   border: 0;
 }
+
+.ck-editor__editable_inline {
+  min-height: 420px !important;
+  max-height: 420px !important;
+  overflow-y: auto;
+}

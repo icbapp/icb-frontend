@@ -45,7 +45,7 @@ type FormValidateType = {
   phone: string
 }
 
-type RoleOption = {
+export type RoleOption = {
   id: number
   name: string
 }
