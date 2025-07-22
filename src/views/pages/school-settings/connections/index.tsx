@@ -20,6 +20,7 @@ import { useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
 import { Skeleton } from '@mui/material'
 import ConfirmDialog from '@/comman/dialog/ConfirmDialog'
+import endPointApi from '@/utils/endPointApi'
 
 type ConnectedAccountsType = {
   title: string
@@ -187,10 +188,26 @@ const sessionState = params.get('session_state');
     })
   }, [cleanCode]);
 
-  const handleChange = (event) => {
-    const isChecked = event.target.checked
-    setChecked(isChecked)
+const handleChange = async (event: any) => { 
+  const isChecked = event.target.checked
+  setChecked(isChecked)
+
+  const formData = new FormData()
+  formData.append('status_view', isChecked ? '1' : '0')
+
+  try {
+    const response = await api.post(`${endPointApi.postConnectionView}`, formData)
+
+    if (response?.data?.success) {
+     toast.success(response?.data?.message)
+    } else {
+      console.error('Failed to update status_view.')
+    }
+  } catch (error) {
+    console.error('Error while updating status_view:', error)
   }
+}
+
   return (
     <>
     <Card>
@@ -214,7 +231,7 @@ const sessionState = params.get('session_state');
                     <Typography variant='body2'>{item.subtitle}</Typography>
                   </div>
                 </div>
-                <Switch defaultChecked={item.checked} />
+                 <Switch defaultChecked={item.checked} />
               </div>
             ))}
           </CardContent>
@@ -273,7 +290,6 @@ const sessionState = params.get('session_state');
             subheader='Display content from your connected accounts on your site'
           />
           <CardContent className='flex flex-col gap-4'>
-            {console.log("connectedAccountsArr", connectedAccountsArr)}
             
             {connectedAccountsArr.map((item, index) => (
               <div key={index} className='flex items-center justify-between gap-4'>
@@ -287,7 +303,7 @@ const sessionState = params.get('session_state');
                   </div>
                 </div>
                 <Switch checked={checked}
-      onChange={handleChange} />
+                  onChange={handleChange} />
               </div>
             ))}
           </CardContent>

@@ -14,6 +14,25 @@ const MyCKEditor: React.FC<Props> = ({ value, onChange }) => {
     <CKEditor
       editor={ClassicEditor as any}
       data={value}
+       config={{
+    toolbar: [
+      'heading',
+      '|',
+      'bold', 'italic', 'underline', 'strikethrough',
+      '|',
+      'link',
+      'bulletedList', 'numberedList', 'blockQuote',
+      '|',
+      'insertTable',
+      '|',
+      'undo', 'redo'
+      // 🚫 Removed: 'imageUpload', 'insertImage', 'mediaEmbed'
+    ],
+    table: {
+      contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableCellProperties', 'tableProperties']
+    },
+    // removePlugins: ['Image', 'ImageToolbar', 'ImageCaption', 'ImageUpload', 'MediaEmbed']
+  }}
      onReady={(editor) => {
           // Set fixed height
           const editable = editor.ui.getEditableElement()

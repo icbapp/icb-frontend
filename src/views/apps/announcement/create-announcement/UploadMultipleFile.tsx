@@ -57,33 +57,50 @@ const Dropzone = styled(AppReactDropzone)<BoxProps>(({ theme }) => ({
 
 const UploadMultipleFile: React.FC<UploadMultipleFileProps> = ({ files, setFiles }) => {
   // Hooks
+
+  const MAX_TOTAL_FILES = 5;
+  const MAX_TOTAL_SIZE_MB = 5;
+
 const { getRootProps, getInputProps } = useDropzone({
   onDrop: (acceptedFiles: File[]) => {
+    const currentFiles = Array.isArray(files) ? [...files] : [];
+
+    // Combine new + existing
+    const totalFiles = [...currentFiles, ...acceptedFiles];
+
+    if (totalFiles.length > MAX_TOTAL_FILES) {
+      toast.error(`Maximum ${MAX_TOTAL_FILES} files allowed.`);
+      return;
+    }
+
+    const totalSizeBytes = totalFiles.reduce((acc, file) => acc + file.size, 0);
+    const maxBytes = MAX_TOTAL_SIZE_MB * 1024 * 1024;
+
+    if (totalSizeBytes > maxBytes) {
+      toast.error(`Total file size should not exceed ${MAX_TOTAL_SIZE_MB} MB.`);
+      return;
+    }
+
     const newFiles: FileProp[] = acceptedFiles.map(file => ({
       name: file.name,
       type: file.type,
       size: file.size,
       file: file,
       file_path: '',
-      file_url: URL.createObjectURL(file), // 👈 required for preview
-      preview: URL.createObjectURL(file),  // 👈 optional but useful
-    }))
+      file_url: URL.createObjectURL(file),
+      preview: URL.createObjectURL(file),
+    }));
 
-    setFiles(prevFiles =>
-      Array.isArray(prevFiles) ? [...prevFiles, ...newFiles] : [...newFiles]
-    )
+    setFiles([...currentFiles, ...newFiles]);
   },
- accept: {
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'image/png': ['.png'],
-  'video/mp4': ['.mp4'],
-  'audio/mpeg': ['.mp3'],
-  'application/pdf': ['.pdf'],
-  // 'application/msword': ['.doc'],
-  // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
-}
-
-})
+  accept: {
+    'image/jpeg': ['.jpg', '.jpeg'],
+    'image/png': ['.png'],
+    'video/mp4': ['.mp4'],
+    'audio/mpeg': ['.mp3'],
+    'application/pdf': ['.pdf'],
+  }
+});
 
 
 const renderFilePreview = (file: FileProp | any) => { 
@@ -151,10 +168,6 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
       </IconButton>
     </ListItem>
   ))
-
-  const handleRemoveAllFiles = () => {
-    setFiles([])
-  }
 
   return (
     <Dropzone>

@@ -30,6 +30,7 @@ export interface EndPointApi {
     //Microsoft
     microsoftAuthTokenValide: string
     microsoftFetchUsers: string
+    postConnectionView: string
 
     // Announcements
     getAnnouncements: string
@@ -72,6 +73,7 @@ const endPointApi: EndPointApi = {
     //Microsoft
     microsoftAuthTokenValide: '/ms-auth-token/school-token-valide',
     microsoftFetchUsers: 'auth/microsoft/fetch-users',
+    postConnectionView: 'connection-view',    
 
     // Announcements
     getAnnouncements: 'announcements-get',
