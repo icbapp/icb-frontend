@@ -38,6 +38,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Locale } from '@/configs/i18n'
 import { ThemeColor } from '@/@core/types'
 import AgGridTable from '@/comman/table/AgGridTable'
+import { toast } from 'react-toastify'
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -184,22 +185,36 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       columnHelper.accessor('created_at', {
         header: 'Created At',
-        cell: ({ row }) => <Typography>{row.original.created_at}</Typography>
+        // cell: ({ row }) => <Typography>{row.original.created_at}</Typography>
+        cell: ({ row }: any) => {
+          const date = new Date(row.original.created_at);
+          const yyyy = date.getFullYear();
+          const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+          const dd = date.getDate().toString().padStart(2, '0');
+          return <Typography>{`${yyyy}-${mm}-${dd}`}</Typography>;
+        },
       }),
 
       columnHelper.accessor('created_by', {
         header: 'Created By',
-        cell: ({ row }) => <Typography>{row.original.created_by ? row.original.created_by.name : '-'}</Typography>
+        cell: ({ row }: any) => <Typography>{row.original.created_by ? row.original.created_by.name : '-'}</Typography>
       }),
 
       columnHelper.accessor('updated_at', {
         header: 'Updated At',
-        cell: ({ row }) => <Typography>{row.original.updated_at}</Typography>
+        // cell: ({ row }) => <Typography>{row.original.updated_at}</Typography>
+         cell: ({ row }: any) => {
+          const date = new Date(row.original.updated_at);
+          const yyyy = date.getFullYear();
+          const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+          const dd = date.getDate().toString().padStart(2, '0');
+          return <Typography>{`${yyyy}-${mm}-${dd}`}</Typography>;
+        },
       }),
 
       columnHelper.accessor('updated_by', {
         header: 'Updated By',
-        cell: ({ row }) => <Typography>{row?.original?.updated_by ? row.original.updated_by.name : '-'}</Typography>
+        cell: ({ row }: any) => <Typography>{row?.original?.updated_by ? row.original.updated_by.name : '-'}</Typography>
       }),
 
       columnHelper.accessor('action', {
@@ -321,96 +336,6 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       setLoading(false)
     }
   }
-
-  const columnDefs = [
-    {
-      field: 'title',
-      headerName: 'Title'
-    },
-    {
-      field: 'description',
-      headerName: 'Description',
-      cellRenderer: params => {
-        const htmlToText = (html: string): string => {
-          const temp = document.createElement('div')
-          temp.innerHTML = html
-          return temp.textContent || temp.innerText || ''
-        }
-
-        const text = htmlToText(params.value || '')
-        const truncated = text.length > 25 ? `${text.slice(0, 25)}...` : text
-        return (
-          <Tooltip title={text} arrow placement='bottom-start'>
-            <Typography noWrap>{truncated}</Typography>
-          </Tooltip>
-        )
-      }
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      cellRenderer: (params: any) => {
-        const statusObj: Record<
-          string | number,
-          { title: string; color: 'default' | 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' }
-        > = {
-          1: { title: 'Draft', color: 'secondary' },
-          2: { title: 'Ready to Publish', color: 'warning' },
-          3: { title: 'Published', color: 'success' }
-        }
-        const status = statusObj[params.value]
-        return status ? (
-          <Chip label={status.title} variant='tonal' color={status.color} size='small' />
-        ) : (
-          <Chip label='-' variant='outlined' color='default' size='small' />
-        )
-      }
-    },
-    {
-      field: 'number_of_campaigns',
-      headerName: 'Number of Campaigns'
-    },
-    {
-      field: 'created_at',
-      headerName: 'Created At'
-    },
-    {
-      field: 'created_by',
-      headerName: 'Created By',
-      valueGetter: (params: any) => params.data?.created_by?.name ?? '-'
-    },
-    {
-      field: 'updated_at',
-      headerName: 'Updated At'
-    },
-    {
-      field: 'updated_by',
-      headerName: 'Updated By',
-      valueGetter: (params: any) => params.data?.updated_by?.name ?? '-'
-    },
-    {
-      headerName: 'Action',
-      field: 'action',
-      width: 120,
-      sortable: false,
-      filter: false,
-      cellRendererFramework: (params: any) => (
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <Tooltip title='Edit'>
-            <IconButton size='small' onClick={() => alert(`Edit ${params.data.email}`)}>
-              {/* <EditIcon fontSize="small" /> */}gfhfgf
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title='Delete'>
-            <IconButton size='small' onClick={() => alert(`Delete ${params.data.email}`)}>
-              <DeleteIcon fontSize='small' color='error' />
-            </IconButton>
-          </Tooltip>
-        </div>
-      )
-    }
-  ]
 
   return (
     <>
