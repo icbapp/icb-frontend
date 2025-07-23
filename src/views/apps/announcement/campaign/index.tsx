@@ -31,14 +31,14 @@ import { api } from '@/utils/axiosInstance'
 import { Button, Typography, Skeleton, Tooltip, Chip, CardContent, TextField, TextFieldProps } from '@mui/material'
 import endPointApi from '@/utils/endPointApi'
 import DeleteGialog from '@/comman/dialog/DeleteDialog'
-import ImageGallery from './ImageGallery'
 import ReactTable from '@/comman/table/ReactTable'
 import { getLocalizedUrl } from '@/utils/i18n'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Locale } from '@/configs/i18n'
 import { ThemeColor } from '@/@core/types'
 import AgGridTable from '@/comman/table/AgGridTable'
 import { toast } from 'react-toastify'
+import { useSettings } from '@/@core/hooks/useSettings'
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -57,16 +57,14 @@ type UserCount = {
 
 interface UsersTypeWithAction {
   id: number | string
-  title: string
-  description: string
-  status: 'active' | 'inactive'
-  number_of_campaigns?: number
-  updated_by?: string
-  created_by?: string
-  created_at?: string
-  updated_at?: string
-  attachments?: File[]
   action?: string
+  campaign_status?: string
+  frequency_type?: string
+  campaign_date?: string  // e.g., '2025-07-22'
+  formatted_campaign_time?: string // e.g., '10:00 AM'
+  frequency_count?: number
+  schedule?: 'now' | 'schedule'
+  publish_mode?: 'one_time' | 'recurring'
 }
 
 type ProductCategoryType = {
@@ -102,12 +100,14 @@ const DebouncedInput = ({
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
 }
 
-const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
+const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const permissions = useSelector((state: RootState) => state.sidebarPermission)
   const router = useRouter()
   const { lang: locale } = useParams()
+  const { settings } = useSettings()
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id')
 
-  const [imagemainPopUpOpen, setImagemainPopUpOpen] = useState(false)
   const [data, setData] = useState<UsersType[]>([])
   const [selectedUser, setSelectedUser] = useState<any>(null) // ideally type this
   const [loaderMain, setloaderMain] = useState(false)
@@ -131,90 +131,33 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
-      columnHelper.accessor('title', {
-        header: 'Title',
-        cell: ({ row }) => <Typography>{row.original.title}</Typography>
+      columnHelper.accessor('campaign_status', {
+        header: 'note',
+        cell: ({ row }) => <Typography>{row.original.campaign_status}</Typography>
       }),
-
-      columnHelper.accessor('description', {
-        header: 'Description',
-        cell: ({ row }) => {
-          const htmlToText = (html: string): string => {
-            const temp = document.createElement('div')
-            temp.innerHTML = html
-            return temp.textContent || temp.innerText || ''
-          }
-
-          const text = htmlToText(row.original.description || '')
-          const truncated = text.length > 25 ? `${text.slice(0, 25)}...` : text
-
-          return (
-            <Tooltip title={text} arrow placement='bottom-start'>
-              <Typography noWrap>{truncated}</Typography>
-            </Tooltip>
-          )
-        }
+      columnHelper.accessor('campaign_status', {
+        header: 'Campaign Status',
+        cell: ({ row }) => <Typography>{row.original.campaign_status}</Typography>
       }),
-
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: ({ row }) => {
-          const statusObj: Record<
-            string | number,
-            { title: string; color: 'default' | 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' }
-          > = {
-            1: { title: 'Draft', color: 'secondary' },
-            2: { title: 'Ready to Publish', color: 'warning' },
-            3: { title: 'Published', color: 'success' }
-          }
-
-          const status = statusObj[row.original.status]
-
-          return status ? (
-            <Chip label={status.title} variant='tonal' color={status.color} size='small' />
-          ) : (
-            <Chip label='-' variant='outlined' color='default' size='small' />
-          )
-        }
+      columnHelper.accessor('frequency_type', {
+        header: 'frequency Type',
+        cell: ({ row }) => <Typography>{row.original.frequency_type}</Typography>
       }),
-
-      columnHelper.accessor('number_of_campaigns', {
-        header: 'Number of Campaigns'
-        // cell: ({ row }) => <Typography>{row.original.number_of_campaigns}</Typography>
+      columnHelper.accessor('campaign_date', {
+        header: 'campaign date',
+        cell: ({ row }) => <Typography>{row.original.campaign_date + ' ' +  row.original.formatted_campaign_time}</Typography>
       }),
-
-      columnHelper.accessor('created_at', {
-        header: 'Created At',
-        // cell: ({ row }) => <Typography>{row.original.created_at}</Typography>
-        cell: ({ row }: any) => {
-          const date = new Date(row.original.created_at);
-          const yyyy = date.getFullYear();
-          const mm = (date.getMonth() + 1).toString().padStart(2, '0');
-          const dd = date.getDate().toString().padStart(2, '0');
-          return <Typography>{`${yyyy}-${mm}-${dd}`}</Typography>;
-        },
+      columnHelper.accessor('frequency_count', {
+        header: 'Repeat',
+        cell: ({ row }) => <Typography>{row.original.frequency_count}</Typography>
       }),
-
-      columnHelper.accessor('created_by', {
-        header: 'Created By',
-        cell: ({ row }: any) => <Typography>{row.original.created_by ? row.original.created_by.name : '-'}</Typography>
+      columnHelper.accessor('schedule', {
+        header: 'schedule',
+        cell: ({ row }) => <Typography>{row.original.schedule}</Typography>
       }),
-
-      columnHelper.accessor('updated_at', {
-        header: 'Updated At',
-        // cell: ({ row }) => <Typography>{row.original.updated_at}</Typography>
-         cell: ({ row }: any) => {
-          const date = new Date(row.original.updated_at);
-          const yyyy = date.getFullYear();
-          const mm = (date.getMonth() + 1).toString().padStart(2, '0');
-          const dd = date.getDate().toString().padStart(2, '0');
-          return <Typography>{`${yyyy}-${mm}-${dd}`}</Typography>;
-        },
-      }),
-
-      columnHelper.accessor('updated_by', {
-        header: 'Updated By',
-        cell: ({ row }: any) => <Typography>{row?.original?.updated_by ? row.original.updated_by.name : '-'}</Typography>
+      columnHelper.accessor('publish_mode', {
+        header: 'publish mode',
+        cell: ({ row }) => <Typography>{row.original.publish_mode}</Typography>
       }),
 
       columnHelper.accessor('action', {
@@ -233,28 +176,11 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   <i className='ri-pencil-line' style={{ color: 'green' }} />
                 </IconButton>
               </Tooltip>
-              <Tooltip title='Attachment'>
+              <Tooltip title='View Log'>
                 <IconButton
                   size='small'
-                  onClick={() => {
-                    setImagemainPopUpOpen(true)
-                    openPopUp(Number(row.original.id))
-                  }}
-                  disabled={(row.original.attachments?.length ?? 0) === 0}
                 >
-                  <i className='ri-multi-image-line text-blue-600' />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title='Campaign'>
-                <IconButton
-                  size='small'
-                  onClick={() => {
-                    if (row?.original?.id) {
-                      router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${row.original.id}`, locale as Locale))
-                    }
-                  }}
-                >
-                  <i className='ri-megaphone-line text-orange-500' />
+                  <i className='ri-eye-line' style={{ color: '' }} />
                 </IconButton>
               </Tooltip>
               <Tooltip title='Delete'>
@@ -271,29 +197,24 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     ],
     [data, permissions]
   )
-  const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName'>) => {
-    const { avatar, fullName } = params
-
-    if (avatar) {
-      return <CustomAvatar src={avatar} skin='light' size={34} />
-    } else {
-      return (
-        <CustomAvatar skin='light' size={34}>
-          {getInitials(fullName as string)}
-        </CustomAvatar>
-      )
-    }
-  }
 
   const fetchUsers = async () => {
     setloaderMain(true)
     try {
       const formData = new FormData()
+      formData.append('announcement_id', paginationInfo.perPage.toString())
       formData.append('per_page', paginationInfo.perPage.toString())
       formData.append('page', (paginationInfo.page + 1).toString())
       formData.append('search', globalFilter)
 
-      const res = await api.post(`${endPointApi.getAnnouncements}`, formData)
+      const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
+        params: {
+          announcement_id: id,
+          // search: searchData,
+          per_page: paginationInfo.perPage.toString(),
+          page: (paginationInfo.page + 1).toString(),
+        }
+      })
 
       setTotalRows(res.data.data.total)
       setData(res.data.data.data)
@@ -317,7 +238,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     setDeleteOpen(true)
   }
   const editUser = async (id: number) => {
-    router.push(`${getLocalizedUrl('/apps/announcement/add-announcement', locale as Locale)}?id=${id}`)
+    router.push(`${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${id}`)
   }
 
   const deleteUser = async (id: number) => {
@@ -341,6 +262,12 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   return (
     <>
+      <p style={{ color: settings.primaryColor }} className="font-bold flex items-center gap-2 mb-1">
+        <span className="inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer" onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}>
+          <i className="ri-arrow-go-back-line text-lg"></i>
+        </span>
+        Announcement / Campaign
+      </p>
       <Card>
         {/* <CardHeader title='Filters' className='pbe-4' /> */}
         <Divider />
@@ -358,19 +285,19 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   value={globalFilter ?? ''}
                   className='max-sm:w-full min-w-[220px]'
                   onChange={value => setGlobalFilter(String(value))}
-                  placeholder='Search Announcement...'
+                  placeholder='Search Campaign...'
                 />
               </div>
 
               <Button
                 variant='contained'
                 onClick={() => {
-                  router.replace(getLocalizedUrl('/apps/announcement/add-announcement', locale as Locale))
+                  router.replace(getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale))
                 }}
                 className='w-full sm:w-auto'
                 startIcon={<i className='ri-add-line' />}
               >
-                Add Announcement
+                Add Campaign
               </Button>
             </>
           )}
@@ -418,21 +345,8 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         )}
       </Card>
 
-      {deleteOpen && (
-        <DeleteGialog
-          open={deleteOpen}
-          setOpen={setDeleteOpen}
-          type={'delete-order'}
-          onConfirm={() => deleteUser(selectedUserId)}
-          selectedDeleteStatus=''
-        />
-      )}
-
-      {imagemainPopUpOpen && (
-        <ImageGallery open={imagemainPopUpOpen} setOpen={() => setImagemainPopUpOpen(false)} images={selectedUser} />
-      )}
     </>
   )
 }
 
-export default AnnouncementListPage
+export default CampaignListPage

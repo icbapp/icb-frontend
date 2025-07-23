@@ -42,6 +42,7 @@ export interface EndPointApi {
 
     // Campaign
     postLaunchCampaign: string
+    getCampaignAnnounceWise: string
 }
 
 // Define and export the API endpoint object
@@ -88,7 +89,8 @@ const endPointApi: EndPointApi = {
     postRoleWiseUsersList: 'school/roles-users',
 
     // Campaign
-    postLaunchCampaign: 'aws/campaign-schedules',
+    postLaunchCampaign: 'campaign-schedules-add',
+    getCampaignAnnounceWise: 'campaign-schedules-fetch',
 };
 
 export default endPointApi;

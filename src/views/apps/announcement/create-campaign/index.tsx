@@ -2,7 +2,20 @@
 import { Locale } from '@/configs/i18n'
 import { getLocalizedUrl } from '@/utils/i18n'
 // src/views/announcements/CampaignDialog.tsx
-import { Button, TextField, Grid, Box, Typography, Autocomplete, Card, MenuItem, InputAdornment, FormControl, Select, FormHelperText } from '@mui/material'
+import {
+  Button,
+  TextField,
+  Grid,
+  Box,
+  Typography,
+  Autocomplete,
+  Card,
+  MenuItem,
+  InputAdornment,
+  FormControl,
+  Select,
+  FormHelperText
+} from '@mui/material'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AudienceGrid from './AudienceGrid'
@@ -18,10 +31,18 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 
-const frequencyType = [
-  { id: '1', name: 'Draft' },
-  { id: '2', name: 'Ready to Publish' },
-  { id: '3', name: 'Published' }
+const campaignStatusType = [
+  { name: 'One Time', value: 'one_time' },
+  { name: 'Recurring', value: 'recurring' },
+  { name: 'In Progress', value: 'in_progress' }
+]
+const publishingModeType = [
+  { name: 'Recurring', value: 'recurring' },
+    { name: 'One Time', value: 'one_time' },
+]
+const scheduleTypeDropDown = [
+  { name: 'Now', value: 'now' },
+  { name: 'Schedule', value: 'schedule' }
 ]
 
 const CreateCampaign = () => {
@@ -36,20 +57,22 @@ const CreateCampaign = () => {
   const [selectedData, setSelectedData] = useState([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
 
-   const [status, setStatus] = useState('One Time')
-   const [selectedIds, setSelectedIds] = useState([])
+  const [status, setStatus] = useState('One Time')
+  const [selectedIds, setSelectedIds] = useState([])
   const [mode, setMode] = useState('One Time')
   const [scheduleType, setScheduleType] = useState('Now')
   const [recurringCount, setRecurringCount] = useState(5)
   const [recurringType, setRecurringType] = useState('month')
+  const [note, setNote] = useState('')
+
   const announcementTitle = 'Independence Day Celebration'
 
-  const isRecurring = mode === 'Recurring'
+  const isRecurring = mode === 'recurring'
 
   const channels = [
     { key: 'email', label: 'Email', icon: '📧', sub: 'Send via email' },
-    { key: 'whatsapp', label: 'WhatsApp', icon: '💬', sub: 'WhatsApp messages' },
-    { key: 'push', label: 'Push Notifications', icon: '🔔', sub: 'Mobile app notifications' },
+    { key: 'wp', label: 'WhatsApp', icon: '💬', sub: 'WhatsApp messages' },
+    { key: 'push_notification', label: 'Push Notifications', icon: '🔔', sub: 'Mobile app notifications' },
     { key: 'sms', label: 'SMS', icon: '📱', sub: 'Text messages' }
   ]
 
@@ -99,24 +122,26 @@ const CreateCampaign = () => {
       const date = datePart
       const time = `${timePart}`
       const timeampn = `${ampm}`
-        const body = {
-          announcements_id: 57,
-          tenant_id: adminStore.tenant_id,
-          school_id: adminStore.school_id,
-          user_ids: selectedIds,
-          channels: [selectedChannel],
-          frequency_type: recurringType,
-          campaign_status: status,
-          publish_mode: mode, 
-          schedule: scheduleType,
-          frequency_count: recurringCount,
-          campaign_date: date,
-          campaign_time: time,
-          campaign_ampm: timeampn
-        }
-        const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
-    }
-    catch (error) {
+      const body = {
+        id: 0,
+        note:'demo',
+        announcements_id: 57,
+        tenant_id: adminStore.tenant_id,
+        school_id: adminStore.school_id,
+        user_ids: [51],
+        // user_ids: selectedIds,
+        channels: selectedChannel,
+        frequency_type: recurringType,
+        campaign_status: status,
+        publish_mode: mode,
+        schedule: scheduleType,
+        frequency_count: recurringCount,
+        campaign_date: date,
+        campaign_time: time,
+        campaign_ampm: timeampn
+      }
+      const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
+    } catch (error) {
       console.error('Error fetching role-wise users:', error)
     }
   }
@@ -125,7 +150,7 @@ const CreateCampaign = () => {
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
         <span
           className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
-          onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}
+          onClick={() => router.replace(getLocalizedUrl('/apps/announcement/campaign', locale as Locale))}
         >
           <i className='ri-arrow-go-back-line text-lg'></i>
         </span>
@@ -200,13 +225,14 @@ const CreateCampaign = () => {
               clearOnEscape
             />
           </Grid> */}
+            <TextField label='Note' value={note} onChange={e => setNote(e.target.value)} />
           </Grid>
         </Box>
       </Card>
       <Card sx={{ mt: 4 }}>
         <Box p={6}>
           {/* Grid */}
-          <AudienceGrid role={role} selectedData={selectedData} setSelectedIds={setSelectedIds}/>
+          <AudienceGrid role={role} selectedData={selectedData} setSelectedIds={setSelectedIds} />
         </Box>
       </Card>
       <Card sx={{ mt: 4 }}>
@@ -250,127 +276,131 @@ const CreateCampaign = () => {
             </Grid>
           </Grid> */}
           <Grid container spacing={4}>
-      {/* Status */}
-      <Grid item xs={12} md={4}>
-        <TextField
-          label='Campaign Status'
-          select
-          fullWidth
-          value={status}
-          onChange={e => setStatus(e.target.value)}
-        >
-          {['One time', 'Recurring', 'In Progress'].map(option => (
-            <MenuItem key={option} value={option}>
-              {option}
-            </MenuItem>
-          ))}
-        </TextField>
-        {/* {status !== 'Scheduled' && (
+            {/* Status */}
+            <Grid item xs={12} md={4}>
+              <TextField
+                label='Campaign Status'
+                select
+                fullWidth
+                value={status}
+                onChange={e => setStatus(e.target.value)}
+              >
+                {campaignStatusType.map((option, index) => (
+                  <MenuItem key={index} value={option.value}>
+                    {option.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              {/* {status !== 'Scheduled' && (
           <FormHelperText sx={{ color: 'error.main' }}>
             ❌ Cannot delete campaign unless status is <b>Scheduled</b>
           </FormHelperText>
         )} */}
-      </Grid>
+            </Grid>
 
-      {/* Publishing Mode */}
-      <Grid item xs={12} md={4}>
-        <TextField
-          label='Publishing Mode'
-          select
-          fullWidth
-          value={mode}
-          onChange={e => setMode(e.target.value)}
-        >
-          <MenuItem value='One Time'>One Time</MenuItem>
-          <MenuItem value='Recurring'>Recurring</MenuItem>
-        </TextField>
-      </Grid>
+            {/* Publishing Mode */}
+            <Grid item xs={12} md={4}>
+              <TextField label='Publishing Mode' select fullWidth value={mode} onChange={e => setMode(e.target.value)}>
+                {publishingModeType.map((option, index) => (
+                  <MenuItem key={index} value={option.value}>
+                    {option.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
 
-      {/* Schedule Type */}
-      <Grid item xs={12} md={4}>
-        <TextField
-          label='Schedule'
-          select
-          fullWidth
-          value={scheduleType}
-          onChange={e => setScheduleType(e.target.value)}
-        >
-          <MenuItem value='Now'>Now</MenuItem>
-          <MenuItem value='Schedule'>Schedule</MenuItem>
-        </TextField>
-      </Grid>
-
-      {/* DateTime */}
-      {scheduleType === 'Schedule' && (
-        <Grid item xs={12} md={6}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DemoContainer components={['DateTimePicker']}>
-                  <DateTimePicker
-                    label='Start Date Time'
-                    value={startDateTime}
-                    onChange={newValue => setStartDateTime(newValue)}
-                    minDateTime={dayjs()} // ✅ restrict to current date and time onwards
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                </DemoContainer>
-              </LocalizationProvider>
-        </Grid>
-      )}
-
-      {/* Recurring Settings */}
-      {isRecurring && (
-        <>
-          <Grid item xs={6} md={3}>
-            <TextField
-              label='Repeat'
-              type='number'
-              fullWidth
-              inputProps={{ min: 1, max: 10 }}
-              value={recurringCount}
-              onChange={e => setRecurringCount(Number(e.target.value))}
-              InputProps={{
-                endAdornment: <InputAdornment position='end'>times</InputAdornment>
-              }}
-            />
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <FormControl fullWidth>
-              <Select
-                value={recurringType}
-                onChange={e => setRecurringType(e.target.value)}
+            {/* Schedule Type */}
+            <Grid item xs={12} md={4}>
+              <TextField
+                label='Schedule'
+                select
+                fullWidth
+                value={scheduleType}
+                onChange={e => setScheduleType(e.target.value)}
               >
-                <MenuItem value='day'>Day</MenuItem>
-                <MenuItem value='week'>Week</MenuItem>
-                <MenuItem value='month'>Month</MenuItem>
-                <MenuItem value='year'>Year</MenuItem>
-              </Select>
-              {/* <FormHelperText>Frequency</FormHelperText> */}
-            </FormControl>
-          </Grid>
-        </>
-      )}
+                  {/* {publishingModeType.map((option, index) => (
+                  <MenuItem key={index} value={option.value}>
+                    {option.name}
+                  </MenuItem>
+                ))} */}
+                {scheduleTypeDropDown.map((option, index) => (
+                  <MenuItem key={index} value={option.value}>
+                    {option.name}
+                  </MenuItem>
+                ))}
+                {/* <MenuItem value='Now'>Now</MenuItem>
+                <MenuItem value='Schedule'>Schedule</MenuItem> */}
+              </TextField>
+            </Grid>
 
-      {/* Preview */}
-      {scheduleType === 'Schedule' && (
-        <Grid item xs={12}>
-          <Box sx={{ background: '#f4f6f8', p: 2, borderRadius: 2 }}>
-            <Typography variant='subtitle1' fontWeight='600'>
-              Preview:
-            </Typography>
-            <Typography>
-              The system will send <b>{announcementTitle}</b> to users on{' '}
-              <b>{startDateTime.format('DD-MM-YYYY hh:mm A')}</b>.
-              {isRecurring && (
-                <>
-                  {' '}This will repeat <b>{recurringCount}</b> times every{' '}
-                  <b>{recurringType}</b>.
-                </>
-              )}
-            </Typography>
-          </Box>
-        </Grid>
-      )}
-    </Grid>
+            {/* DateTime */}
+            {scheduleType === 'schedule' && (
+              <Grid item xs={12} md={6}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DemoContainer components={['DateTimePicker']}>
+                    <DateTimePicker
+                      label='Start Date Time'
+                      value={startDateTime}
+                      onChange={newValue => setStartDateTime(newValue)}
+                      minDateTime={dayjs()} // ✅ restrict to current date and time onwards
+                      slotProps={{ textField: { fullWidth: true } }}
+                    />
+                  </DemoContainer>
+                </LocalizationProvider>
+              </Grid>
+            )}
+
+            {/* Recurring Settings */}
+            {isRecurring && (
+              <>
+                <Grid item xs={6} md={3}>
+                  <TextField
+                    label='Repeat'
+                    type='number'
+                    fullWidth
+                    inputProps={{ min: 1, max: 10 }}
+                    value={recurringCount}
+                    onChange={e => setRecurringCount(Number(e.target.value))}
+                    InputProps={{
+                      endAdornment: <InputAdornment position='end'>times</InputAdornment>
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={6} md={3}>
+                  <FormControl fullWidth>
+                    <Select value={recurringType} onChange={e => setRecurringType(e.target.value)}>
+                      <MenuItem value='day'>Day</MenuItem>
+                      <MenuItem value='week'>Week</MenuItem>
+                      <MenuItem value='month'>Month</MenuItem>
+                      <MenuItem value='year'>Year</MenuItem>
+                    </Select>
+                    {/* <FormHelperText>Frequency</FormHelperText> */}
+                  </FormControl>
+                </Grid>
+              </>
+            )}
+
+            {/* Preview */}
+            {scheduleType === 'schedule' && (
+              <Grid item xs={12}>
+                <Box sx={{ background: '#f4f6f8', p: 2, borderRadius: 2 }}>
+                  <Typography variant='subtitle1' fontWeight='600'>
+                    Preview:
+                  </Typography>
+                  <Typography>
+                    The system will send <b>{announcementTitle}</b> to users on{' '}
+                    <b>{startDateTime.format('DD-MM-YYYY hh:mm A')}</b>.
+                    {isRecurring && (
+                      <>
+                        {' '}
+                        This will repeat <b>{recurringCount}</b> times every <b>{recurringType}</b>.
+                      </>
+                    )}
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
+          </Grid>
           {/* Communication Channels */}
           <Box>
             <Typography fontWeight={600} mb={1} mt={3}>
@@ -406,7 +436,7 @@ const CreateCampaign = () => {
               ))}
             </Grid>
           </Box>
-       
+
           {/* Action Buttons */}
           <Box display='flex' justifyContent='flex-start' gap={2}>
             <Button variant='contained' onClick={launchCampaign}>
