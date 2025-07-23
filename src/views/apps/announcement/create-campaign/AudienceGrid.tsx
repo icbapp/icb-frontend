@@ -1,3 +1,4 @@
+'use client'
 import React, { useMemo, useRef, useState } from "react";
 import "./styles.css";
 import { AgGridReact } from "ag-grid-react";
@@ -63,7 +64,12 @@ const top100Films = [
   { label: "demo3", year: 1974 },
   { label: "demo4", year: 1974 },
 ];
-const AudienceGrid = () => {
+
+export interface Props {
+ setSelectedIds: any
+}
+
+const AudienceGrid = ({setSelectedIds}: Props) => {
   const [selectedLabels, setSelectedLabels] = useState([]);
   const [filteredData, setFilteredData] = useState(data);
   const gridRef = useRef(null);
@@ -115,8 +121,7 @@ const paginationPageSize = 2;
 const paginationPageSizeSelector = [2, 20, 50, 100];
 const handleSelectionChanged = () => {
   const selectedNodes = gridRef.current.api.getSelectedNodes();
-  const selectedIds = selectedNodes.map((node:any) => node.data.id);
-  console.log("Selected IDs:", selectedIds);
+  setSelectedIds(selectedNodes.map((node:any) => node.data.id))
 };
   return (
     <>

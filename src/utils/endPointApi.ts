@@ -39,6 +39,9 @@ export interface EndPointApi {
     deleteAnnouncements: string,
     deleteImageAnnouncements: string
     postRoleWiseUsersList: string
+
+    // Campaign
+    postLaunchCampaign: string
 }
 
 // Define and export the API endpoint object
@@ -83,6 +86,9 @@ const endPointApi: EndPointApi = {
     deleteAnnouncements: 'announcements-delete',
     deleteImageAnnouncements: 'announcements-delete-image',
     postRoleWiseUsersList: 'school/roles-users',
+
+    // Campaign
+    postLaunchCampaign: 'aws/campaign-schedules',
 };
 
 export default endPointApi;
