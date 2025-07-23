@@ -14,6 +14,7 @@ export interface EndPointApi {
        
     //User Management
     getUser: string
+    getUserCount: string
     postMultipleStatusChange: string
     postMultipleRoleChange: string
     
@@ -38,6 +39,9 @@ export interface EndPointApi {
     deleteAnnouncements: string,
     deleteImageAnnouncements: string
     postRoleWiseUsersList: string
+
+    // Campaign
+    postLaunchCampaign: string
 }
 
 // Define and export the API endpoint object
@@ -57,6 +61,7 @@ const endPointApi: EndPointApi = {
 
     //User Management
     getUser: 'user-get',
+    getUserCount: 'users/count',
     postMultipleStatusChange: 'users/status-toggle-multiple',
     postMultipleRoleChange: 'users/roles-toggle-multiple',
 
@@ -81,6 +86,9 @@ const endPointApi: EndPointApi = {
     deleteAnnouncements: 'announcements-delete',
     deleteImageAnnouncements: 'announcements-delete-image',
     postRoleWiseUsersList: 'school/roles-users',
+
+    // Campaign
+    postLaunchCampaign: 'aws/campaign-schedules',
 };
 
 export default endPointApi;

@@ -36,12 +36,12 @@ const CreateCampaign = () => {
   const [selectedData, setSelectedData] = useState([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
 
-   const [status, setStatus] = useState('Scheduled')
+   const [status, setStatus] = useState('One Time')
+   const [selectedIds, setSelectedIds] = useState([])
   const [mode, setMode] = useState('One Time')
-  const [scheduleType, setScheduleType] = useState('NOW')
+  const [scheduleType, setScheduleType] = useState('Now')
   const [recurringCount, setRecurringCount] = useState(5)
   const [recurringType, setRecurringType] = useState('month')
-  const [startDate, setStartDate] = useState(dayjs('2025-08-01T13:00'))
   const announcementTitle = 'Independence Day Celebration'
 
   const isRecurring = mode === 'Recurring'
@@ -91,6 +91,35 @@ const CreateCampaign = () => {
     fetchRoleWiseUsers()
   }, [role])
 
+  const launchCampaign = async () => {
+    try {
+      const formatted = startDateTime.format('YYYY-MM-DD hh:mm A')
+
+      const [datePart, timePart, ampm] = formatted.split(' ')
+      const date = datePart
+      const time = `${timePart}`
+      const timeampn = `${ampm}`
+        const body = {
+          announcements_id: 57,
+          tenant_id: adminStore.tenant_id,
+          school_id: adminStore.school_id,
+          user_ids: selectedIds,
+          channels: [selectedChannel],
+          frequency_type: recurringType,
+          campaign_status: status,
+          publish_mode: mode, 
+          schedule: scheduleType,
+          frequency_count: recurringCount,
+          campaign_date: date,
+          campaign_time: time,
+          campaign_ampm: timeampn
+        }
+        const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
+    }
+    catch (error) {
+      console.error('Error fetching role-wise users:', error)
+    }
+  }
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
@@ -177,7 +206,7 @@ const CreateCampaign = () => {
       <Card sx={{ mt: 4 }}>
         <Box p={6}>
           {/* Grid */}
-          <AudienceGrid role={role} selectedData={selectedData} />
+          <AudienceGrid role={role} selectedData={selectedData} setSelectedIds={setSelectedIds}/>
         </Box>
       </Card>
       <Card sx={{ mt: 4 }}>
@@ -230,7 +259,7 @@ const CreateCampaign = () => {
           value={status}
           onChange={e => setStatus(e.target.value)}
         >
-          {['One time', 'Done', 'Recurring', 'In Progress'].map(option => (
+          {['One time', 'Recurring', 'In Progress'].map(option => (
             <MenuItem key={option} value={option}>
               {option}
             </MenuItem>
@@ -266,13 +295,13 @@ const CreateCampaign = () => {
           value={scheduleType}
           onChange={e => setScheduleType(e.target.value)}
         >
-          <MenuItem value='NOW'>NOW</MenuItem>
-          <MenuItem value='SCHEDULE'>Schedule</MenuItem>
+          <MenuItem value='Now'>Now</MenuItem>
+          <MenuItem value='Schedule'>Schedule</MenuItem>
         </TextField>
       </Grid>
 
       {/* DateTime */}
-      {scheduleType === 'SCHEDULE' && (
+      {scheduleType === 'Schedule' && (
         <Grid item xs={12} md={6}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DemoContainer components={['DateTimePicker']}>
@@ -322,7 +351,7 @@ const CreateCampaign = () => {
       )}
 
       {/* Preview */}
-      {scheduleType === 'SCHEDULE' && (
+      {scheduleType === 'Schedule' && (
         <Grid item xs={12}>
           <Box sx={{ background: '#f4f6f8', p: 2, borderRadius: 2 }}>
             <Typography variant='subtitle1' fontWeight='600'>
@@ -330,7 +359,7 @@ const CreateCampaign = () => {
             </Typography>
             <Typography>
               The system will send <b>{announcementTitle}</b> to users on{' '}
-              <b>{startDate.format('DD-MM-YYYY hh:mm A')}</b>.
+              <b>{startDateTime.format('DD-MM-YYYY hh:mm A')}</b>.
               {isRecurring && (
                 <>
                   {' '}This will repeat <b>{recurringCount}</b> times every{' '}
@@ -380,7 +409,7 @@ const CreateCampaign = () => {
        
           {/* Action Buttons */}
           <Box display='flex' justifyContent='flex-start' gap={2}>
-            <Button variant='contained' onClick={() => alert('Campaign Launched!')}>
+            <Button variant='contained' onClick={launchCampaign}>
               Launch Campaign
             </Button>
             <Button
