@@ -117,7 +117,7 @@ const ReactTable = ({
                   >
                     {!header.isPlaceholder && (
                       <div
-                        className="flex justify-center items-center"
+                        className="justify-center items-center"
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}

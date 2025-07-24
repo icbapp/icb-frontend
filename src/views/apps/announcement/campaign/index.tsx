@@ -19,24 +19,15 @@ import type { RankingInfo } from '@tanstack/match-sorter-utils'
 // Type Imports
 import type { UsersType } from '@/types/apps/userTypes'
 
-// Component Imports
-import CustomAvatar from '@core/components/mui/Avatar'
-
-// Util Imports
-import { getInitials } from '@/utils/getInitials'
-
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 import { api } from '@/utils/axiosInstance'
-import { Button, Typography, Skeleton, Tooltip, Chip, CardContent, TextField, TextFieldProps } from '@mui/material'
+import { Button, Typography, Skeleton, Tooltip, CardContent, TextField, TextFieldProps } from '@mui/material'
 import endPointApi from '@/utils/endPointApi'
-import DeleteGialog from '@/comman/dialog/DeleteDialog'
 import ReactTable from '@/comman/table/ReactTable'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Locale } from '@/configs/i18n'
-import { ThemeColor } from '@/@core/types'
-import AgGridTable from '@/comman/table/AgGridTable'
 import { toast } from 'react-toastify'
 import { useSettings } from '@/@core/hooks/useSettings'
 
@@ -49,12 +40,6 @@ declare module '@tanstack/table-core' {
   }
 }
 
-type UserCount = {
-  active_count: number
-  inactive_count: number
-  [key: string]: any // add more properties if needed
-}
-
 interface UsersTypeWithAction {
   id: number | string
   action?: string
@@ -65,13 +50,6 @@ interface UsersTypeWithAction {
   frequency_count?: number
   schedule?: 'now' | 'schedule'
   publish_mode?: 'one_time' | 'recurring'
-}
-
-type ProductCategoryType = {
-  [key: string]: {
-    icon: string
-    color: ThemeColor
-  }
 }
 
 // Column Definitions
@@ -106,14 +84,13 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const { lang: locale } = useParams()
   const { settings } = useSettings()
   const searchParams = useSearchParams()
-  const id = searchParams.get('id')
+  const ids = searchParams.get('id')
 
   const [data, setData] = useState<UsersType[]>([])
   const [selectedUser, setSelectedUser] = useState<any>(null) // ideally type this
   const [loaderMain, setloaderMain] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
-  const [addOpen, setAddOpen] = useState(false)
   const [totalRows, setTotalRows] = useState(0)
   const [paginationInfo, setPaginationInfo] = useState({
     page: 0,
@@ -145,7 +122,11 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
       columnHelper.accessor('campaign_date', {
         header: 'campaign date',
-        cell: ({ row }) => <Typography>{row.original.campaign_date + ' ' +  row.original.formatted_campaign_time}</Typography>
+        cell: ({ row }) => <Typography>{row.original.campaign_date}</Typography>
+      }),
+      columnHelper.accessor('formatted_campaign_time', {
+        header: 'campaign time',
+        cell: ({ row }) => <Typography>{row.original.formatted_campaign_time}</Typography>
       }),
       columnHelper.accessor('frequency_count', {
         header: 'Repeat',
@@ -169,7 +150,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                 <IconButton
                   size='small'
                   onClick={() => {
-                    setAddOpen(true)
                     editUser(Number(row.original.id))
                   }}
                 >
@@ -183,11 +163,11 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   <i className='ri-eye-line' style={{ color: '' }} />
                 </IconButton>
               </Tooltip>
-              <Tooltip title='Delete'>
+              {/* <Tooltip title='Delete'>
                 <IconButton size='small' onClick={() => handleDeleteClick(Number(row.original.id))}>
                   <i className='ri-delete-bin-7-line text-red-600' />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </>
           </div>
         ),
@@ -209,7 +189,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
-          announcement_id: id,
+          announcement_id: ids,
           // search: searchData,
           per_page: paginationInfo.perPage.toString(),
           page: (paginationInfo.page + 1).toString(),
@@ -263,7 +243,8 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   return (
     <>
       <p style={{ color: settings.primaryColor }} className="font-bold flex items-center gap-2 mb-1">
-        <span className="inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer" onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}>
+        <span className="inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer"
+         onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}>
           <i className="ri-arrow-go-back-line text-lg"></i>
         </span>
         Announcement / Campaign

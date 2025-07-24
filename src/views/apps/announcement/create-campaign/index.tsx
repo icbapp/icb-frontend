@@ -49,6 +49,7 @@ const CreateCampaign = () => {
   const router = useRouter()
   const { lang: locale } = useParams()
   const { settings } = useSettings()
+  const announcementId = localStorage.getItem('announcementId')
   const adminStore = useSelector((state: RootState) => state.admin)
 
   const [selectedChannel, setSelectedChannel] = useState('email')
@@ -150,7 +151,7 @@ const CreateCampaign = () => {
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
         <span
           className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
-          onClick={() => router.replace(getLocalizedUrl('/apps/announcement/campaign', locale as Locale))}
+          onClick={() => router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))}
         >
           <i className='ri-arrow-go-back-line text-lg'></i>
         </span>
@@ -232,7 +233,7 @@ const CreateCampaign = () => {
       <Card sx={{ mt: 4 }}>
         <Box p={6}>
           {/* Grid */}
-          <AudienceGrid role={role} selectedData={selectedData} setSelectedIds={setSelectedIds} />
+          <AudienceGrid role={role} rolesList={rolesList} selectedData={selectedData} setSelectedIds={setSelectedIds} />
         </Box>
       </Card>
       <Card sx={{ mt: 4 }}>
@@ -443,9 +444,7 @@ const CreateCampaign = () => {
               Launch Campaign
             </Button>
             <Button
-              onClick={() => {
-                router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))
-              }}
+              onClick={() => router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))}
               variant='outlined'
             >
               Cancel

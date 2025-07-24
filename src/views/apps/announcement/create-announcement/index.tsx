@@ -193,7 +193,8 @@ const AnnouncementCreatePage = () => {
     <>
      {/* <p style={{ color: settings.primaryColor }} className="font-bold"><i className="ri-arrow-go-back-line mr-2"></i>Announcement / {editId ? 'Edit' : 'Create'} Announcement</p> */}
     <p style={{ color: settings.primaryColor }} className="font-bold flex items-center gap-2 mb-1">
-      <span className="inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer" onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}>
+      <span className="inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer"
+       onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}>
         <i className="ri-arrow-go-back-line text-lg"></i>
       </span>
       Announcement / {editId ? 'Edit' : 'Create'} Announcement

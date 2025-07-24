@@ -66,10 +66,11 @@ const top100Films = [
 ];
 
 export interface Props {
- setSelectedIds: any
+ setSelectedIds: any,
+ rolesList: any
 }
 
-const AudienceGrid = ({setSelectedIds}: Props) => {
+const AudienceGrid = ({setSelectedIds,rolesList}: Props) => {
   const [selectedLabels, setSelectedLabels] = useState([]);
   const [filteredData, setFilteredData] = useState(data);
   const gridRef = useRef(null);
@@ -128,8 +129,8 @@ const handleSelectionChanged = () => {
       <Autocomplete
         multiple
         disableCloseOnSelect
-        options={top100Films}
-        getOptionLabel={(option) => option.label}
+        options={rolesList}
+        getOptionLabel={(option) => option.name}
         value={selectedLabels}
         onChange={handleFilterChange}
         sx={{ width: 400, marginBottom: 2 }}

@@ -113,7 +113,6 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [loaderMain, setloaderMain] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
-  const [addOpen, setAddOpen] = useState(false)
   const [totalRows, setTotalRows] = useState(0)
   const [paginationInfo, setPaginationInfo] = useState({
     page: 0,
@@ -185,14 +184,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       columnHelper.accessor('created_at', {
         header: 'Created At',
-        // cell: ({ row }) => <Typography>{row.original.created_at}</Typography>
-        cell: ({ row }: any) => {
-          const date = new Date(row.original.created_at);
-          const yyyy = date.getFullYear();
-          const mm = (date.getMonth() + 1).toString().padStart(2, '0');
-          const dd = date.getDate().toString().padStart(2, '0');
-          return <Typography>{`${yyyy}-${mm}-${dd}`}</Typography>;
-        },
+        cell: ({ row }: any) => <Typography>{row.original.created_at}</Typography>
       }),
 
       columnHelper.accessor('created_by', {
@@ -202,14 +194,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       columnHelper.accessor('updated_at', {
         header: 'Updated At',
-        // cell: ({ row }) => <Typography>{row.original.updated_at}</Typography>
-         cell: ({ row }: any) => {
-          const date = new Date(row.original.updated_at);
-          const yyyy = date.getFullYear();
-          const mm = (date.getMonth() + 1).toString().padStart(2, '0');
-          const dd = date.getDate().toString().padStart(2, '0');
-          return <Typography>{`${yyyy}-${mm}-${dd}`}</Typography>;
-        },
+         cell: ({ row }: any) =><Typography>{row.original.updated_at}</Typography>
       }),
 
       columnHelper.accessor('updated_by', {
@@ -226,7 +211,6 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                 <IconButton
                   size='small'
                   onClick={() => {
-                    setAddOpen(true)
                     editUser(Number(row.original.id))
                   }}
                 >
@@ -251,6 +235,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   onClick={() => {
                     if (row?.original?.id) {
                       router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${row.original.id}`, locale as Locale))
+                      localStorage.setItem('announcementId', row.original.id.toString())
                     }
                   }}
                 >
