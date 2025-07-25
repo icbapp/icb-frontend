@@ -194,12 +194,14 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       columnHelper.accessor('updated_at', {
         header: 'Updated At',
-         cell: ({ row }: any) =><Typography>{row.original.updated_at}</Typography>
+        cell: ({ row }: any) => <Typography>{row.original.updated_at}</Typography>
       }),
 
       columnHelper.accessor('updated_by', {
         header: 'Updated By',
-        cell: ({ row }: any) => <Typography>{row?.original?.updated_by ? row.original.updated_by.name : '-'}</Typography>
+        cell: ({ row }: any) => (
+          <Typography>{row?.original?.updated_by ? row.original.updated_by.name : '-'}</Typography>
+        )
       }),
 
       columnHelper.accessor('action', {
@@ -234,7 +236,9 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   size='small'
                   onClick={() => {
                     if (row?.original?.id) {
-                      router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${row.original.id}`, locale as Locale))
+                      router.replace(
+                        getLocalizedUrl(`/apps/announcement/campaign?id=${row.original.id}`, locale as Locale)
+                      )
                       localStorage.setItem('announcementId', row.original.id.toString())
                     }
                   }}
@@ -242,10 +246,18 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   <i className='ri-megaphone-line text-orange-500' />
                 </IconButton>
               </Tooltip>
-              <Tooltip title='Delete'>
-                <IconButton size='small' onClick={() => handleDeleteClick(Number(row.original.id))}>
-                  <i className='ri-delete-bin-7-line text-red-600' />
-                </IconButton>
+              <Tooltip title={row.original.status == 3 ? 'Cannot delete published item' : 'Delete'}>
+                {console.log("row.original.status",row.original.status)}
+                
+                <span>
+                  <IconButton
+                    size='small'
+                    onClick={() => handleDeleteClick(Number(row.original.id))}
+                    disabled={row.original.status == 3}
+                  >
+                    <i className='ri-delete-bin-7-line text-red-600' />
+                  </IconButton>
+                </span>
               </Tooltip>
             </>
           </div>
@@ -283,9 +295,9 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       setTotalRows(res.data.data.total)
       setData(res.data.data.data)
       setloaderMain(false)
-    } catch (err:any) {
+    } catch (err: any) {
       setloaderMain(false)
-       if (err.response?.status === 500) {
+      if (err.response?.status === 500) {
         toast.error('Internal Server Error.')
       } else {
         toast.error(err?.response?.data?.message || 'Something went wrong')

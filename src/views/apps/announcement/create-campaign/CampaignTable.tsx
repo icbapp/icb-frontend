@@ -43,10 +43,12 @@ declare module '@tanstack/table-core' {
 interface UsersTypeWithAction {
   id: number | string
   action?: string
+  note?: string
   campaign_status?: string
+  channels?: string
   frequency_type?: string
-  campaign_date?: string  // e.g., '2025-07-22'
-  formatted_campaign_time?: string // e.g., '10:00 AM'
+  campaign_date?: string
+  formatted_campaign_time?: string
   frequency_count?: number
   schedule?: 'now' | 'schedule'
   publish_mode?: 'one_time' | 'recurring'
@@ -108,13 +110,17 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
-      columnHelper.accessor('campaign_status', {
+      columnHelper.accessor('note', {
         header: 'note',
-        cell: ({ row }) => <Typography>{row.original.campaign_status}</Typography>
+        cell: ({ row }) => <Typography>{row.original.note}</Typography>
       }),
       columnHelper.accessor('campaign_status', {
         header: 'Campaign Status',
         cell: ({ row }) => <Typography>{row.original.campaign_status}</Typography>
+      }),
+      columnHelper.accessor('channels', {
+        header: 'channels',
+        cell: ({ row }) => <Typography>{row.original.channels}</Typography>
       }),
       columnHelper.accessor('frequency_type', {
         header: 'frequency Type',
@@ -181,12 +187,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const fetchUsers = async () => {
     setloaderMain(true)
     try {
-      const formData = new FormData()
-      formData.append('announcement_id', paginationInfo.perPage.toString())
-      formData.append('per_page', paginationInfo.perPage.toString())
-      formData.append('page', (paginationInfo.page + 1).toString())
-      formData.append('search', globalFilter)
-
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
           announcement_id: ids,
@@ -213,32 +213,10 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     fetchUsers()
   }, [paginationInfo.page, paginationInfo.perPage, globalFilter])
 
-  const handleDeleteClick = (id: number) => {
-    setSelectedUserId(id)
-    setDeleteOpen(true)
-  }
   const editUser = async (id: number) => {
     router.push(`${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${id}`)
   }
 
-  const deleteUser = async (id: number) => {
-    try {
-      setDeleteOpen(false)
-      setLoading(true)
-
-      const response = await api.delete(`${endPointApi.deleteAnnouncements}/${id}`)
-
-      if (response.data?.status === 200) {
-        setLoading(false)
-        fetchUsers()
-      }
-    } catch (error: any) {
-      setLoading(false)
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <>

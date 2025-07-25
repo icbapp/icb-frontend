@@ -16,7 +16,7 @@ import {
   Select,
   FormHelperText
 } from '@mui/material'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AudienceGrid from './AudienceGrid'
 import { RoleOption } from '../../user/list/AddUserDrawer'
@@ -30,6 +30,8 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
+import { toast } from 'react-toastify'
+import CampaignViewLogDialog from '@/components/dialogs/campaign-view-log'
 
 const campaignStatusType = [
   { name: 'One Time', value: 'one_time' },
@@ -38,11 +40,17 @@ const campaignStatusType = [
 ]
 const publishingModeType = [
   { name: 'Recurring', value: 'recurring' },
-    { name: 'One Time', value: 'one_time' },
+  { name: 'One Time', value: 'one_time' }
 ]
 const scheduleTypeDropDown = [
   { name: 'Now', value: 'now' },
   { name: 'Schedule', value: 'schedule' }
+]
+const frequencyTypeDropDown = [
+  { name: 'Day', value: 'day' },
+  { name: 'Week', value: 'week' },
+  { name: 'Month', value: 'month' },
+  { name: 'Year', value: 'year' }
 ]
 
 const CreateCampaign = () => {
@@ -50,32 +58,81 @@ const CreateCampaign = () => {
   const { lang: locale } = useParams()
   const { settings } = useSettings()
   const announcementId = localStorage.getItem('announcementId')
+  const searchParams = useSearchParams()
+  const ids = searchParams.get('id')
   const adminStore = useSelector((state: RootState) => state.admin)
 
   const [selectedChannel, setSelectedChannel] = useState('email')
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
-  const [role, setRole] = useState<string[]>([])
   const [selectedData, setSelectedData] = useState([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
 
-  const [status, setStatus] = useState('One Time')
   const [selectedIds, setSelectedIds] = useState([])
+  const [status, setStatus] = useState('One Time')
   const [mode, setMode] = useState('One Time')
   const [scheduleType, setScheduleType] = useState('Now')
   const [recurringCount, setRecurringCount] = useState(5)
   const [recurringType, setRecurringType] = useState('month')
   const [note, setNote] = useState('')
-
-  const announcementTitle = 'Independence Day Celebration'
-
+  const [announcementTitle, setAnnouncementTitle] = useState('')
+  const [selectedLabels, setSelectedLabels] = useState([])
+  const [openDialog, setOpenDialog] = useState(false)
   const isRecurring = mode === 'recurring'
 
   const channels = [
-    { key: 'email', label: 'Email', icon: '📧', sub: 'Send via email' },
-    { key: 'wp', label: 'WhatsApp', icon: '💬', sub: 'WhatsApp messages' },
-    { key: 'push_notification', label: 'Push Notifications', icon: '🔔', sub: 'Mobile app notifications' },
-    { key: 'sms', label: 'SMS', icon: '📱', sub: 'Text messages' }
+    {
+      key: 'wp',
+      label: 'WhatsApp',
+      icon: '<i class="ri-whatsapp-line"></i>',
+      sub: 'WhatsApp messages',
+      color: '#25D366',
+      bg: '#E8F5E9',
+      text: 'text-green-600'
+    },
+    {
+      key: 'sms',
+      label: 'SMS',
+      icon: '<i class="ri-message-2-line"></i>',
+      sub: 'SMS messages',
+      bg: '#FCE7F3',
+      color: '#DB2777',
+      text: 'text-pink-600'
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      icon: '<i class="ri-mail-line"></i>',
+      sub: 'Email notifications',
+      bg: '#E0E7FF',
+      color: '#4338CA',
+      text: 'text-indigo-600'
+    },
+    {
+      key: 'push_notification',
+      label: 'Push',
+      icon: '<i class="ri-notification-3-line"></i>',
+      sub: 'Mobile push alerts',
+      bg: '#FEF9C3',
+      color: '#CA8A04',
+      text: 'text-yellow-600'
+    }
   ]
+
+  const handleFilterChange = (event, newValues) => {
+    setSelectedLabels(newValues)
+
+    if (newValues && newValues.length > 0) {
+      const selectedRoles = newValues.map(val => val.name.toLowerCase())
+
+      // Example filter logic (if your data has 'role' field)
+      // const filtered = data.filter(item =>
+      //   selectedRoles.includes(item.role.toLowerCase())
+      // );
+      // setFilteredData(filtered);
+    } else {
+      setSelectedData([]) // or show all
+    }
+  }
 
   const fetchRoles = async () => {
     try {
@@ -95,17 +152,15 @@ const CreateCampaign = () => {
 
   useEffect(() => {
     const fetchRoleWiseUsers = async () => {
+      if (selectedLabels.length === 0) return
       try {
+        const select = selectedLabels.map(val => val.id)
         const body = {
           tenant_id: adminStore.tenant_id,
           school_id: adminStore.school_id,
-          role_ids: role
+          role_ids: select ?? ''
         }
-
         const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
-        console.log('response**', response.data)
-
-        // Optionally set state:
         setSelectedData(response.data.users)
       } catch (error) {
         console.error('Error fetching role-wise users:', error)
@@ -113,35 +168,74 @@ const CreateCampaign = () => {
     }
 
     fetchRoleWiseUsers()
-  }, [role])
+  }, [selectedLabels])
 
+  const fetchEditCampign = async () => {
+    // setloaderMain(true)
+    try {
+      const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
+        params: {
+          announcement_id: localStorage.getItem('announcementId'),
+          campaign_id: ids
+        }
+      })
+      console.log('res', res.data.data.data)
+
+      setNote(res.data.data.data.note)
+      setStatus(res.data.data.data.campaign_status)
+      setMode(res.data.data.data.publish_mode)
+      setScheduleType(res.data.data.data.schedule)
+      setRecurringCount(res.data.data.data.frequency_count)
+      setRecurringType(res.data.data.data.frequency_type)
+      setSelectedChannel(res.data.data.data.channels)
+      setStartDateTime(dayjs(res.data.data.data.campaign_date + ' ' + res.data.data.data.formatted_campaign_time))
+      setAnnouncementTitle(res.data.data.data.announcement.title)
+    } catch (err: any) {
+      if (err.response?.status === 500) {
+        toast.error('Internal Server Error.')
+      }
+    }
+  }
+
+  useEffect(() => {
+    fetchEditCampign()
+  }, [ids])
   const launchCampaign = async () => {
     try {
-      const formatted = startDateTime.format('YYYY-MM-DD hh:mm A')
+      let date = ''
+      let time = ''
+      let timeampm = ''
 
-      const [datePart, timePart, ampm] = formatted.split(' ')
-      const date = datePart
-      const time = `${timePart}`
-      const timeampn = `${ampm}`
+      if (startDateTime && dayjs(startDateTime).isValid()) {
+        const formatted = dayjs(startDateTime).format('YYYY-MM-DD hh:mm A')
+        const [datePart, timePart, ampm] = formatted.split(' ')
+        date = datePart || ''
+        time = timePart || ''
+        timeampm = ampm || ''
+      }
+
       const body = {
-        id: 0,
-        note:'demo',
+        id: ids ? Number(ids) : 0,
+        note: note || '',
         announcements_id: 57,
         tenant_id: adminStore.tenant_id,
         school_id: adminStore.school_id,
-        user_ids: [51],
-        // user_ids: selectedIds,
+        user_ids: selectedIds,
         channels: selectedChannel,
-        frequency_type: recurringType,
+        frequency_type: recurringType || '',
         campaign_status: status,
         publish_mode: mode,
-        schedule: scheduleType,
-        frequency_count: recurringCount,
+        schedule: scheduleType || '',
+        frequency_count: recurringCount || 0,
         campaign_date: date,
         campaign_time: time,
-        campaign_ampm: timeampn
+        campaign_ampm: timeampm
       }
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
+      if (response.data.status === 200) {
+        toast.success(response.data.message)
+        router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))
+      }
     } catch (error) {
       console.error('Error fetching role-wise users:', error)
     }
@@ -151,89 +245,76 @@ const CreateCampaign = () => {
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
         <span
           className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
-          onClick={() => router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))}
+          onClick={() =>
+            router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))
+          }
         >
           <i className='ri-arrow-go-back-line text-lg'></i>
         </span>
         Announcement / {'Create'} Campaign
       </p>
       <Card>
-        <Box p={6}>
-          {/* Title */}
-          <Typography variant='h6' fontWeight={600} mb={3}>
+        <Box p={3} display='flex' justifyContent='space-between' alignItems='center'>
+          {/* Title and Button in one line */}
+          <Typography variant='h6' fontWeight={600}>
             Launch Campaign
           </Typography>
+          <Button variant='contained' onClick={() => setOpenDialog(true)}>
+            View Log
+          </Button>
+        </Box>
+      </Card>
 
+      <Card sx={{ mt: 4 }}>
+        <Box p={6}>
           {/* Audience Selection */}
-          {/* <Typography variant='h6' fontWeight={600} mb={3}>
-          Filter
-        </Typography> */}
+          <Typography variant='h6' fontWeight={600} mb={3}>
+            Filter
+          </Typography>
           <Grid container spacing={2} mb={4}>
-            {/* <Grid item xs={12} sm={3}>
             <Autocomplete
               multiple
-              fullWidth
+              disableCloseOnSelect
               options={rolesList}
-              getOptionLabel={(option: any) => option.name}
-              value={rolesList.filter((item: any) => role.includes(item.id))}
-              onChange={(event, newValue: any[]) => {
-                setRole(newValue.map((item: any) => item.id))
-              }}
-              isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+              getOptionLabel={option => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              value={selectedLabels}
+              onChange={handleFilterChange}
+              sx={{ width: 400, marginBottom: 2 }}
               renderInput={params => <TextField {...params} label='Select Roles' />}
-              clearOnEscape
             />
-          </Grid> */}
-            {/* <Grid item xs={12} sm={3}>
-            <Autocomplete
-              fullWidth
-              options={rolesList}
-              getOptionLabel={(option: any) => option.name}
-              value={rolesList.find((item: any) => item.id === role) || null}
-              onChange={(event, newValue: any) => {
-                setRole(newValue ? newValue.id : '')
-              }}
-              isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
-              renderInput={params => <TextField {...params} label='Years' />}
-              clearOnEscape
-            />
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <Autocomplete
-              fullWidth
-              options={rolesList}
-              getOptionLabel={(option: any) => option.name}
-              value={rolesList.find((item: any) => item.id === role) || null}
-              onChange={(event, newValue: any) => {
-                setRole(newValue ? newValue.id : '')
-              }}
-              isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
-              renderInput={params => <TextField {...params} label='Class' />}
-              clearOnEscape
-            />
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <Autocomplete
-              fullWidth
-              options={rolesList}
-              getOptionLabel={(option: any) => option.name}
-              value={rolesList.find((item: any) => item.id === role) || null}
-              onChange={(event, newValue: any) => {
-                setRole(newValue ? newValue.id : '')
-              }}
-              isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
-              renderInput={params => <TextField {...params} label='Departments' />}
-              clearOnEscape
-            />
-          </Grid> */}
-            <TextField label='Note' value={note} onChange={e => setNote(e.target.value)} />
           </Grid>
         </Box>
       </Card>
       <Card sx={{ mt: 4 }}>
+        <Box p={6} position='relative'>
+          <TextField
+            label='Note'
+            placeholder='Note.....'
+            value={note}
+            onChange={e => {
+              if (e.target.value?.length <= 100) {
+                setNote(e.target.value)
+              }
+            }}
+            fullWidth
+            multiline
+            minRows={2}
+            error={note?.length > 100}
+            helperText={`${note?.length || 0}/100 characters`}
+          />
+        </Box>
+      </Card>
+
+      <Card sx={{ mt: 4 }}>
         <Box p={6}>
           {/* Grid */}
-          <AudienceGrid role={role} rolesList={rolesList} selectedData={selectedData} setSelectedIds={setSelectedIds} />
+          <AudienceGrid
+            rolesList={rolesList}
+            selectedLabels={selectedLabels}
+            selectedData={selectedData}
+            setSelectedIds={setSelectedIds}
+          />
         </Box>
       </Card>
       <Card sx={{ mt: 4 }}>
@@ -319,7 +400,7 @@ const CreateCampaign = () => {
                 value={scheduleType}
                 onChange={e => setScheduleType(e.target.value)}
               >
-                  {/* {publishingModeType.map((option, index) => (
+                {/* {publishingModeType.map((option, index) => (
                   <MenuItem key={index} value={option.value}>
                     {option.name}
                   </MenuItem>
@@ -370,36 +451,16 @@ const CreateCampaign = () => {
                 <Grid item xs={6} md={3}>
                   <FormControl fullWidth>
                     <Select value={recurringType} onChange={e => setRecurringType(e.target.value)}>
-                      <MenuItem value='day'>Day</MenuItem>
-                      <MenuItem value='week'>Week</MenuItem>
-                      <MenuItem value='month'>Month</MenuItem>
-                      <MenuItem value='year'>Year</MenuItem>
+                      {frequencyTypeDropDown.map((option, index) => (
+                        <MenuItem key={index} value={option.value}>
+                          {option.name}
+                        </MenuItem>
+                      ))}
                     </Select>
                     {/* <FormHelperText>Frequency</FormHelperText> */}
                   </FormControl>
                 </Grid>
               </>
-            )}
-
-            {/* Preview */}
-            {scheduleType === 'schedule' && (
-              <Grid item xs={12}>
-                <Box sx={{ background: '#f4f6f8', p: 2, borderRadius: 2 }}>
-                  <Typography variant='subtitle1' fontWeight='600'>
-                    Preview:
-                  </Typography>
-                  <Typography>
-                    The system will send <b>{announcementTitle}</b> to users on{' '}
-                    <b>{startDateTime.format('DD-MM-YYYY hh:mm A')}</b>.
-                    {isRecurring && (
-                      <>
-                        {' '}
-                        This will repeat <b>{recurringCount}</b> times every <b>{recurringType}</b>.
-                      </>
-                    )}
-                  </Typography>
-                </Box>
-              </Grid>
             )}
           </Grid>
           {/* Communication Channels */}
@@ -407,44 +468,94 @@ const CreateCampaign = () => {
             <Typography fontWeight={600} mb={1} mt={3}>
               Communication Channels
             </Typography>
-            <Grid container spacing={2} mb={3}>
-              {channels.map(channel => (
-                <Grid item xs={6} sm={3} key={channel.key}>
-                  <Box
-                    onClick={() => setSelectedChannel(channel.key)}
-                    sx={{
-                      cursor: 'pointer',
-                      border: selectedChannel === channel.key ? '2px solid #1976d2' : '1px solid #ccc',
-                      borderRadius: 2,
-                      height: 200,
-                      p: 2,
-                      textAlign: 'center',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        backgroundColor: '#f5f5f5'
-                      }
-                    }}
-                  >
-                    <Typography fontSize={30}>{channel.icon}</Typography>
-                    <Typography fontWeight={600}>{channel.label}</Typography>
-                    <Typography variant='caption'>{channel.sub}</Typography>
-                  </Box>
-                </Grid>
-              ))}
+            <Grid container spacing={3} mb={3}>
+              {channels.map(channel => {
+                const isSelected = selectedChannel === channel.key
+
+                return (
+                  <Grid item xs={6} sm={3} key={channel.key}>
+                    <Box
+                      onClick={() => setSelectedChannel(channel.key)}
+                      sx={{
+                        cursor: 'pointer',
+                        border: isSelected ? `2px solid ${channel.color}` : '1px solid #e0e0e0',
+                        borderRadius: 3,
+                        height: 200,
+                        p: 3,
+                        backgroundColor: isSelected ? `${channel.color}20` : '',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'scale(1.03)',
+                          boxShadow: 4,
+                          backgroundColor: isSelected ? `${channel.color}25` : ''
+                        }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 64,
+                          height: 64,
+                          backgroundColor: channel.bg,
+                          color: channel.color,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 32,
+                          boxShadow: 2,
+                          mb: 1
+                        }}
+                        dangerouslySetInnerHTML={{ __html: channel.icon }}
+                      />
+                      {/* <img src={channel.img} className={classNames('max-bs-[100px] bs-[102px] rounded-lg')} /> */}
+                      <Typography fontWeight={600} variant='subtitle1' sx={{ textTransform: 'capitalize', mb: 0.5 }}>
+                        {channel.label}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary' textAlign='center'>
+                        {channel.sub}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                )
+              })}
             </Grid>
           </Box>
 
+          {/* Preview */}
+          {scheduleType === 'schedule' && (
+            <Grid item xs={12} mb={2}>
+              <Box sx={{ background: '#f4f6f8', p: 2, borderRadius: 2 }}>
+                <Typography variant='subtitle1' fontWeight='600'>
+                  Preview:
+                </Typography>
+                <Typography>
+                  This campaign will be send <b>{announcementTitle}</b> to selected users on{' '}
+                  <b>{startDateTime.format('DD-MM-YYYY hh:mm A')}</b>.
+                  {isRecurring && (
+                    <>
+                      {' '}
+                      This will repeat <b>{recurringCount}</b> at same time <b>{recurringType}</b>.
+                    </>
+                  )}
+                </Typography>
+              </Box>
+            </Grid>
+          )}
           {/* Action Buttons */}
           <Box display='flex' justifyContent='flex-start' gap={2}>
             <Button variant='contained' onClick={launchCampaign}>
               Launch Campaign
             </Button>
             <Button
-              onClick={() => router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))}
+              onClick={() =>
+                router.replace(
+                  getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale)
+                )
+              }
               variant='outlined'
             >
               Cancel
@@ -452,6 +563,7 @@ const CreateCampaign = () => {
           </Box>
         </Box>
       </Card>
+      {openDialog && <CampaignViewLogDialog open={openDialog} setOpen={setOpenDialog} />}
     </>
   )
 }

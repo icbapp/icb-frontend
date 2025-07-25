@@ -1,4 +1,5 @@
-import CampaignListPage from '@/views/apps/announcement/campaign'
+import CampaignListPage from "@/views/apps/announcement/create-campaign/CampaignTable"
+
 
 const Campaign = () => {
   return <CampaignListPage />
