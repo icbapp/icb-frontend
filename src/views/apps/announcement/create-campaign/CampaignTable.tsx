@@ -89,10 +89,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const ids = searchParams.get('id')
 
   const [data, setData] = useState<UsersType[]>([])
-  const [selectedUser, setSelectedUser] = useState<any>(null) // ideally type this
   const [loaderMain, setloaderMain] = useState(false)
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [totalRows, setTotalRows] = useState(0)
   const [paginationInfo, setPaginationInfo] = useState({
     page: 0,
@@ -100,13 +97,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   })
   const [loading, setLoading] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
-
-  const openPopUp = (id: number) => {
-    const selectedData = data.find(item => item.id === id)
-    if (selectedData) {
-      setSelectedUser(selectedData.attachments)
-    }
-  }
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
@@ -155,9 +145,9 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
               <Tooltip title='Edit'>
                 <IconButton
                   size='small'
-                  onClick={() => {
-                    editUser(Number(row.original.id))
-                  }}
+                  onClick={() =>
+                    router.push(`${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${row.original.id}`)
+                  }
                 >
                   <i className='ri-pencil-line' style={{ color: 'green' }} />
                 </IconButton>
@@ -212,11 +202,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   useEffect(() => {
     fetchUsers()
   }, [paginationInfo.page, paginationInfo.perPage, globalFilter])
-
-  const editUser = async (id: number) => {
-    router.push(`${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${id}`)
-  }
-
 
   return (
     <>

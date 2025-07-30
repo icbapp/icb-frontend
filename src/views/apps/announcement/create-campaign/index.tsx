@@ -14,7 +14,6 @@ import {
   InputAdornment,
   FormControl,
   Select,
-  FormHelperText
 } from '@mui/material'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -32,26 +31,13 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { toast } from 'react-toastify'
 import CampaignViewLogDialog from '@/components/dialogs/campaign-view-log'
-
-const campaignStatusType = [
-  { name: 'One Time', value: 'one_time' },
-  { name: 'Recurring', value: 'recurring' },
-  { name: 'In Progress', value: 'in_progress' }
-]
-const publishingModeType = [
-  { name: 'Recurring', value: 'recurring' },
-  { name: 'One Time', value: 'one_time' }
-]
-const scheduleTypeDropDown = [
-  { name: 'Now', value: 'now' },
-  { name: 'Schedule', value: 'schedule' }
-]
-const frequencyTypeDropDown = [
-  { name: 'Day', value: 'day' },
-  { name: 'Week', value: 'week' },
-  { name: 'Month', value: 'month' },
-  { name: 'Year', value: 'year' }
-]
+import {
+  campaignStatusType,
+  frequencyTypeDropDown,
+  publishingModeType,
+  scheduleTypeDropDown
+} from '@/comman/dropdownOptions/DropdownOptions'
+import { ShowErrorToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
 
 const CreateCampaign = () => {
   const router = useRouter()
@@ -62,7 +48,9 @@ const CreateCampaign = () => {
   const ids = searchParams.get('id')
   const adminStore = useSelector((state: RootState) => state.admin)
 
-  const [selectedChannel, setSelectedChannel] = useState('email')
+  const [selectedChannel, setSelectedChannel] = useState('')
+  console.log("selectedChannelselectedChannel",selectedChannel);
+  
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
   const [selectedData, setSelectedData] = useState([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
@@ -118,11 +106,11 @@ const CreateCampaign = () => {
     }
   ]
 
-  const handleFilterChange = (event, newValues) => {
+  const handleFilterChange = (newValues: any) => {
     setSelectedLabels(newValues)
 
     if (newValues && newValues.length > 0) {
-      const selectedRoles = newValues.map(val => val.name.toLowerCase())
+      const selectedRoles = newValues.map((val: any) => val.name.toLowerCase())
 
       // Example filter logic (if your data has 'role' field)
       // const filtered = data.filter(item =>
@@ -154,7 +142,7 @@ const CreateCampaign = () => {
     const fetchRoleWiseUsers = async () => {
       if (selectedLabels.length === 0) return
       try {
-        const select = selectedLabels.map(val => val.id)
+        const select = selectedLabels.map((val: any) => val.id)
         const body = {
           tenant_id: adminStore.tenant_id,
           school_id: adminStore.school_id,
@@ -179,17 +167,16 @@ const CreateCampaign = () => {
           campaign_id: ids
         }
       })
-      console.log('res', res.data.data.data)
-
-      setNote(res.data.data.data.note)
-      setStatus(res.data.data.data.campaign_status)
-      setMode(res.data.data.data.publish_mode)
-      setScheduleType(res.data.data.data.schedule)
-      setRecurringCount(res.data.data.data.frequency_count)
-      setRecurringType(res.data.data.data.frequency_type)
-      setSelectedChannel(res.data.data.data.channels)
-      setStartDateTime(dayjs(res.data.data.data.campaign_date + ' ' + res.data.data.data.formatted_campaign_time))
-      setAnnouncementTitle(res.data.data.data.announcement.title)
+      setSelectedData(res.data.data.users)
+      setNote(res.data.data.note)
+      setStatus(res.data.data.campaign_status)
+      setMode(res.data.data.publish_mode)
+      setScheduleType(res.data.data.schedule)
+      setRecurringCount(res.data.data.frequency_count)
+      setRecurringType(res.data.data.frequency_type)
+      setSelectedChannel(res.data.data.channels)
+      setStartDateTime(dayjs(res.data.data.campaign_date + ' ' + res.data.data.formatted_campaign_time))
+      setAnnouncementTitle(res.data.data.announcement.title)
     } catch (err: any) {
       if (err.response?.status === 500) {
         toast.error('Internal Server Error.')
@@ -202,6 +189,16 @@ const CreateCampaign = () => {
   }, [ids])
   const launchCampaign = async () => {
     try {
+      if (!selectedIds || selectedIds.length === 0) {
+        ShowErrorToast('Please select at least one user to launch the campaign.');
+        return;
+      }
+      console.log("selectedChannel",selectedChannel);
+      
+      if (selectedChannel === "" || selectedChannel ==  undefined) {
+        ShowErrorToast('The Communication Channels required.');
+        return;
+      }
       let date = ''
       let time = ''
       let timeampm = ''
@@ -217,7 +214,7 @@ const CreateCampaign = () => {
       const body = {
         id: ids ? Number(ids) : 0,
         note: note || '',
-        announcements_id: 57,
+        announcements_id: localStorage.getItem('announcementId'),
         tenant_id: adminStore.tenant_id,
         school_id: adminStore.school_id,
         user_ids: selectedIds,
@@ -233,11 +230,84 @@ const CreateCampaign = () => {
       }
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
       if (response.data.status === 200) {
-        toast.success(response.data.message)
+        ShowSuccessToast(response.data.message)
         router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))
       }
     } catch (error) {
-      console.error('Error fetching role-wise users:', error)
+      console.log("erere", error);
+      
+      console.error('Error fetching role-wise users:', error.data.errors)
+      // ShowErrorToast(error?.data?.data?.message || 'Something went wrong!')
+    }
+  }
+
+  const statuses = ['Draft', 'Ready', 'In Progress', 'Stopped', 'Done'] as const
+  type StatusType = (typeof statuses)[number]
+
+  const [status1, setStatus1] = useState<StatusType>('Draft')
+
+  const getStatusCard = (status: StatusType) => {
+    switch (status) {
+      case 'Draft':
+        return (
+          <div className='border p-6 rounded-lg bg-white shadow'>
+            <h3 className='text-lg font-semibold text-gray-700'>📝 Draft</h3>
+            <p className='text-sm mt-2 text-gray-500'>
+              Campaign is being created. <strong>No messages will be sent.</strong>
+            </p>
+          </div>
+        )
+
+      case 'Ready':
+        return (
+          <div className='border p-6 rounded-lg bg-white shadow'>
+            <h3 className='text-lg font-semibold text-blue-700'>🚀 Ready</h3>
+            <p className='text-sm mt-2 text-gray-600'>
+              Campaign is scheduled to launch. System will begin sending messages as per configuration.
+            </p>
+            <Button className='mt-4' onClick={() => setStatus1('In Progress')}>
+              Launch Now
+            </Button>
+          </div>
+        )
+
+      case 'In Progress':
+        return (
+          <div className='border p-6 rounded-lg bg-white shadow relative'>
+            <h3 className='text-lg font-semibold text-green-700'>📢 In Progress</h3>
+            <p className='text-sm mt-2 text-gray-700'>
+              Messages are being sent. Announcement <strong>cannot be edited</strong> except <em>Note</em>.
+            </p>
+            <p className='text-sm text-orange-500 mt-1'>
+              ⚠ Editing this announcement will send updated details to remaining audience.
+            </p>
+            <Button className='mt-4 bg-red-600 hover:bg-red-700' onClick={() => setStatus1('Stopped')}>
+              Stop Campaign
+            </Button>
+          </div>
+        )
+
+      case 'Stopped':
+        return (
+          <div className='border p-6 rounded-lg bg-white shadow'>
+            <h3 className='text-lg font-semibold text-red-600'>⛔ Stopped</h3>
+            <p className='text-sm mt-2 text-gray-600'>Campaign is stopped. No further changes allowed.</p>
+            <p className='text-sm text-gray-500 mt-1'>
+              You can remove specific audiences with <strong>Pending</strong> status.
+            </p>
+            <Button className='mt-4 bg-green-600 hover:bg-green-700' onClick={() => setStatus1('In Progress')}>
+              Continue Campaign
+            </Button>
+          </div>
+        )
+
+      case 'Done':
+        return (
+          <div className='border p-6 rounded-lg bg-white shadow'>
+            <h3 className='text-lg font-semibold text-gray-700'>✅ Done</h3>
+            <p className='text-sm mt-2 text-gray-600'>Campaign is complete. No edits or actions are allowed.</p>
+          </div>
+        )
     }
   }
   return (
@@ -279,7 +349,7 @@ const CreateCampaign = () => {
               getOptionLabel={option => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               value={selectedLabels}
-              onChange={handleFilterChange}
+              onChange={(event, newValue) => handleFilterChange(newValue)}
               sx={{ width: 400, marginBottom: 2 }}
               renderInput={params => <TextField {...params} label='Select Roles' />}
             />
@@ -308,13 +378,11 @@ const CreateCampaign = () => {
 
       <Card sx={{ mt: 4 }}>
         <Box p={6}>
+           {/* <Button variant='contained'>
+              Bulk Delete
+            </Button> */}
           {/* Grid */}
-          <AudienceGrid
-            rolesList={rolesList}
-            selectedLabels={selectedLabels}
-            selectedData={selectedData}
-            setSelectedIds={setSelectedIds}
-          />
+          <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} />
         </Box>
       </Card>
       <Card sx={{ mt: 4 }}>
@@ -424,8 +492,19 @@ const CreateCampaign = () => {
                       label='Start Date Time'
                       value={startDateTime}
                       onChange={newValue => setStartDateTime(newValue)}
-                      minDateTime={dayjs()} // ✅ restrict to current date and time onwards
-                      slotProps={{ textField: { fullWidth: true } }}
+                      format='DD-MM-YYYY hh:mm A'
+                      minDateTime={dayjs()}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          error: false,
+                          helperText: '',
+                          FormHelperTextProps: { sx: { display: 'none' } },
+                          InputLabelProps: {
+                            sx: { color: 'inherit !important' }
+                          }
+                        }
+                      }}
                     />
                   </DemoContainer>
                 </LocalizationProvider>
@@ -533,8 +612,8 @@ const CreateCampaign = () => {
                   Preview:
                 </Typography>
                 <Typography>
-                  This campaign will be send <b>{announcementTitle}</b> to selected users on{' '}
-                  <b>{startDateTime.format('DD-MM-YYYY hh:mm A')}</b>.
+                  This campaign will be send <b>{announcementTitle}</b> to <b>{selectedChannel}</b> selected users on{' '}
+                  <b>{startDateTime ? startDateTime.format('DD-MM-YYYY hh:mm A') : ''}</b>.
                   {isRecurring && (
                     <>
                       {' '}
@@ -546,26 +625,114 @@ const CreateCampaign = () => {
             </Grid>
           )}
           {/* Action Buttons */}
-          <Box display='flex' justifyContent='flex-start' gap={2}>
+          <Box display='flex' justifyContent='flex-start' alignItems='center' gap={2}>
+            {/* Left-side buttons */}
+            {/* <Button variant='contained' onClick={launchCampaign}>
+              Draft
+            </Button> */}
             <Button variant='contained' onClick={launchCampaign}>
               Launch Campaign
             </Button>
+            {/* <Button variant='contained' onClick={launchCampaign}>
+              In Progress
+            </Button>
+            <Button variant='contained' onClick={launchCampaign}>
+              Stop
+            </Button> */}
             <Button
+              variant='outlined'
               onClick={() =>
                 router.replace(
                   getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale)
                 )
               }
-              variant='outlined'
             >
               Cancel
             </Button>
+            {/* Spacer pushes this button to right */}
+            <Box flexGrow={1} />
+            {/* Right-side cancel button */}
+            {/* <i className='ri-home-fill' onTouchMove={() => {}}></i> */}.
+            {/* <div className='relative inline-block group'>
+              {/* Hover Icon */}
+              <i className='ri-home-fill text-2xl cursor-pointer text-gray-700' /> */}
+
+              {/* Hover Content */}
+              {/* <div className='absolute top-8 left-0 z-10 hidden group-hover:block'> */}
+                <StatusFlow />
+              {/* </div>
+            </div> */}
           </Box>
         </Box>
       </Card>
+
       {openDialog && <CampaignViewLogDialog open={openDialog} setOpen={setOpenDialog} />}
     </>
   )
 }
 
 export default CreateCampaign
+
+const StatusFlow = () => {
+  return (
+    <div className='p-6 max-w-6xl mx-auto text-center'>
+      <h2 className='text-lg font-semibold text-gray-700 mb-6'>📊 Campaign Status Flow</h2>
+
+      <div className='flex flex-wrap justify-center items-center gap-4'>
+        {/* Draft */}
+        <div className='bg-gray-100 border-2 border-gray-300 rounded-md px-4 py-2 text-gray-800'>
+          📝 Draft
+          <p className='text-xs text-gray-500'>Not sending</p>
+        </div>
+
+        <span className='text-2xl text-gray-400'>→</span>
+
+        {/* Ready */}
+        <div className='bg-blue-50 border-2 border-blue-300 rounded-md px-4 py-2 text-blue-700'>
+          🚀 Ready
+          <p className='text-xs text-blue-500'>Launch campaign</p>
+        </div>
+
+        <span className='text-2xl text-gray-400'>→</span>
+
+        {/* In Progress */}
+        <div className='bg-green-50 border-2 border-green-400 rounded-md px-4 py-2 text-green-700 relative'>
+          📢 In Progress
+          <p className='text-xs text-green-500'>Cannot change settings</p>
+          <div className='absolute top-full mt-3 left-1/2 -translate-x-1/2'>
+            <div className='flex flex-col items-center'>
+              <div className='border border-red-500 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-medium'>
+                ⛔ Stop
+              </div>
+              <div className='w-0 h-0 border-l-4 border-r-4 border-t-8 border-t-red-500 mt-1'></div>
+            </div>
+          </div>
+        </div>
+
+        <span className='text-2xl text-gray-400'>→</span>
+
+        {/* Stopped */}
+        <div className='bg-red-50 border-2 border-red-400 rounded-md px-4 py-2 text-red-600 relative'>
+          ⛔ Stopped
+          <p className='text-xs text-red-500'>Paused, no edit</p>
+          <div className='absolute top-full mt-3 left-1/2 -translate-x-1/2'>
+            <div className='flex flex-col items-center'>
+              <div className='border border-green-500 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-medium'>
+                🔄 Continue
+              </div>
+              <div className='w-0 h-0 border-l-4 border-r-4 border-t-8 border-t-green-500 mt-1'></div>
+            </div>
+          </div>
+        </div>
+
+        <span className='text-2xl text-gray-400'>→</span>
+
+        {/* Done */}
+        <div className='bg-gray-200 border-2 border-gray-400 rounded-md px-4 py-2 text-gray-700'>
+          ✅ Done
+          <p className='text-xs text-gray-600'>Final stage</p>
+        </div>
+      </div>
+    </div>
+  )
+}

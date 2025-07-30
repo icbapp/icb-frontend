@@ -25,13 +25,15 @@ import { api } from '@/utils/axiosInstance'
 import { toast } from 'react-toastify'
 import { getShortFileName } from '../../chat/utils'
 
-type FileProp = {
-  file_path: any
+export type FileProp = {
   id?: number; // existing files will have ID
   name: string;
   type: string;
   size: number;
   file?: File; // for new uploads
+  file_url?: string;
+  preview?: string;
+  file_path: string;
 }
 
 interface UploadMultipleFileProps {
@@ -152,7 +154,7 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
         <div className='file-preview'>{renderFilePreview(file)}</div>
         <div>
           <Typography className='file-name font-medium' color='text.primary'>
-           {getShortFileName(file.name || file.file_path?.split('/').pop())}
+           {getShortFileName(file.name || file.file_path?.split('/').pop() || '')}
             </Typography>
             {/* <Typography className='file-size' variant='body2'>
             {file.size

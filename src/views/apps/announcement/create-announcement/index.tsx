@@ -2,13 +2,12 @@
 
 // pages/announcements/index.tsx
 import { useEffect, useState } from 'react'
-import { Typography, Grid, TextField, Card, Skeleton, Box, Autocomplete } from '@mui/material'
+import { Typography, Grid, TextField, Card, Skeleton, Box, Autocomplete, CardContent } from '@mui/material'
 // import Icon from 'src/@core/components/icon'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
 import { api } from '@/utils/axiosInstance'
 import endPointApi from '@/utils/endPointApi'
-import { toast } from 'react-toastify'
 import UploadMultipleFile, { FileProp } from './UploadMultipleFile'
 import '@/libs/styles/tiptapEditor.css'
 import SaveButton from '@/comman/button/SaveButton'
@@ -19,6 +18,9 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import dayjs, { Dayjs } from 'dayjs'
 import MyCKEditor from '../EditorToolbar'
 import { useSettings } from '@/@core/hooks/useSettings'
+import { ShowErrorToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
+import Loader from '@/components/Loader'
+import { statusTypeDropDown } from '@/comman/dropdownOptions/DropdownOptions'
 
 interface AnnouncementForm {
   title: string
@@ -49,59 +51,6 @@ const AnnouncementCreatePage = () => {
   const [description, setDescription] = useState('')
   const adminStore = useSelector((state: RootState) => state.admin)
   const [loadings, setLoadings] = useState(false)
-  const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
-
-  const config = {
-    readonly: false,
-    height: 400,
-    spellcheck: false,
-    autofocus: true,
-    toolbarButtonSize: 'medium',
-    uploader: { insertImageAsBase64URI: true },
-    buttons: [
-      'source',
-      '|',
-      'bold',
-      'italic',
-      'underline',
-      'strikethrough',
-      '|',
-      'ul',
-      'ol',
-      '|',
-      'outdent',
-      'indent',
-      '|',
-      'font',
-      'fontsize',
-      'brush',
-      'paragraph',
-      '|',
-      'image',
-      'file',
-      'video',
-      'table',
-      'link',
-      '|',
-      'align',
-      'undo',
-      'redo',
-      '|',
-      'hr',
-      'eraser',
-      'copyformat',
-      '|',
-      'fullsize',
-      'selectall',
-      'print'
-    ]
-  }
-
-  const statusOptions = [
-    { id: '1', name: 'Draft' },
-    { id: '2', name: 'Ready to Publish' },
-    { id: '3', name: 'Published' }
-  ]
 
   const fetchUsers = async () => {
     // setloaderMain(true)
@@ -110,13 +59,6 @@ const AnnouncementCreatePage = () => {
       formData.append('id', editId || '')
 
       const res = await api.post(`${endPointApi.getAnnouncements}`, formData)
-      // const combined = `${res.data.data.date} ${res.data.data.time}`
-
-      // const parsed = dayjs(combined, 'DD-MM-YYYY hh:mm A')
-
-      // if (parsed.isValid()) {
-      //   setStartDateTime(parsed)
-      // }
 
       setAnnouncementForm(res.data.data)
       setDescription(res.data.data.description)
@@ -139,12 +81,6 @@ const AnnouncementCreatePage = () => {
   const handleSubmit = async () => {
     setLoadings(true)
 
-    // const formatted = startDateTime.format('YYYY-MM-DD hh:mm A')
-
-    // const [datePart, timePart, ampm] = formatted.split(' ')
-    // const date = datePart
-    // const time = `${timePart} ${ampm}`
-
     const formData = new FormData()
 
     formData.append('id', editId ? String(editId) : '0')
@@ -152,8 +88,6 @@ const AnnouncementCreatePage = () => {
     formData.append('tenant_id', adminStore.tenant_id)
     formData.append('title', announcementForm.title)
     formData.append('description', description)
-    // formData.append('date', date)
-    // formData.append('time', time)
     formData.append('location', announcementForm.location)
     formData.append('status', announcementForm.status)
 
@@ -175,30 +109,35 @@ const AnnouncementCreatePage = () => {
       })
       if (res) {
         setLoadings(false)
-        toast.success(res.data.message || 'Announcement created successfully!')
+        ShowSuccessToast(res.data.message || 'Announcement created successfully!')
         router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))
       }
     } catch (error: any) {
+      console.log('error', error.response.data.message)
+
       setLoadings(false)
-      toast.error(error?.data?.data?.message || 'Something went wrong!')
-      console.error('Error:', error.data.data)
+      ShowErrorToast(error.response.data.message || 'Something went wrong!')
     }
   }
 
   useEffect(() => {
-    setFiles(announcementForm.attachments)
+    setFiles(announcementForm.attachments as unknown as FileProp[])
   }, [announcementForm.attachments])
 
   return (
     <>
-     {/* <p style={{ color: settings.primaryColor }} className="font-bold"><i className="ri-arrow-go-back-line mr-2"></i>Announcement / {editId ? 'Edit' : 'Create'} Announcement</p> */}
-    <p style={{ color: settings.primaryColor }} className="font-bold flex items-center gap-2 mb-1">
-      <span className="inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer"
-       onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}>
-        <i className="ri-arrow-go-back-line text-lg"></i>
-      </span>
-      Announcement / {editId ? 'Edit' : 'Create'} Announcement
-    </p>
+      {/* <p style={{ color: settings.primaryColor }} className="font-bold"><i className="ri-arrow-go-back-line mr-2"></i>Announcement / {editId ? 'Edit' : 'Create'} Announcement</p> */}
+      {loadings && <Loader />}
+
+      <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
+        <span
+          className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
+          onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}
+        >
+          <i className='ri-arrow-go-back-line text-lg'></i>
+        </span>
+        Announcement / {editId ? 'Edit' : 'Create'} Announcement
+      </p>
       <Card>
         <div className='p-6'>
           <Typography variant='h5' gutterBottom>
@@ -230,9 +169,9 @@ const AnnouncementCreatePage = () => {
                     <Grid item xs={4} style={{ marginTop: '3px' }}>
                       <Autocomplete
                         fullWidth
-                        options={statusOptions}
+                        options={statusTypeDropDown}
                         getOptionLabel={option => option.name}
-                        value={statusOptions.find(item => item.id === String(announcementForm.status)) || null}
+                        value={statusTypeDropDown.find(item => item.id === String(announcementForm.status)) || null}
                         onChange={(event, newValue) => {
                           setAnnouncementForm(prev => ({
                             ...prev,
@@ -267,22 +206,28 @@ const AnnouncementCreatePage = () => {
                     {/* Description */}
                     <Grid item xs={12}>
                       <Typography className='mbe-1'>Description (Optional)</Typography>
-                      <Card className='p-0 border shadow-none'>
-                        {/* <CardContent className='p-0'>
-                        <EditorToolbar editor={editor} />
-                        <Divider className='mli-5' />
-                        <EditorContent editor={editor} className='bs-[135px] overflow-y-auto flex ' />
-                      </CardContent> */}
-                        <div className='bg-white rounded-xl shadow p-4'>
-                          <MyCKEditor value={description} onChange={setDescription} />
-                        </div>
+                      <Card>
+                        <CardContent>
+                          <div className='bg-white rounded-xl'>
+                            <MyCKEditor value={description} onChange={setDescription} settingMode={settings.mode} />
+                          </div>
+                        </CardContent>
                       </Card>
                     </Grid>
 
                     {/* Buttons */}
                     <Grid item xs={12}>
                       <Box display='flex' gap={2}>
-                        <SaveButton name='Save' type='submit' disabled={announcementForm?.title === ''} />
+                        <SaveButton
+                          name='Save'
+                          type='submit'
+                          disabled={
+                            announcementForm?.title === '' ||
+                            description === '' ||
+                            announcementForm?.status === '' ||
+                            announcementForm?.location === ''
+                          }
+                        />
                         <CancelButtons
                           name='Cancel'
                           onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}
@@ -309,7 +254,7 @@ export default AnnouncementCreatePage
 
 const AnnouncementSkeleton = () => {
   return (
-   <Grid container spacing={4}>
+    <Grid container spacing={4}>
       {/* Left Column */}
       <Grid item xs={12} md={8}>
         <Grid container spacing={3}>
@@ -350,9 +295,9 @@ const AnnouncementSkeleton = () => {
 
       {/* Right Column */}
       <Grid item xs={12} md={4}>
-         <Card>
+        <Card>
           <div className='bg-white rounded-xl shadow p-4'>
-          <Skeleton variant='rectangular' height={300} sx={{ borderRadius: 1 }} />
+            <Skeleton variant='rectangular' height={300} sx={{ borderRadius: 1 }} />
           </div>
         </Card>
       </Grid>

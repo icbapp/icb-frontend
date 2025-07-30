@@ -246,14 +246,12 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   <i className='ri-megaphone-line text-orange-500' />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={row.original.status == 3 ? 'Cannot delete published item' : 'Delete'}>
-                {console.log("row.original.status",row.original.status)}
-                
+              <Tooltip title={Number(row.original.status) == 3 ? 'Cannot delete published item' : 'Delete'}>
                 <span>
                   <IconButton
                     size='small'
                     onClick={() => handleDeleteClick(Number(row.original.id))}
-                    disabled={row.original.status == 3}
+                    disabled={Number(row.original.status) == 3}
                   >
                     <i className='ri-delete-bin-7-line text-red-600' />
                   </IconButton>
@@ -317,7 +315,8 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     router.push(`${getLocalizedUrl('/apps/announcement/add-announcement', locale as Locale)}?id=${id}`)
   }
 
-  const deleteUser = async (id: number) => {
+  const deleteUser = async (id: number | null) => {
+    // if (id === null) return;
     try {
       setDeleteOpen(false)
       setLoading(true)
@@ -327,6 +326,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       if (response.data?.status === 200) {
         setLoading(false)
         fetchUsers()
+        toast.success(response.data.message)
       }
     } catch (error: any) {
       setLoading(false)
