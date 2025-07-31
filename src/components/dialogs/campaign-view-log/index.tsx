@@ -37,8 +37,7 @@ import { ColumnDef } from '@tanstack/table-core'
 type CampaignDialogProps = {
   open: boolean
   setOpen: (open: boolean) => void
-  item?: RoleType
-  title?: string
+  selectedChannel: string
 }
 type ErrorType = {
   message: string[]
@@ -141,7 +140,7 @@ const projectTable: ProjectListDataType[] = [
 
 const columnHelper = createColumnHelper<ProjectListDataType>()
 
-const CampaignViewLogDialog = ({ open, setOpen, item, title }: CampaignDialogProps) => {
+const CampaignViewLogDialog = ({ open, setOpen, selectedChannel }: CampaignDialogProps) => {
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
   const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
@@ -157,88 +156,143 @@ const CampaignViewLogDialog = ({ open, setOpen, item, title }: CampaignDialogPro
   const { lang: locale } = useParams()
 
   const [data, setData] = useState(...[projectTable])
-  
-    // Hooks
-    const columns = useMemo<ColumnDef<ProjectListDataType, any>[]>(
-      () => [
-        columnHelper.accessor('projectTitle', {
-          header: 'Project',
-          cell: ({ row }) => (
-            <div className='flex items-center gap-3'>
-              <CustomAvatar src={row.original.img} size={34} />
-              <div className='flex flex-col'>
-                <Typography color='text.primary' className='font-medium'>
-                  {row.original.projectTitle}
-                </Typography>
-                <Typography variant='body2'>{row.original.projectType}</Typography>
-              </div>
-            </div>
-          )
-        }),
-        columnHelper.accessor('totalTask', {
-          header: 'Total Task',
-          cell: ({ row }) => <Typography color='text.primary'>{row.original.totalTask}</Typography>
-        }),
-        columnHelper.accessor('progressValue', {
-          header: 'Progress',
-          cell: ({ row }) => (
-            <>
-              <Typography color='text.primary'>{`${row.original.progressValue}%`}</Typography>
-              <LinearProgress
-                color={row.original.progressColor}
-                value={row.original.progressValue}
-                variant='determinate'
-                className='is-full'
-              />
-            </>
-          )
+
+  // Hooks
+  const columns = useMemo<ColumnDef<ProjectListDataType, any>[]>(() => {
+    if (selectedChannel === 'email') {
+      return [
+        columnHelper.accessor('hours', {
+          header: 'Name',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         }),
         columnHelper.accessor('hours', {
-          header: 'Hours',
+          header: 'Email',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Status',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'SentTime',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'delivered Time',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Read Time',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Action',
           cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         })
-      ],
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      []
-    )
-  useEffect(() => {
-    if (title && item) {
-      setRoleName(item.title)
-      setSelectedCheckbox(item.permission || [])
+      ]
+    } else if (selectedChannel === 'sms') {
+      return [
+        columnHelper.accessor('hours', {
+          header: 'Name',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Phone',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Message',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'SentTime',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Status',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'delivered Time',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        })
+      ]
+    } else if (selectedChannel === 'push_notification') {
+      return [
+        columnHelper.accessor('hours', {
+          header: 'Name',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Phone',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Message',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'SentTime',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Status',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'delivered Time',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        })
+      ]
     } else {
-      setRoleName('')
-      setSelectedCheckbox([])
+      return [
+        columnHelper.accessor('hours', {
+          header: 'Name',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Phone',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Message Preview',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Attachments',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'SentTime',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Status',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Read Time',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        }),
+        columnHelper.accessor('hours', {
+          header: 'Delivered Time',
+          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        })
+      ]
     }
-    setIsIndeterminateCheckbox(false)
-  }, [title, item, open])
+  }, [selectedChannel])
 
   useEffect(() => {
     const totalPermissions = defaultData.length * 3
-    setIsIndeterminateCheckbox(
-      selectedCheckbox.length > 0 && selectedCheckbox.length < totalPermissions
-    )
+    setIsIndeterminateCheckbox(selectedCheckbox.length > 0 && selectedCheckbox.length < totalPermissions)
   }, [selectedCheckbox])
 
   const handleSubmit = async (e: React.FormEvent) => {
-
     e.preventDefault()
 
-    const id = item?.id ?? (roleStore.length + 1).toString()
-
-    // const newRole: RoleType = {
-    //   id,
-    //   title: roleName,
-    //   totalUsers: item?.totalUsers ?? 0,
-    //   avatars: item?.avatars ?? [],
-    //   permission: selectedCheckbox
-    // }
-
     try {
-      if (loading) return;
+      if (loading) return
       setLoading(true)
-
-      // const resultAction = await dispatch(addRoleToDB(newRole))
-
       const payload = {
         name: roleName,
         permissions: [],
@@ -262,14 +316,12 @@ const CampaignViewLogDialog = ({ open, setOpen, item, title }: CampaignDialogPro
       if (errors && typeof errors === 'object') {
         const messages = Object.values(errors).flat()
         setErrorState({ message: messages as string[] })
-        toast.error("something went wrong, please try again later.")
-
+        toast.error('something went wrong, please try again later.')
       } else {
         setErrorState({ message: ['Something went wrong. Please try again.'] })
-        toast.error("something went wrong, please try again later.")
+        toast.error('something went wrong, please try again later.')
       }
-    }
-    finally {
+    } finally {
       setLoading(false)
     }
   }
@@ -282,11 +334,18 @@ const CampaignViewLogDialog = ({ open, setOpen, item, title }: CampaignDialogPro
   }
 
   return (
-    <Dialog fullWidth maxWidth='md' scroll='body' open={open} onClose={handleClose} sx={{ '& .MuiDialog-paper': { width: '100%', maxWidth: '1200px' } }}>
+    <Dialog
+      fullWidth
+      maxWidth='md'
+      scroll='body'
+      open={open}
+      onClose={handleClose}
+      sx={{ '& .MuiDialog-paper': { width: '100%', maxWidth: '1200px' } }}
+    >
       {/* {loading && <Loader />} */}
 
       <DialogTitle variant='h4' className='flex flex-col gap-2 text-center'>
-       View Log
+        View Log ({selectedChannel})
       </DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent className='overflow-visible'>
@@ -295,7 +354,7 @@ const CampaignViewLogDialog = ({ open, setOpen, item, title }: CampaignDialogPro
           </IconButton>
 
           <div className='flex flex-col overflow-x-auto'>
-              <ReactTable
+            <ReactTable
               data={data}
               columns={columns}
               // count={totalRows}
@@ -308,9 +367,6 @@ const CampaignViewLogDialog = ({ open, setOpen, item, title }: CampaignDialogPro
         </DialogContent>
 
         <DialogActions className='justify-center py-6'>
-          <Button variant='contained' type='submit'>
-            Submit
-          </Button>
           <Button variant='outlined' color='secondary' onClick={handleClose}>
             Cancel
           </Button>

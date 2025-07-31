@@ -12,8 +12,6 @@ import {
   Card,
   MenuItem,
   InputAdornment,
-  FormControl,
-  Select,
 } from '@mui/material'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -49,8 +47,7 @@ const CreateCampaign = () => {
   const adminStore = useSelector((state: RootState) => state.admin)
 
   const [selectedChannel, setSelectedChannel] = useState('')
-  console.log("selectedChannelselectedChannel",selectedChannel);
-  
+
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
   const [selectedData, setSelectedData] = useState([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
@@ -167,16 +164,24 @@ const CreateCampaign = () => {
           campaign_id: ids
         }
       })
-      setSelectedData(res.data.data.users)
-      setNote(res.data.data.note)
-      setStatus(res.data.data.campaign_status)
-      setMode(res.data.data.publish_mode)
-      setScheduleType(res.data.data.schedule)
-      setRecurringCount(res.data.data.frequency_count)
-      setRecurringType(res.data.data.frequency_type)
-      setSelectedChannel(res.data.data.channels)
-      setStartDateTime(dayjs(res.data.data.campaign_date + ' ' + res.data.data.formatted_campaign_time))
-      setAnnouncementTitle(res.data.data.announcement.title)
+
+      if (Array.isArray(res?.data?.role_only)) {
+        const selected = res.data.role_only.map((item: any) => ({
+          id: item.role_id,
+          name: item.role_name
+        }))
+        setSelectedLabels(selected)
+      }
+
+      setNote(res.data.note)
+      setStatus(res.data.campaign_status)
+      setMode(res.data.publish_mode)
+      setScheduleType(res.data.schedule)
+      setRecurringCount(res.data.frequency_count)
+      setRecurringType(res.data.frequency_type)
+      setSelectedChannel(res.data.channels)
+      setStartDateTime(dayjs(res.data.campaign_date + ' ' + res.data.formatted_campaign_time))
+      setAnnouncementTitle(res.data.announcement.title)
     } catch (err: any) {
       if (err.response?.status === 500) {
         toast.error('Internal Server Error.')
@@ -190,14 +195,14 @@ const CreateCampaign = () => {
   const launchCampaign = async () => {
     try {
       if (!selectedIds || selectedIds.length === 0) {
-        ShowErrorToast('Please select at least one user to launch the campaign.');
-        return;
+        ShowErrorToast('Please select at least one user to launch the campaign.')
+        return
       }
-      console.log("selectedChannel",selectedChannel);
-      
-      if (selectedChannel === "" || selectedChannel ==  undefined) {
-        ShowErrorToast('The Communication Channels required.');
-        return;
+      console.log('selectedChannel', selectedChannel)
+
+      if (selectedChannel === '' || selectedChannel == undefined) {
+        ShowErrorToast('The Communication Channels required.')
+        return
       }
       let date = ''
       let time = ''
@@ -220,7 +225,7 @@ const CreateCampaign = () => {
         user_ids: selectedIds,
         channels: selectedChannel,
         frequency_type: recurringType || '',
-        campaign_status: status,
+        campaign_status: 'one_time',
         publish_mode: mode,
         schedule: scheduleType || '',
         frequency_count: recurringCount || 0,
@@ -234,8 +239,6 @@ const CreateCampaign = () => {
         router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))
       }
     } catch (error) {
-      console.log("erere", error);
-      
       console.error('Error fetching role-wise users:', error.data.errors)
       // ShowErrorToast(error?.data?.data?.message || 'Something went wrong!')
     }
@@ -244,72 +247,30 @@ const CreateCampaign = () => {
   const statuses = ['Draft', 'Ready', 'In Progress', 'Stopped', 'Done'] as const
   type StatusType = (typeof statuses)[number]
 
-  const [status1, setStatus1] = useState<StatusType>('Draft')
+  const scheduleDates = []
+  const maxDates = Math.min(recurringCount, 5) // ✅ limit to 5
 
-  const getStatusCard = (status: StatusType) => {
-    switch (status) {
-      case 'Draft':
-        return (
-          <div className='border p-6 rounded-lg bg-white shadow'>
-            <h3 className='text-lg font-semibold text-gray-700'>📝 Draft</h3>
-            <p className='text-sm mt-2 text-gray-500'>
-              Campaign is being created. <strong>No messages will be sent.</strong>
-            </p>
-          </div>
-        )
+  for (let i = 0; i < maxDates; i++) {
+    let nextDate = dayjs(startDateTime)
 
-      case 'Ready':
-        return (
-          <div className='border p-6 rounded-lg bg-white shadow'>
-            <h3 className='text-lg font-semibold text-blue-700'>🚀 Ready</h3>
-            <p className='text-sm mt-2 text-gray-600'>
-              Campaign is scheduled to launch. System will begin sending messages as per configuration.
-            </p>
-            <Button className='mt-4' onClick={() => setStatus1('In Progress')}>
-              Launch Now
-            </Button>
-          </div>
-        )
-
-      case 'In Progress':
-        return (
-          <div className='border p-6 rounded-lg bg-white shadow relative'>
-            <h3 className='text-lg font-semibold text-green-700'>📢 In Progress</h3>
-            <p className='text-sm mt-2 text-gray-700'>
-              Messages are being sent. Announcement <strong>cannot be edited</strong> except <em>Note</em>.
-            </p>
-            <p className='text-sm text-orange-500 mt-1'>
-              ⚠ Editing this announcement will send updated details to remaining audience.
-            </p>
-            <Button className='mt-4 bg-red-600 hover:bg-red-700' onClick={() => setStatus1('Stopped')}>
-              Stop Campaign
-            </Button>
-          </div>
-        )
-
-      case 'Stopped':
-        return (
-          <div className='border p-6 rounded-lg bg-white shadow'>
-            <h3 className='text-lg font-semibold text-red-600'>⛔ Stopped</h3>
-            <p className='text-sm mt-2 text-gray-600'>Campaign is stopped. No further changes allowed.</p>
-            <p className='text-sm text-gray-500 mt-1'>
-              You can remove specific audiences with <strong>Pending</strong> status.
-            </p>
-            <Button className='mt-4 bg-green-600 hover:bg-green-700' onClick={() => setStatus1('In Progress')}>
-              Continue Campaign
-            </Button>
-          </div>
-        )
-
-      case 'Done':
-        return (
-          <div className='border p-6 rounded-lg bg-white shadow'>
-            <h3 className='text-lg font-semibold text-gray-700'>✅ Done</h3>
-            <p className='text-sm mt-2 text-gray-600'>Campaign is complete. No edits or actions are allowed.</p>
-          </div>
-        )
+    switch (recurringType) {
+      case 'year':
+        nextDate = nextDate.add(i, 'year')
+        break
+      case 'month':
+        nextDate = nextDate.add(i, 'month')
+        break
+      case 'week':
+        nextDate = nextDate.add(i, 'week')
+        break
+      case 'day':
+        nextDate = nextDate.add(i, 'day')
+        break
     }
+
+    scheduleDates.push(nextDate.format('DD-MM-YYYY'))
   }
+
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
@@ -329,9 +290,13 @@ const CreateCampaign = () => {
           <Typography variant='h6' fontWeight={600}>
             Launch Campaign
           </Typography>
-          <Button variant='contained' onClick={() => setOpenDialog(true)}>
-            View Log
-          </Button>
+          {ids ? (
+            <Button variant='contained' onClick={() => setOpenDialog(true)}>
+              View Log
+            </Button>
+          ) : (
+            ''
+          )}
         </Box>
       </Card>
 
@@ -378,7 +343,7 @@ const CreateCampaign = () => {
 
       <Card sx={{ mt: 4 }}>
         <Box p={6}>
-           {/* <Button variant='contained'>
+          {/* <Button variant='contained'>
               Bulk Delete
             </Button> */}
           {/* Grid */}
@@ -387,47 +352,8 @@ const CreateCampaign = () => {
       </Card>
       <Card sx={{ mt: 4 }}>
         <Box p={6}>
-          {/* <Grid container spacing={2} mb={4}>
-            <Grid item xs={4} style={{ marginTop: '3px' }}>
-              <Autocomplete
-                fullWidth
-                options={frequencyType}
-                getOptionLabel={option => option.name}
-                // value={frequencyType.find(item => item.id === String(announcementForm.status)) || null}
-                // onChange={(event, newValue) => {
-                //   setAnnouncementForm(prev => ({
-                //     ...prev,
-                //     status: newValue ? newValue.id : ''
-                //   }))
-                // }}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderInput={params => <TextField {...params} label='Status' />}
-                clearOnEscape
-              />
-            </Grid>
-            <Grid item xs={4} style={{ marginTop: '3px' }}>
-               <TextField
-                  label='Number of Times'
-                  fullWidth
-                  // value={announcementForm?.title}
-                  // onChange={e => handleChange('title', e.target.value)}
-                />
-            </Grid>
-            <Grid item xs={4}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DemoContainer components={['DateTimePicker']}>
-                  <DateTimePicker
-                    label='Start Date Time'
-                    value={startDateTime}
-                    onChange={newValue => setStartDateTime(newValue)}
-                  />
-                </DemoContainer>
-              </LocalizationProvider>
-            </Grid>
-          </Grid> */}
           <Grid container spacing={4}>
-            {/* Status */}
-            <Grid item xs={12} md={4}>
+            {/* <Grid item xs={12} md={4}>
               <TextField
                 label='Campaign Status'
                 select
@@ -441,12 +367,7 @@ const CreateCampaign = () => {
                   </MenuItem>
                 ))}
               </TextField>
-              {/* {status !== 'Scheduled' && (
-          <FormHelperText sx={{ color: 'error.main' }}>
-            ❌ Cannot delete campaign unless status is <b>Scheduled</b>
-          </FormHelperText>
-        )} */}
-            </Grid>
+            </Grid> */}
 
             {/* Publishing Mode */}
             <Grid item xs={12} md={4}>
@@ -468,24 +389,17 @@ const CreateCampaign = () => {
                 value={scheduleType}
                 onChange={e => setScheduleType(e.target.value)}
               >
-                {/* {publishingModeType.map((option, index) => (
-                  <MenuItem key={index} value={option.value}>
-                    {option.name}
-                  </MenuItem>
-                ))} */}
                 {scheduleTypeDropDown.map((option, index) => (
                   <MenuItem key={index} value={option.value}>
                     {option.name}
                   </MenuItem>
                 ))}
-                {/* <MenuItem value='Now'>Now</MenuItem>
-                <MenuItem value='Schedule'>Schedule</MenuItem> */}
               </TextField>
             </Grid>
 
             {/* DateTime */}
             {scheduleType === 'schedule' && (
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DemoContainer components={['DateTimePicker']}>
                     <DateTimePicker
@@ -514,7 +428,7 @@ const CreateCampaign = () => {
             {/* Recurring Settings */}
             {isRecurring && (
               <>
-                <Grid item xs={6} md={3}>
+                <Grid item xs={6} md={4}>
                   <TextField
                     label='Repeat'
                     type='number'
@@ -527,17 +441,20 @@ const CreateCampaign = () => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={6} md={3}>
-                  <FormControl fullWidth>
-                    <Select value={recurringType} onChange={e => setRecurringType(e.target.value)}>
-                      {frequencyTypeDropDown.map((option, index) => (
-                        <MenuItem key={index} value={option.value}>
-                          {option.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {/* <FormHelperText>Frequency</FormHelperText> */}
-                  </FormControl>
+                <Grid item xs={6} md={4}>
+                  <TextField
+                    label='Duration'
+                    select
+                    fullWidth
+                    value={recurringType}
+                    onChange={e => setRecurringType(e.target.value)}
+                  >
+                    {frequencyTypeDropDown.map((option, index) => (
+                      <MenuItem key={index} value={option.value}>
+                        {option.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </Grid>
               </>
             )}
@@ -612,15 +529,44 @@ const CreateCampaign = () => {
                   Preview:
                 </Typography>
                 <Typography>
-                  This campaign will be send <b>{announcementTitle}</b> to <b>{selectedChannel}</b> selected users on{' '}
-                  <b>{startDateTime ? startDateTime.format('DD-MM-YYYY hh:mm A') : ''}</b>.
-                  {isRecurring && (
+                  {/* This campaign will be send <b>{announcementTitle}</b> to select  advisor via  <b>{selectedChannel}</b> on{' '}
+                  <b>{startDateTime ? startDateTime.format('DD-MM-YYYY hh:mm A') : ''}</b> this will repeat for <b>{recurringCount} {recurringType}(s)</b> at same time(s). */}
+                  This campaign will send <b>{announcementTitle}</b> to the selected advisor via{' '}
+                  <b>{selectedChannel}</b> on{' '}
+                  <b>
+                    {dayjs(startDateTime).isValid()
+                      ? dayjs(startDateTime).format('DD-MM-YYYY hh:mm A')
+                      : 'DD-MM-YYYY hh:mm A'}
+                  </b>
+                  . It will repeat{' '}
+                  <b>
+                    {recurringCount} {recurringType}
+                    {recurringCount > 1 ? 's' : ''}
+                  </b>{' '}
+                  at the same time.
+                  {/* {isRecurring && (
                     <>
                       {' '}
                       This will repeat <b>{recurringCount}</b> at same time <b>{recurringType}</b>.
                     </>
-                  )}
+                  )} */}
                 </Typography>
+                <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+                  <h4 className='text-sm font-semibold text-blue-700 mb-3 flex items-center'>
+                    <i className='ri-calendar-event-line mr-2 text-base' /> Scheduled Dates {recurringType}
+                  </h4>
+                  <ul className='space-y-2'>
+                    {scheduleDates.map((date, idx) => (
+                      <li
+                        key={idx}
+                        className='flex items-center gap-3 text-sm text-gray-800 border border-gray-200 rounded px-3 py-2 bg-white shadow-sm'
+                      >
+                        <span className='font-bold text-blue-600'>{idx + 1}</span>:
+                        <span className='text-gray-700'>{date}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </Box>
             </Grid>
           )}
@@ -655,18 +601,19 @@ const CreateCampaign = () => {
             {/* <i className='ri-home-fill' onTouchMove={() => {}}></i> */}.
             {/* <div className='relative inline-block group'>
               {/* Hover Icon */}
-              <i className='ri-home-fill text-2xl cursor-pointer text-gray-700' /> */}
-
-              {/* Hover Content */}
-              {/* <div className='absolute top-8 left-0 z-10 hidden group-hover:block'> */}
-                <StatusFlow />
-              {/* </div>
+            <i className='ri-home-fill text-2xl cursor-pointer text-gray-700' />
+            {/* Hover Content */}
+            {/* <div className='absolute top-8 left-0 z-10 hidden group-hover:block'> */}
+            {/* <StatusFlow /> */}
+            {/* </div>
             </div> */}
           </Box>
         </Box>
       </Card>
 
-      {openDialog && <CampaignViewLogDialog open={openDialog} setOpen={setOpenDialog} />}
+      {openDialog && (
+        <CampaignViewLogDialog open={openDialog} setOpen={setOpenDialog} selectedChannel={selectedChannel} />
+      )}
     </>
   )
 }

@@ -22,7 +22,16 @@ import type { UsersType } from '@/types/apps/userTypes'
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 import { api } from '@/utils/axiosInstance'
-import { Button, Typography, Skeleton, Tooltip, CardContent, TextField, TextFieldProps } from '@mui/material'
+import {
+  Button,
+  Typography,
+  Skeleton,
+  Tooltip,
+  CardContent,
+  TextField,
+  TextFieldProps,
+  Box,
+} from '@mui/material'
 import endPointApi from '@/utils/endPointApi'
 import ReactTable from '@/comman/table/ReactTable'
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -30,6 +39,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Locale } from '@/configs/i18n'
 import { toast } from 'react-toastify'
 import { useSettings } from '@/@core/hooks/useSettings'
+import CampaignViewLogDialog from '@/components/dialogs/campaign-view-log'
+import { useTheme } from '@emotion/react'
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -53,6 +64,44 @@ interface UsersTypeWithAction {
   schedule?: 'now' | 'schedule'
   publish_mode?: 'one_time' | 'recurring'
 }
+type DataType = {
+  title: string
+  value: string
+  color: string
+  iconClass: string
+  bg: string
+}
+
+const fackeddata: DataType[] = [
+  {
+    title: 'Whatsapp',
+    value: '1,250',
+    color: '#25D366',
+    iconClass: '<i class="ri-whatsapp-line"></i>',
+    bg: '#E8F5E9'
+  },
+  {
+    title: 'Sms',
+    value: '60',
+    color: '#DB2777',
+    iconClass: '<i class="ri-message-2-line"></i>',
+    bg: '#FCE7F3'
+  },
+  {
+    title: 'Email',
+    value: '82',
+    color: '#4338CA',
+    iconClass: '<i class="ri-mail-line"></i>',
+    bg: '#E0E7FF'
+  },
+  {
+    title: 'Notification',
+    value: '14',
+    color: '#CA8A04',
+    iconClass: '<i class="ri-notification-3-line"></i>',
+    bg: '#FEF9C3'
+  }
+]
 
 // Column Definitions
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
@@ -96,7 +145,9 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     perPage: 10
   })
   const [loading, setLoading] = useState(false)
+  const [openDialog, setOpenDialog] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
+  const [channelName, setChannelName] = useState('')
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
@@ -146,7 +197,9 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                 <IconButton
                   size='small'
                   onClick={() =>
-                    router.push(`${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${row.original.id}`)
+                    router.push(
+                      `${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${row.original.id}`
+                    )
                   }
                 >
                   <i className='ri-pencil-line' style={{ color: 'green' }} />
@@ -155,6 +208,10 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
               <Tooltip title='View Log'>
                 <IconButton
                   size='small'
+                  onClick={() => {
+                    setOpenDialog(true)
+                    setChannelName(row.original.channels)
+                  }}
                 >
                   <i className='ri-eye-line' style={{ color: '' }} />
                 </IconButton>
@@ -182,16 +239,16 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           announcement_id: ids,
           // search: searchData,
           per_page: paginationInfo.perPage.toString(),
-          page: (paginationInfo.page + 1).toString(),
+          page: (paginationInfo.page + 1).toString()
         }
       })
 
       setTotalRows(res.data.data.total)
       setData(res.data.data.data)
       setloaderMain(false)
-    } catch (err:any) {
+    } catch (err: any) {
       setloaderMain(false)
-       if (err.response?.status === 500) {
+      if (err.response?.status === 500) {
         toast.error('Internal Server Error.')
       } else {
         toast.error(err?.response?.data?.message || 'Something went wrong')
@@ -205,13 +262,55 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   return (
     <>
-      <p style={{ color: settings.primaryColor }} className="font-bold flex items-center gap-2 mb-1">
-        <span className="inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer"
-         onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}>
-          <i className="ri-arrow-go-back-line text-lg"></i>
+      <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
+        <span
+          className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
+          onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}
+        >
+          <i className='ri-arrow-go-back-line text-lg'></i>
         </span>
         Announcement / Campaign
       </p>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-6'>
+        {fackeddata.map((item, i) => (
+          <div
+            key={i}
+            className='flex items-center gap-4 p-4 rounded-lg transition-all duration-200 hover:shadow-lg border'
+            style={{ borderColor: item.color }}
+          >
+            <Box
+              sx={{
+                width: 52,
+                height: 52,
+                backgroundColor: item.bg,
+                color: item.color,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 32,
+                boxShadow: 2,
+                mb: 1
+              }}
+              dangerouslySetInnerHTML={{ __html: item.iconClass }}
+            />
+
+            <div>
+              <Typography className='font-medium text-sm' color='text.secondary'>
+                {item.title}
+              </Typography>
+              <Typography
+                variant='h5'
+                className='font-bold mt-1'
+                style={{ color: `var(--mui-palette-${item.color}-main)` }}
+              >
+                {item.value}
+              </Typography>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <Card>
         {/* <CardHeader title='Filters' className='pbe-4' /> */}
         <Divider />
@@ -288,7 +387,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           </div>
         )}
       </Card>
-
+      {openDialog && <CampaignViewLogDialog open={openDialog} setOpen={setOpenDialog} selectedChannel={channelName} />}
     </>
   )
 }
