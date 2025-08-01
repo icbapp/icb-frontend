@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './styles.css'
 import { AgGridReact } from 'ag-grid-react'
 import {
@@ -12,7 +12,7 @@ import {
 } from 'ag-grid-community'
 import { ColumnMenuModule, ColumnsToolPanelModule, ContextMenuModule, RowGroupingModule } from 'ag-grid-enterprise'
 import { ModuleRegistry } from 'ag-grid-community'
-import {  IconButton, Tooltip } from '@mui/material'
+import { IconButton, Tooltip } from '@mui/material'
 import { useSettings } from '@/@core/hooks/useSettings'
 // Register required AG Grid modules
 ModuleRegistry.registerModules([
@@ -51,6 +51,7 @@ const theme = themeQuartz
   )
 
 const AudienceGrid = ({ setSelectedIds, selectedData }: Props) => {
+
   // const gridRef = useRef(null)
   const gridRef = useRef<AgGridReact<any>>(null)
   const { settings } = useSettings()
@@ -116,6 +117,19 @@ const AudienceGrid = ({ setSelectedIds, selectedData }: Props) => {
     document.body.dataset.agThemeMode = settings.mode === 'light' ? 'light-red' : 'dark-red'
   }, [settings])
 
+  const onFirstDataRendered = useCallback((params) => {
+    console.log("dsdasdasdasd",params);
+    
+        params.api.forEachNode((node) => {
+            console.log(node, 'check');
+            if (
+                node.data.check == "true"
+            ) {
+                node.setSelected(true);
+            }
+        });
+    }, []);
+
   return (
     <>
       <div style={containerStyle}>
@@ -139,6 +153,7 @@ const AudienceGrid = ({ setSelectedIds, selectedData }: Props) => {
               paginationPageSizeSelector={paginationPageSizeSelector}
               onSelectionChanged={handleSelectionChanged}
               groupIncludeFooter={true}
+              onFirstDataRendered={onFirstDataRendered}
             />
           </div>
         </div>

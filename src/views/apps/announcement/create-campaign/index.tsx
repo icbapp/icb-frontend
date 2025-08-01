@@ -2,17 +2,7 @@
 import { Locale } from '@/configs/i18n'
 import { getLocalizedUrl } from '@/utils/i18n'
 // src/views/announcements/CampaignDialog.tsx
-import {
-  Button,
-  TextField,
-  Grid,
-  Box,
-  Typography,
-  Autocomplete,
-  Card,
-  MenuItem,
-  InputAdornment,
-} from '@mui/material'
+import { Button, TextField, Grid, Box, Typography, Autocomplete, Card, MenuItem, InputAdornment } from '@mui/material'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AudienceGrid from './AudienceGrid'
@@ -46,7 +36,7 @@ const CreateCampaign = () => {
   const ids = searchParams.get('id')
   const adminStore = useSelector((state: RootState) => state.admin)
 
-  const [selectedChannel, setSelectedChannel] = useState('')
+  const [selectedChannel, setSelectedChannel] = useState<string[]>([])
 
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
   const [selectedData, setSelectedData] = useState([])
@@ -146,7 +136,9 @@ const CreateCampaign = () => {
           role_ids: select ?? ''
         }
         const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
-        setSelectedData(response.data.users)
+        if(!ids){
+          setSelectedData(response.data.users)
+        }
       } catch (error) {
         console.error('Error fetching role-wise users:', error)
       }
@@ -172,6 +164,7 @@ const CreateCampaign = () => {
         }))
         setSelectedLabels(selected)
       }
+        setSelectedData(res.data.users)
 
       setNote(res.data.note)
       setStatus(res.data.campaign_status)
@@ -198,7 +191,6 @@ const CreateCampaign = () => {
         ShowErrorToast('Please select at least one user to launch the campaign.')
         return
       }
-      console.log('selectedChannel', selectedChannel)
 
       if (selectedChannel === '' || selectedChannel == undefined) {
         ShowErrorToast('The Communication Channels required.')
@@ -271,6 +263,13 @@ const CreateCampaign = () => {
     scheduleDates.push(nextDate.format('DD-MM-YYYY'))
   }
 
+ const toggleChannel = (key: string) =>
+  setSelectedChannel(prev => {
+    const safe = Array.isArray(prev) ? prev : [];
+    return safe.includes(key)
+      ? safe.filter(k => k !== key)
+      : [...safe, key];
+  });
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
@@ -348,6 +347,7 @@ const CreateCampaign = () => {
             </Button> */}
           {/* Grid */}
           <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} />
+          {/* <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} /> */}
         </Box>
       </Card>
       <Card sx={{ mt: 4 }}>
@@ -466,19 +466,19 @@ const CreateCampaign = () => {
             </Typography>
             <Grid container spacing={3} mb={3}>
               {channels.map(channel => {
-                const isSelected = selectedChannel === channel.key
-
+                // const isSelected = selectedChannel === channel.key
+                const isSelected = selectedChannel?.includes(channel.key) ?? false;
                 return (
                   <Grid item xs={6} sm={3} key={channel.key}>
                     <Box
-                      onClick={() => setSelectedChannel(channel.key)}
+                      onClick={() => toggleChannel(channel.key)}
                       sx={{
                         cursor: 'pointer',
                         border: isSelected ? `2px solid ${channel.color}` : '1px solid #e0e0e0',
                         borderRadius: 3,
                         height: 200,
                         p: 3,
-                        backgroundColor: isSelected ? `${channel.color}20` : '',
+                        backgroundColor: isSelected ? `${channel.color}20` : 'transparent',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -532,7 +532,7 @@ const CreateCampaign = () => {
                   {/* This campaign will be send <b>{announcementTitle}</b> to select  advisor via  <b>{selectedChannel}</b> on{' '}
                   <b>{startDateTime ? startDateTime.format('DD-MM-YYYY hh:mm A') : ''}</b> this will repeat for <b>{recurringCount} {recurringType}(s)</b> at same time(s). */}
                   This campaign will send <b>{announcementTitle}</b> to the selected advisor via{' '}
-                  <b>{selectedChannel}</b> on{' '}
+                  <b>{ids ? selectedChannel : selectedChannel && selectedChannel.map((x)=> x).join(', ')}</b> on{' '}
                   <b>
                     {dayjs(startDateTime).isValid()
                       ? dayjs(startDateTime).format('DD-MM-YYYY hh:mm A')
