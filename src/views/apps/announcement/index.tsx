@@ -36,9 +36,7 @@ import ReactTable from '@/comman/table/ReactTable'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { useParams, useRouter } from 'next/navigation'
 import { Locale } from '@/configs/i18n'
-import { ThemeColor } from '@/@core/types'
-import AgGridTable from '@/comman/table/AgGridTable'
-import { toast } from 'react-toastify'
+import { ShowErrorToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -60,7 +58,7 @@ interface UsersTypeWithAction {
   title: string
   description: string
   status: 'active' | 'inactive'
-  number_of_campaigns?: number
+  total_campaigns?: number
   updated_by?: string
   created_by?: string
   created_at?: string
@@ -68,14 +66,6 @@ interface UsersTypeWithAction {
   attachments?: File[]
   action?: string
 }
-
-type ProductCategoryType = {
-  [key: string]: {
-    icon: string
-    color: ThemeColor
-  }
-}
-
 // Column Definitions
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
@@ -132,7 +122,23 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     () => [
       columnHelper.accessor('title', {
         header: 'Title',
-        cell: ({ row }) => <Typography>{row.original.title}</Typography>
+        // cell: ({ row }) => <Typography>{row.original.title}</Typography>
+        cell: ({ row }) => {
+          const htmlToText = (html: string): string => {
+            const temp = document.createElement('div')
+            temp.innerHTML = html
+            return temp.textContent || temp.innerText || ''
+          }
+
+          const text = htmlToText(row.original.title || '')
+          const truncated = text.length > 20 ? `${text.slice(0, 20)}...` : text
+
+          return (
+            <Tooltip title={text} arrow placement='bottom-start'>
+              <Typography noWrap>{truncated}</Typography>
+            </Tooltip>
+          )
+        }
       }),
 
       columnHelper.accessor('description', {
@@ -177,9 +183,8 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         }
       }),
 
-      columnHelper.accessor('number_of_campaigns', {
+      columnHelper.accessor('total_campaigns', {
         header: 'Number of Campaigns'
-        // cell: ({ row }) => <Typography>{row.original.number_of_campaigns}</Typography>
       }),
 
       columnHelper.accessor('created_at', {
@@ -296,9 +301,9 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     } catch (err: any) {
       setloaderMain(false)
       if (err.response?.status === 500) {
-        toast.error('Internal Server Error.')
+        ShowErrorToast('Internal Server Error.')
       } else {
-        toast.error(err?.response?.data?.message || 'Something went wrong')
+        ShowErrorToast(err?.response?.data?.message)
       }
     }
   }
@@ -326,10 +331,11 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       if (response.data?.status === 200) {
         setLoading(false)
         fetchUsers()
-        toast.success(response.data.message)
+        ShowSuccessToast(response.data.message)
       }
     } catch (error: any) {
       setLoading(false)
+      ShowErrorToast(error?.response.data?.message)
       return null
     } finally {
       setLoading(false)

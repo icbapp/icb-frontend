@@ -18,7 +18,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import dayjs, { Dayjs } from 'dayjs'
 import MyCKEditor from '../EditorToolbar'
 import { useSettings } from '@/@core/hooks/useSettings'
-import { ShowErrorToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
+import { ShowErrorToast, ShowInfoToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
 import Loader from '@/components/Loader'
 import { statusTypeDropDown } from '@/comman/dropdownOptions/DropdownOptions'
 
@@ -113,10 +113,11 @@ const AnnouncementCreatePage = () => {
         router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))
       }
     } catch (error: any) {
-      console.log('error', error.response.data.message)
-
       setLoadings(false)
       ShowErrorToast(error.response.data.message || 'Something went wrong!')
+      if(error.response.data.message === 'It will send the updated announcement to the remaining audience.') {
+        ShowInfoToast(error.response.data.message || 'Something went wrong!')
+      }
     }
   }
 

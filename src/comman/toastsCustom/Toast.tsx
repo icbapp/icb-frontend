@@ -25,4 +25,16 @@ export const ShowErrorToast = (message: string) => {
     theme: 'light'
   })
 }
+export const ShowInfoToast = (message: string) => {
+
+  toast.info(message, {
+    position: 'top-right',
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    theme: 'light'
+  })
+}
 

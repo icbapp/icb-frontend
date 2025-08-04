@@ -22,16 +22,7 @@ import type { UsersType } from '@/types/apps/userTypes'
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 import { api } from '@/utils/axiosInstance'
-import {
-  Button,
-  Typography,
-  Skeleton,
-  Tooltip,
-  CardContent,
-  TextField,
-  TextFieldProps,
-  Box,
-} from '@mui/material'
+import { Button, Typography, Skeleton, Tooltip, CardContent, TextField, TextFieldProps, Box } from '@mui/material'
 import endPointApi from '@/utils/endPointApi'
 import ReactTable from '@/comman/table/ReactTable'
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -148,6 +139,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [openDialog, setOpenDialog] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
   const [channelName, setChannelName] = useState('')
+  const [channelCounts, setChannelCounts] = useState<DataType[]>([])
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
@@ -260,6 +252,60 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     fetchUsers()
   }, [paginationInfo.page, paginationInfo.perPage, globalFilter])
 
+  const getCampaignCount = async () => {
+    try {
+      const res = await api.get(`${endPointApi.getcampaignCount}`, {
+        params: {
+          announcement_id: ids
+        }
+      })
+
+      const response = res.data // real response
+
+      const updatedData: DataType[] = [
+        {
+          title: 'Whatsapp',
+          value: response.whatsapp?.toString() || '0',
+          color: '#25D366',
+          iconClass: '<i class="ri-whatsapp-line"></i>',
+          bg: '#E8F5E9'
+        },
+        {
+          title: 'Sms',
+          value: response.sms?.toString() || '0',
+          color: '#DB2777',
+          iconClass: '<i class="ri-message-2-line"></i>',
+          bg: '#FCE7F3'
+        },
+        {
+          title: 'Email',
+          value: response.email_sent?.toString() || '0',
+          color: '#4338CA',
+          iconClass: '<i class="ri-mail-line"></i>',
+          bg: '#E0E7FF'
+        },
+        {
+          title: 'Notification',
+          value: response.push_sent?.toString() || '0',
+          color: '#CA8A04',
+          iconClass: '<i class="ri-notification-3-line"></i>',
+          bg: '#FEF9C3'
+        }
+      ]
+
+      setChannelCounts(updatedData)
+    } catch (err: any) {
+      if (err.response?.status === 500) {
+        toast.error('Internal Server Error.')
+      } else {
+        toast.error(err?.response?.data?.message || 'Something went wrong')
+      }
+    }
+  }
+
+  useEffect(() => {
+    getCampaignCount()
+  }, [ids])
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
@@ -272,7 +318,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         Announcement / Campaign
       </p>
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-6'>
-        {fackeddata.map((item, i) => (
+        {channelCounts.map((item, i) => (
           <div
             key={i}
             className='flex items-center gap-4 p-4 rounded-lg transition-all duration-200 hover:shadow-lg border'
