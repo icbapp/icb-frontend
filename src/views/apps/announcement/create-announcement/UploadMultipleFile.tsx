@@ -61,7 +61,7 @@ const UploadMultipleFile: React.FC<UploadMultipleFileProps> = ({ files, setFiles
   // Hooks
 
   const MAX_TOTAL_FILES = 5;
-  const MAX_TOTAL_SIZE_MB = 5;
+  const MAX_TOTAL_SIZE_MB = 20;
 
 const { getRootProps, getInputProps } = useDropzone({
   onDrop: (acceptedFiles: File[]) => {
@@ -78,10 +78,10 @@ const { getRootProps, getInputProps } = useDropzone({
     const totalSizeBytes = totalFiles.reduce((acc, file) => acc + file.size, 0);
     const maxBytes = MAX_TOTAL_SIZE_MB * 1024 * 1024;
 
-    if (totalSizeBytes > maxBytes) {
-      toast.error(`Total file size should not exceed ${MAX_TOTAL_SIZE_MB} MB.`);
-      return;
-    }
+    // if (totalSizeBytes > maxBytes) {
+    //   toast.error(`Total file size should not exceed ${MAX_TOTAL_SIZE_MB} MB.`);
+    //   return;
+    // }
 
     const newFiles: FileProp[] = acceptedFiles.map(file => ({
       name: file.name,

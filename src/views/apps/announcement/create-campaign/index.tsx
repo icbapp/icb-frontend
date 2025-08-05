@@ -51,6 +51,7 @@ const CreateCampaign = () => {
   const [announcementTitle, setAnnouncementTitle] = useState('')
   const [selectedLabels, setSelectedLabels] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
+  const [openChart, setOpenChart] = useState(false)
   const isRecurring = mode === 'recurring'
 
   const channels = [
@@ -134,9 +135,9 @@ const CreateCampaign = () => {
           role_ids: select ?? ''
         }
         const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
-        
+
         // if (ids) {
-          setSelectedData(response.data.users)
+        setSelectedData(response.data.users)
         // }
       } catch (error) {
         console.error('Error fetching role-wise users:', error)
@@ -229,22 +230,13 @@ const CreateCampaign = () => {
         ShowSuccessToast(response.data.message)
         router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))
       }
-    } catch (error) {
-      console.error('Error fetching role-wise users:', error.data.errors)
-      // ShowErrorToast(error?.data?.data?.message || 'Something went wrong!')
+    } catch (error: any) {
+      if (error.response?.status === 500) {
+        ShowErrorToast('Internal Server Error.')
+      }
     }
   }
 
-  const stopCampaign = async (status: string) => {
-    const body = {
-      campaign_id: ids,
-      announcements_id: localStorage.getItem('announcementId'),
-      campaign_status: status
-    }
-    const response = await api.post(`${endPointApi.postCampaignSchedulesStop}`, body)
-    router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))
-    ShowSuccessToast(response.data.message || '')
-  }
   const statuses = ['Draft', 'Ready', 'In Progress', 'Stopped', 'Done'] as const
   type StatusType = (typeof statuses)[number]
 
@@ -612,16 +604,26 @@ const CreateCampaign = () => {
           {/* Action Buttons */}
           <Box display='flex' justifyContent='flex-start' alignItems='center' gap={2}>
             {/* Left-side buttons */}
-            <Button variant='contained' onClick={() => launchCampaign('draft')} disabled={status === 'stop' || status === 'in_progress' || status === 'done'}>
+            <Button
+              variant='contained'
+              onClick={() => launchCampaign('draft')}
+              disabled={status === 'stop' || status === 'in_progress' || status === 'done'}
+            >
               Draft
             </Button>
-            <Button variant='contained' onClick={() => launchCampaign('in_progress')} disabled={status === 'stop' || status === 'in_progress' || status === 'done'}>
+            <Button
+              variant='contained'
+              onClick={() => launchCampaign('in_progress')}
+              disabled={status === 'stop' || status === 'in_progress' || status === 'done'}
+            >
               In Progress
             </Button>
             {status === 'stop' ? (
-              <Button variant='contained' onClick={() => launchCampaign('in_progress')}  disabled={status === 'done'}>Continue</Button>
+              <Button variant='contained' onClick={() => launchCampaign('in_progress')} disabled={status === 'done'}>
+                Continue
+              </Button>
             ) : (
-              <Button variant='contained' onClick={() => launchCampaign("stop")} disabled={status === 'done'}>
+              <Button variant='contained' onClick={() => launchCampaign('stop')} disabled={status === 'done'}>
                 Stop
               </Button>
             )}
@@ -636,16 +638,13 @@ const CreateCampaign = () => {
               Cancel
             </Button>
             {/* Spacer pushes this button to right */}
-            <Box flexGrow={1} />
-            {/* Right-side cancel button */}
-            {/* <i className='ri-home-fill' onTouchMove={() => {}}></i> */}.
-            {/* <div className='relative inline-block group'>
-              {/* Hover Icon */}
-            <i className='ri-home-fill text-2xl cursor-pointer text-gray-700' />
-            {/* Hover Content */}
-            {/* <div className='absolute top-8 left-0 z-10 hidden group-hover:block'> */}
-            {/* <StatusFlow /> */}
-            {/* </div>
+            {/* <div
+              className='relative inline-block group'
+              onMouseEnter={() => setOpenChart(true)}
+              onMouseLeave={() => setOpenChart(false)}
+            >
+              <i className='ri-home-fill text-2xl cursor-pointer text-gray-700' />
+              {openChart && <StatusFlow />}
             </div> */}
           </Box>
         </Box>

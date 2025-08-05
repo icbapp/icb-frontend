@@ -62,6 +62,13 @@ type DataType = {
   iconClass: string
   bg: string
 }
+type EmailLogType = {
+  title: string
+  value: string
+  color: string
+  iconClass: string
+  bg: string
+}
 
 const fackeddata: DataType[] = [
   {
@@ -135,17 +142,41 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     page: 0,
     perPage: 10
   })
+  const [paginationInfoLog, setPaginationInfoLog] = useState({
+    page: 0,
+    perPage: 10
+  })
+  const [totalRowsLog, setTotalRowsLog] = useState(0)
+
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
   const [channelName, setChannelName] = useState('')
+  const [viewLogId, setViewLogId] = useState('')
   const [channelCounts, setChannelCounts] = useState<DataType[]>([])
+  const [viewEmailLog, setViewEmailLog] = useState<EmailLogType[]>([])
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
       columnHelper.accessor('note', {
         header: 'note',
-        cell: ({ row }) => <Typography>{row.original.note}</Typography>
+        // cell: ({ row }) => <Typography>{row.original.note}</Typography>
+        cell: ({ row }) => {
+          const htmlToText = (html: string): string => {
+            const temp = document.createElement('div')
+            temp.innerHTML = html
+            return temp.textContent || temp.innerText || ''
+          }
+
+          const text = htmlToText(row.original.note || '')
+          const truncated = text.length > 25 ? `${text.slice(0, 25)}...` : text
+
+          return (
+            <Tooltip title={text} arrow placement='bottom-start'>
+              <Typography noWrap>{truncated}</Typography>
+            </Tooltip>
+          )
+        }
       }),
       columnHelper.accessor('campaign_status', {
         header: 'Campaign Status',
@@ -203,6 +234,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   onClick={() => {
                     setOpenDialog(true)
                     setChannelName(row.original.channels)
+                    setViewLogId(row.original.id)
                   }}
                 >
                   <i className='ri-eye-line' style={{ color: '' }} />
@@ -229,7 +261,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
           announcement_id: ids,
-          // search: searchData,
+          search: globalFilter,
           per_page: paginationInfo.perPage.toString(),
           page: (paginationInfo.page + 1).toString()
         }
@@ -306,6 +338,31 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   useEffect(() => {
     getCampaignCount()
   }, [ids])
+
+  const getViewLog = async () => {
+    const formdata = new FormData()
+
+    formdata.append('announcement_id', ids || '')
+    formdata.append('campaign_id', viewLogId)
+    formdata.append('search', '')
+    formdata.append('per_page', paginationInfoLog.perPage.toString())
+    formdata.append('page', paginationInfoLog.page.toString() + 1)
+    try {
+      const res = await api.post(`${endPointApi.postCampaignEmailLogGet}`, formdata)
+      setViewEmailLog(res.data)
+      setTotalRowsLog(res.data.total)
+    } catch (err: any) {
+      if (err.response?.status === 500) {
+        toast.error('Internal Server Error.')
+      } else {
+        toast.error(err?.response?.data?.message || 'Something went wrong')
+      }
+    }
+  }
+
+  useEffect(() => {
+    getViewLog()
+  }, [viewLogId, openDialog, paginationInfoLog.page, paginationInfoLog.perPage,globalFilter])
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
@@ -433,7 +490,17 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           </div>
         )}
       </Card>
-      {openDialog && <CampaignViewLogDialog open={openDialog} setOpen={setOpenDialog} selectedChannel={channelName} />}
+      {openDialog && (
+        <CampaignViewLogDialog
+          open={openDialog}
+          setOpen={setOpenDialog}
+          selectedChannel={channelName}
+          viewLogData={viewEmailLog}
+          paginationInfoLog={paginationInfoLog}
+          setPaginationInfoLog={setPaginationInfoLog}
+          totalRowsLog={totalRowsLog}
+        />
+      )}
     </>
   )
 }

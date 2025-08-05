@@ -16,7 +16,8 @@ import {
   FormControlLabel,
   DialogActions,
   Button,
-  LinearProgress
+  LinearProgress,
+  Tooltip
 } from '@mui/material'
 
 import type { RoleType } from '@/types/apps/roleType'
@@ -38,6 +39,10 @@ type CampaignDialogProps = {
   open: boolean
   setOpen: (open: boolean) => void
   selectedChannel: string
+  viewLogData: any
+  paginationInfoLog: any
+  setPaginationInfoLog: any
+  totalRowsLog: any
 }
 type ErrorType = {
   message: string[]
@@ -54,93 +59,21 @@ const defaultData: string[] = [
   'Payroll'
 ]
 
-type ProjectListDataType = {
-  id: number
-  img: string
-  hours: string
-  totalTask: string
-  projectType: string
-  projectTitle: string
-  progressValue: number
-  progressColor: ThemeColor
+interface UsersTypeWithAction {
+  id: number | string
+  name: string
+  email: string
+  status: 'failed'
+  sent_time?: string
+  sent_date?: string
+  delivered_time?: string
+  read_time?: string
+  action?: string
+  hours?: string
 }
-// Vars
-const projectTable: ProjectListDataType[] = [
-  {
-    id: 1,
-    hours: '18:42',
-    progressValue: 78,
-    totalTask: '122/240',
-    progressColor: 'success',
-    projectType: 'React Project',
-    projectTitle: 'BGC eCommerce App',
-    img: '/images/logos/react-bg.png'
-  },
-  {
-    id: 2,
-    hours: '20:42',
-    progressValue: 18,
-    totalTask: '9/56',
-    progressColor: 'error',
-    projectType: 'Figma Project',
-    projectTitle: 'Falcon Logo Design',
-    img: '/images/logos/figma-bg.png'
-  },
-  {
-    id: 3,
-    hours: '120:87',
-    progressValue: 62,
-    totalTask: '290/320',
-    progressColor: 'primary',
-    projectType: 'VueJs Project',
-    projectTitle: 'Dashboard Design',
-    img: '/images/logos/vue-bg.png'
-  },
-  {
-    id: 4,
-    hours: '89:19',
-    progressValue: 8,
-    totalTask: '7/63',
-    progressColor: 'error',
-    projectType: 'Xamarin Project',
-    projectTitle: 'Foodista Mobile App',
-    img: '/images/icons/mobile-bg.png'
-  },
-  {
-    id: 5,
-    hours: '230:10',
-    progressValue: 49,
-    totalTask: '120/186',
-    progressColor: 'warning',
-    projectType: 'Python Project',
-    projectTitle: 'Dojo React Project',
-    img: '/images/logos/python-bg.png'
-  },
-  {
-    id: 6,
-    hours: '342:41',
-    progressValue: 92,
-    totalTask: '99/109',
-    progressColor: 'success',
-    projectType: 'Sketch Project',
-    projectTitle: 'Blockchain Website',
-    img: '/images/logos/sketch-bg.png'
-  },
-  {
-    id: 7,
-    hours: '12:45',
-    progressValue: 88,
-    totalTask: '98/110',
-    progressColor: 'success',
-    projectType: 'HTML Project',
-    projectTitle: 'Hoffman Website',
-    img: '/images/logos/html-bg.png'
-  }
-]
+const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
-const columnHelper = createColumnHelper<ProjectListDataType>()
-
-const CampaignViewLogDialog = ({ open, setOpen, selectedChannel }: CampaignDialogProps) => {
+const CampaignViewLogDialog = ({ open, setOpen, selectedChannel, viewLogData, paginationInfoLog, setPaginationInfoLog, totalRowsLog }: CampaignDialogProps) => {
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
   const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
@@ -155,39 +88,51 @@ const CampaignViewLogDialog = ({ open, setOpen, selectedChannel }: CampaignDialo
   const router = useRouter()
   const { lang: locale } = useParams()
 
-  const [data, setData] = useState(...[projectTable])
-
   // Hooks
-  const columns = useMemo<ColumnDef<ProjectListDataType, any>[]>(() => {
+  const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(() => {
     if (selectedChannel === 'email') {
       return [
-        columnHelper.accessor('hours', {
-          header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        }),
-        columnHelper.accessor('hours', {
+        // columnHelper.accessor('hours', {
+        //   header: 'Name',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // }),
+        columnHelper.accessor('email', {
           header: 'Email',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.email}</Typography>
         }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('status', {
           header: 'Status',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.status}</Typography>
         }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('sent_date', {
+          header: 'SentDate',
+          cell: ({ row }) => <Typography>{row.original.sent_date}</Typography>
+        }),
+        columnHelper.accessor('sent_time', {
           header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
         }),
-        columnHelper.accessor('hours', {
-          header: 'delivered Time',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        columnHelper.accessor('delivered_time', {
+          header: 'delivered Time'
+          // cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         }),
-        columnHelper.accessor('hours', {
-          header: 'Read Time',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        columnHelper.accessor('read_time', {
+          header: 'Read Time'
+          // cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('action', {
           header: 'Action',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => (
+            <div className='flex items-center'>
+              <>
+                <Tooltip title='Delete'>
+                  <IconButton size='small'>
+                    <i className='ri-delete-bin-7-line text-red-600' />
+                  </IconButton>
+                </Tooltip>
+              </>
+            </div>
+          )
         })
       ]
     } else if (selectedChannel === 'sms') {
@@ -355,13 +300,13 @@ const CampaignViewLogDialog = ({ open, setOpen, selectedChannel }: CampaignDialo
 
           <div className='flex flex-col overflow-x-auto'>
             <ReactTable
-              data={data}
+              data={viewLogData.data}
               columns={columns}
-              // count={totalRows}
-              // page={paginationInfo.page}
-              // rowsPerPage={paginationInfo.perPage}
-              // onPageChange={(_, newPage) => setPaginationInfo(prev => ({ ...prev, page: newPage }))}
-              // onRowsPerPageChange={newSize => setPaginationInfo({ page: 0, perPage: newSize })}
+              count={totalRowsLog}
+              page={paginationInfoLog.page}
+              rowsPerPage={paginationInfoLog.perPage}
+              onPageChange={(_, newPage) => setPaginationInfoLog(prev => ({ ...prev, page: newPage }))}
+              onRowsPerPageChange={newSize => setPaginationInfoLog({ page: 0, perPage: newSize })}
             />
           </div>
         </DialogContent>
