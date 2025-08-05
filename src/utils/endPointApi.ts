@@ -14,6 +14,7 @@ export interface EndPointApi {
        
     //User Management
     getUser: string
+    getUserCount: string
     postMultipleStatusChange: string
     postMultipleRoleChange: string
     
@@ -30,12 +31,22 @@ export interface EndPointApi {
     //Microsoft
     microsoftAuthTokenValide: string
     microsoftFetchUsers: string
+    postConnectionView: string
 
     // Announcements
     getAnnouncements: string
     addAnnouncements: string
     deleteAnnouncements: string,
     deleteImageAnnouncements: string
+    postRoleWiseUsersList: string
+
+    // Campaign
+    postLaunchCampaign: string
+    getCampaignAnnounceWise: string
+
+    getcampaignCount: string
+    postCampaignSchedulesStop: string
+    postCampaignEmailLogGet: string
 }
 
 // Define and export the API endpoint object
@@ -55,6 +66,7 @@ const endPointApi: EndPointApi = {
 
     //User Management
     getUser: 'user-get',
+    getUserCount: 'users/count',
     postMultipleStatusChange: 'users/status-toggle-multiple',
     postMultipleRoleChange: 'users/roles-toggle-multiple',
 
@@ -71,12 +83,21 @@ const endPointApi: EndPointApi = {
     //Microsoft
     microsoftAuthTokenValide: '/ms-auth-token/school-token-valide',
     microsoftFetchUsers: 'auth/microsoft/fetch-users',
+    postConnectionView: 'connection-view',    
 
     // Announcements
     getAnnouncements: 'announcements-get',
     addAnnouncements: 'announcements-add',
     deleteAnnouncements: 'announcements-delete',
     deleteImageAnnouncements: 'announcements-delete-image',
+    postRoleWiseUsersList: 'school/roles-users',
+
+    // Campaign
+    postLaunchCampaign: 'campaign-schedules-add',
+    getCampaignAnnounceWise: 'campaign-schedules-fetch',
+    getcampaignCount: 'campaign-count',
+    postCampaignSchedulesStop: 'campaign-schedules-stop',
+    postCampaignEmailLogGet: 'campaign-email-log', //log
 };
 
 export default endPointApi;

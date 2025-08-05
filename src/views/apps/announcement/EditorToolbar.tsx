@@ -1,152 +1,93 @@
-'use client'
+'use client' // ✅ important for Next.js App Router
 
-// MUI Imports
-import Divider from '@mui/material/Divider'
+import React, { useEffect } from 'react'
+import { CKEditor } from '@ckeditor/ckeditor5-react'
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 
-// Third-party imports
-import { useEditor, EditorContent } from '@tiptap/react'
-import { StarterKit } from '@tiptap/starter-kit'
-import { Underline } from '@tiptap/extension-underline'
-import { Placeholder } from '@tiptap/extension-placeholder'
-import { TextAlign } from '@tiptap/extension-text-align'
-import type { Editor } from '@tiptap/core'
-
-// Components Imports
-import CustomIconButton from '@core/components/mui/IconButton'
-
-// Editor Toolbar Component
-const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
-  if (!editor) {
-    return null
-  }
-
-  return (
-    <div className='flex flex-wrap gap-x-3 gap-y-1 p-5'>
-      {/* Bold */}
-      <CustomIconButton
-        {...(editor.isActive('bold') && { color: 'primary' })}
-        variant='outlined'
-        size='small'
-        onClick={() => editor.chain().focus().toggleBold().run()}
-      >
-        <i className='ri-bold' />
-      </CustomIconButton>
-      {/* Underline */}
-      <CustomIconButton
-        {...(editor.isActive('underline') && { color: 'primary' })}
-        variant='outlined'
-        size='small'
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
-      >
-        <i className='ri-underline' />
-      </CustomIconButton>
-      {/* Italic */}
-      <CustomIconButton
-        {...(editor.isActive('italic') && { color: 'primary' })}
-        variant='outlined'
-        size='small'
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-      >
-        <i className='ri-italic' />
-      </CustomIconButton>
-      {/* Strike */}
-      <CustomIconButton
-        {...(editor.isActive('strike') && { color: 'primary' })}
-        variant='outlined'
-        size='small'
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-      >
-        <i className='ri-strikethrough' />
-      </CustomIconButton>
-      {/* Align Left */}
-      <CustomIconButton
-        {...(editor.isActive({ textAlign: 'left' }) && { color: 'primary' })}
-        variant='outlined'
-        size='small'
-        onClick={() => editor.chain().focus().setTextAlign('left').run()}
-      >
-        <i className='ri-align-left' />
-      </CustomIconButton>
-      {/* Align Center */}
-      <CustomIconButton
-        {...(editor.isActive({ textAlign: 'center' }) && { color: 'primary' })}
-        variant='outlined'
-        size='small'
-        onClick={() => editor.chain().focus().setTextAlign('center').run()}
-      >
-        <i className='ri-align-center' />
-      </CustomIconButton>
-      {/* Align Right */}
-      <CustomIconButton
-        {...(editor.isActive({ textAlign: 'right' }) && { color: 'primary' })}
-        variant='outlined'
-        size='small'
-        onClick={() => editor.chain().focus().setTextAlign('right').run()}
-      >
-        <i className='ri-align-right' />
-      </CustomIconButton>
-      {/* Align Justify */}
-      <CustomIconButton
-        {...(editor.isActive({ textAlign: 'justify' }) && { color: 'primary' })}
-        variant='outlined'
-        size='small'
-        onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-      >
-        <i className='ri-align-justify' />
-      </CustomIconButton>
-    </div>
-  )
+type Props = {
+  value: string
+  onChange: (data: string) => void
+  settingMode?: string
 }
 
-const EditorBasic = ({ content, onContentChange }: { content?: string; onContentChange: (value: string) => void }) => {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder: 'Write something here...', // Placeholder text
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph']
-      }),
-      Underline
-    ],
+const MyCKEditor: React.FC<Props> = ({ value, onChange, settingMode }) => {
+  useEffect(() => {
+    let styleElement: HTMLStyleElement | null = null
 
-    content:
-      content ??
-      `
-      <p>
-        This is a radically reduced version of tiptap
-      </p>
+    if (settingMode === 'dark') {
+      styleElement = document.createElement('style')
+      styleElement.setAttribute('data-ckeditor-dark', 'true') // helpful for future cleanup
+
+      styleElement.innerHTML = `
+      .ck.ck-editor__main > .ck-editor__editable {
+        background-color: #30334e !important;
+        color: #fff !important;
+      }
+      .ck.ck-toolbar {
+        background-color: #30334e !important;
+        border-color: #444 !important;
+      }
+      .ck.ck-toolbar button.ck-on {
+        background-color: #444 !important;
+      }
+      .ck.ck-toolbar .ck-button {
+        color: #ccc !important;
+      }
     `
-  })
+      document.head.appendChild(styleElement)
+    }
 
-  // Handle editor content change
-  const handleContentChange = () => {
-    const editorContent = editor?.getHTML() || ''
-    onContentChange(editorContent) // Update the parent component state
-  }
+    // ✅ Clean up on mode change
+    return () => {
+      if (styleElement) {
+        document.head.removeChild(styleElement)
+      }
+    }
+  }, [settingMode])
 
   return (
-    <>
-      <label className='block text-lg font-medium text-gray-700 mb-2'>
-        Description
-      </label>
-      <div className='border rounded-md'>
-        {/* Editor Toolbar */}
-        <EditorToolbar editor={editor} />
-
-        {/* Divider */}
-        <Divider />
-
-        {/* Editor Content with Placeholder */}
-        <EditorContent
-          editor={editor}
-          onPaste={handleContentChange} // Call when content updates
-          className='p-4 bg-white rounded-b-md min-h-[200px] overflow-auto text-sm'
-        />
-      </div>
-    </>
+    <CKEditor
+      editor={ClassicEditor as any}
+      data={value}
+      config={{
+        toolbar: [
+          'heading',
+          '|',
+          'bold',
+          'italic',
+          'underline',
+          'strikethrough',
+          '|',
+          'link',
+          'bulletedList',
+          'numberedList',
+          'blockQuote',
+          '|',
+          'insertTable',
+          '|',
+          'undo',
+          'redo'
+          // 🚫 Removed: 'imageUpload', 'insertImage', 'mediaEmbed'
+        ],
+        table: {
+          contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableCellProperties', 'tableProperties']
+        }
+        // removePlugins: ['Image', 'ImageToolbar', 'ImageCaption', 'ImageUpload', 'MediaEmbed']
+      }}
+      onReady={editor => {
+        // Set fixed height
+        const editable = editor.ui.getEditableElement()
+        if (editable) {
+          editable.style.height = '400px'
+          // editable.style.borderRadius = '8px'
+        }
+      }}
+      onChange={(_, editor) => {
+        const data = editor.getData()
+        onChange(data)
+      }}
+    />
   )
 }
 
-export default EditorBasic
+export default MyCKEditor

@@ -33,7 +33,8 @@ import { api } from '@/utils/axiosInstance'
 import { useEffect, useState } from 'react'
 import { setSidebarPermissionInfo } from '@/redux-store/slices/sidebarPermission'
 import Loader from '@/components/Loader'
-import { Skeleton } from '@mui/material'
+import { Button, Dialog, DialogActions, DialogContent, Skeleton, Typography } from '@mui/material'
+import { saveToken } from '@/utils/tokenManager'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/verticalMenuData'
@@ -79,6 +80,20 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
 
   const [permissionData, setpermissionData] = useState([])
   const [loading, setLoading] = useState(false)
+
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const continueUrl = localStorage.getItem('continue');
+      if (continueUrl === '1') {
+        setOpen(true);
+        clearInterval(interval); // stop checking once triggered
+      }
+    }, 500); // check every 0.5 sec
+
+    return () => clearInterval(interval);
+  }, []);
 
   const hasMenuPermission = (menuName: string) => {
     const menus = (permissions as unknown as sidebarDataPermission).menus || [];
@@ -135,6 +150,18 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
     }
   }, [loginStore?.super_admin]);
 
+  
+  const refreshApi = async () => {
+     try {
+    const res = await api.post('auth/refresh');
+    saveToken(res.data.access_token);  
+    setOpen(false);        
+    window.location.reload();           
+    localStorage.removeItem('continue');
+    } catch (err) {
+      console.error('Refresh failed:', err);
+    }
+  }
 
   return (
     // eslint-disable-next-line lines-around-comment
@@ -154,6 +181,37 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
 
       {/* Incase you also want to scroll NavHeader to scroll with Vertical Menu, remove NavHeader from above and paste it below this comment */}
       {/* Vertical Menu */}
+      {open &&
+      <>
+         <Dialog fullWidth maxWidth='xs' open={open} onClose={() => setOpen(false)} closeAfterTransition={false}>
+           <DialogContent className='flex items-center flex-col text-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
+             <i className='ri-error-warning-line text-[88px] mbe-6 text-warning' />
+               <Typography variant='h4'>
+                 Do you want to continue login?
+               </Typography>
+           </DialogContent>
+           <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
+             <Button variant='contained' 
+            onClick={refreshApi}
+            >
+              Yes
+            </Button>
+            <Button
+              variant='outlined'
+              color='secondary'
+              onClick={() => {
+                setOpen(false)
+                localStorage.removeItem('auth_token');
+                window.location.href = '/login';
+                localStorage.removeItem('continue');
+              }}
+            >
+              No
+            </Button>
+          </DialogActions>
+        </Dialog>
+        </>
+      }
       <Menu
         popoutMenuOffset={{ mainAxis: 17 }}
         menuItemStyles={menuItemStyles(verticalNavOptions, theme)}

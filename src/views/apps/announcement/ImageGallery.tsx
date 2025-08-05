@@ -70,7 +70,6 @@ const ImageGallery = ({ open, setOpen, images }: ConfirmationDialogProps) => {
                 const isPdf = image.file_url.endsWith('.pdf');
                 const isVideo = image.file_url.endsWith('.mp4');
                 const isDoc = image.file_url.endsWith('.doc');
-console.log("image.file_url",image.file_url);
 
                 return (
                   <Grid item xs={4} key={index}>

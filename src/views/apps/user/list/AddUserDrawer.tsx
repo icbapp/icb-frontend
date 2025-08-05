@@ -45,7 +45,7 @@ type FormValidateType = {
   phone: string
 }
 
-type RoleOption = {
+export type RoleOption = {
   id: number
   name: string
 }
@@ -105,7 +105,7 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers, selectedUs
       //   )
       //   .map((r: any) => ({ id: r.id, name: r.name }));
       const roles: RoleOption[] = response.data.data
-        .filter((r: any) => r.name !== 'Default' && r.name !== 'Super Admin')
+        .filter((r: any) => r.name !== 'Super Admin')
         .map((r: any) => ({ id: r.id, name: r.name }));
       setRolesList(roles)
     } catch (err) {
@@ -144,25 +144,16 @@ const AddUserDrawer = ({ open, handleClose, editUserData, fetchUsers, selectedUs
 
       if (response.data?.status === 200) {
         toast.success(response.data.message)
-        resetForm({
-          fullName: '',
-          username: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-          role: [],
-          phone: ''
-        })
+        handleReset()
+        setSuggestedName([])
         fetchUsers()
-
+        setLoading(false)
       }
     } catch (error: any) {
       toast.error(error.response.data.message)
       setSuggestedName(error.response.data.data.suggested_usernames)
-    } finally {
       setLoading(false)
-      handleReset()
-    }
+    } 
   }
 
   const handleReset = () => {

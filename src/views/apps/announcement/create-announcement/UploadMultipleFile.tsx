@@ -1,11 +1,8 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
-
 // MUI Imports
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
 import Button from '@mui/material/Button'
 import IconButton from '@mui/material/IconButton'
@@ -19,38 +16,40 @@ import type { BoxProps } from '@mui/material/Box'
 import { useDropzone } from 'react-dropzone'
 
 // Component Imports
-import Link from '@components/Link'
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Styled Component Imports
 import AppReactDropzone from '@/libs/styles/AppReactDropzone'
-import Box from '@mui/material/Box'
 import endPointApi from '@/utils/endPointApi'
 import { api } from '@/utils/axiosInstance'
 import { toast } from 'react-toastify'
 import { getShortFileName } from '../../chat/utils'
 
-type FileProp = {
-  file_path: any
+export type FileProp = {
   id?: number; // existing files will have ID
   name: string;
   type: string;
   size: number;
   file?: File; // for new uploads
+  file_url?: string;
+  preview?: string;
+  file_path: string;
 }
 
 interface UploadMultipleFileProps {
   files: FileProp[];
   setFiles: React.Dispatch<React.SetStateAction<FileProp[]>>;
-  fetchUsers: () => void
 }
 // Styled Dropzone Component
 const Dropzone = styled(AppReactDropzone)<BoxProps>(({ theme }) => ({
   '& .dropzone': {
     minHeight: 'unset',
-    padding: theme.spacing(12),
+    padding: theme.spacing(7),
+    border: `2px solid ${theme.palette.divider}`, // ✅ solid border instead of dashed
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.background.paper, // optional for white bg
     [theme.breakpoints.down('sm')]: {
-      paddingInline: theme.spacing(5)
+      paddingInline: theme.spacing(1)
     },
     '&+.MuiList-root .MuiListItem-root .file-name': {
       fontWeight: theme.typography.body1.fontWeight
@@ -60,34 +59,53 @@ const Dropzone = styled(AppReactDropzone)<BoxProps>(({ theme }) => ({
 
 const UploadMultipleFile: React.FC<UploadMultipleFileProps> = ({ files, setFiles }) => {
   // Hooks
+
+  const MAX_TOTAL_FILES = 5;
+  const MAX_TOTAL_SIZE_MB = 20;
+
 const { getRootProps, getInputProps } = useDropzone({
   onDrop: (acceptedFiles: File[]) => {
+    const currentFiles = Array.isArray(files) ? [...files] : [];
+
+    // Combine new + existing
+    const totalFiles = [...currentFiles, ...acceptedFiles];
+
+    if (totalFiles.length > MAX_TOTAL_FILES) {
+      toast.error(`Maximum ${MAX_TOTAL_FILES} files allowed.`);
+      return;
+    }
+
+    const totalSizeBytes = totalFiles.reduce((acc, file) => acc + file.size, 0);
+    const maxBytes = MAX_TOTAL_SIZE_MB * 1024 * 1024;
+
+    // if (totalSizeBytes > maxBytes) {
+    //   toast.error(`Total file size should not exceed ${MAX_TOTAL_SIZE_MB} MB.`);
+    //   return;
+    // }
+
     const newFiles: FileProp[] = acceptedFiles.map(file => ({
       name: file.name,
       type: file.type,
       size: file.size,
       file: file,
       file_path: '',
-    }))
+      file_url: URL.createObjectURL(file),
+      preview: URL.createObjectURL(file),
+    }));
 
-    setFiles(prevFiles =>
-      Array.isArray(prevFiles) ? [...prevFiles, ...newFiles] : [...newFiles]
-    )
+    setFiles([...currentFiles, ...newFiles]);
   },
- accept: {
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'image/png': ['.png'],
-  'video/mp4': ['.mp4'],
-  'audio/mpeg': ['.mp3'],
-  'application/pdf': ['.pdf'],
-  // 'application/msword': ['.doc'],
-  // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
-}
-
-})
+  accept: {
+    'image/jpeg': ['.jpg', '.jpeg'],
+    'image/png': ['.png'],
+    'video/mp4': ['.mp4'],
+    'audio/mpeg': ['.mp3'],
+    'application/pdf': ['.pdf'],
+  }
+});
 
 
-const renderFilePreview = (file: FileProp | any) => {
+const renderFilePreview = (file: FileProp | any) => { 
   const isImage =
     file?.type?.startsWith('image') ||
     file?.file_type?.startsWith('image') ||
@@ -96,15 +114,17 @@ const renderFilePreview = (file: FileProp | any) => {
   if (isImage) {
     let src = ''
 
-    if (file?.file?.preview) {
-      src = file.file.preview
-    } else if (file?.file_path?.startsWith('http')) {
-      src = file.file_path
-    } else {
-      src = `${file.file_url}`
-    }
+  if (file?.preview) {
+  src = file.preview
+} else if (file?.file?.preview) {
+  src = file.file.preview
+} else if (file?.file_path?.startsWith('http')) {
+  src = file.file_path
+} else {
+  src = file?.file_url || ''
+}
 
-    return <img width={38} height={38} alt={file.name || 'file'} src={src} />
+    return <img width={38} height={38} alt={file.name || 'file'} src={src} onLoad={() => URL.revokeObjectURL(src)}/>
   }
 
   return <i className='ri-file-text-line' />
@@ -134,7 +154,7 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
         <div className='file-preview'>{renderFilePreview(file)}</div>
         <div>
           <Typography className='file-name font-medium' color='text.primary'>
-           {getShortFileName(file.name || file.file_path?.split('/').pop())}
+           {getShortFileName(file.name || file.file_path?.split('/').pop() || '')}
             </Typography>
             {/* <Typography className='file-size' variant='body2'>
             {file.size
@@ -151,10 +171,6 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
     </ListItem>
   ))
 
-  const handleRemoveAllFiles = () => {
-    setFiles([])
-  }
-
   return (
     <Dropzone>
       <Card>
@@ -165,8 +181,8 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
               <CustomAvatar variant='rounded' skin='light' color='secondary'>
                 <i className='ri-upload-2-line' />
               </CustomAvatar>
-              <Typography variant='h4'>Drag and Drop Your Image Here.</Typography>
-              <Typography color='text.disabled'>or</Typography>
+              <Typography variant='h4'>Drag and Drop Your items.</Typography>
+              <Typography color='text.disabled'>accepted png,jpg,jpeg,mp4,pdf</Typography>
               <Button variant='outlined' size='small'>
                 Browse Image
               </Button>
@@ -174,7 +190,7 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
           </div>
           {files?.length ? (
             <>
-              <List sx={{ maxHeight: 200, overflowY: 'auto' }}>{fileList}</List>
+              <List sx={{ maxHeight: 375, overflowY: 'auto' }}>{fileList}</List>
               {/* <div className='buttons'>
                 <Button color='secondary' variant='outlined' onClick={handleRemoveAllFiles}>
                   Remove All

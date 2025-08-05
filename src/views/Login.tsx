@@ -163,12 +163,15 @@ const Login = ({ mode }: { mode: Mode }) => {
       })
       .catch((error) => {
         const message = error?.response?.data?.message || 'Username or Password is incorrect';
+
         if (error?.response?.status === 404) {
           toast.error(message);
           setDisableBtn(false);
+          setLoading(false);
         } else {
           toast.error(message);
           setDisableBtn(false);
+          setLoading(false);
         }
       })
       .finally(() => {
@@ -184,27 +187,41 @@ const Login = ({ mode }: { mode: Mode }) => {
     }
   }, [adminStore])
 
-    const firstApiCall = async () => {
+  const firstApiCall = async () => {
+    // try {
+    // setLoading(true);
+    const hostNameParts = window.location.hostname.split('.');
+    const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
+    
+    const baseURL = process.env.NEXT_PUBLIC_API_URL;
+
+    if (!baseURL) {
+      throw new Error('');
+    }
+
+    const formData = new URLSearchParams();
+    formData.append('type', hostNameData);
+
     try {
-      setLoading(true);
-      const formData = new FormData();
-    const hostNameData = window.location.hostname == "icb-frontend-production.vercel.app" ? "icbschool" : "myschool";
+      const res = await fetch(baseURL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString()
+      });
 
-      formData.append('type', hostNameData);
+      const data = await res.json(); // 🔥 YOU MISSED THIS
+      console.log("✅ Final Parsed Response:", data);
 
-      const response = await axios.post('/api/school', formData);
-
-      if (response.data?.status === 200) {
-        dispatch(setAdminInfo(response.data.data));
-        setLoading(false);
-      } else {
-        console.error('Unexpected response:', response.data);
-        setLoading(false);
+      if (data.status === 200) {
+        dispatch(setAdminInfo(data.data));
+      //   setLoading(false);
       }
     } catch (error) {
-      console.error('❌ API call failed:', error);
-      setLoading(false);
+      console.error("❌ Error calling API", error);
     }
+  
   };
 
   useEffect(() => {
