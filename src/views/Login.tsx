@@ -224,6 +224,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   
   };
 
+  
   useEffect(() => {
       firstApiCall();
   }, []);
