@@ -46,6 +46,7 @@ export interface EndPointApi {
 
     getcampaignCount: string
     postCampaignSchedulesStop: string
+    postCampaignEmailLogGet: string
 }
 
 // Define and export the API endpoint object
@@ -96,6 +97,7 @@ const endPointApi: EndPointApi = {
     getCampaignAnnounceWise: 'campaign-schedules-fetch',
     getcampaignCount: 'campaign-count',
     postCampaignSchedulesStop: 'campaign-schedules-stop',
+    postCampaignEmailLogGet: 'campaign-email-log', //log
 };
 
 export default endPointApi;
