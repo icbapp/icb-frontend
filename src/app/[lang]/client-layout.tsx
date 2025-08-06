@@ -121,10 +121,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     // try {
     // setLoading(true);
     const hostNameParts = window.location.hostname.split('.');
-    const hostNameData = hostNameParts.length > 2 ? 'icbrisbane' : 'icbmyschool';
-    // const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
+    // const hostNameData = hostNameParts.length > 2 ? 'icbrisbane' : 'icbmyschool';
+    const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
     const baseURL = process.env.NEXT_PUBLIC_APP_URL;
-    console.log("hostNameData",hostNameData);
     
     if (!baseURL) {
       throw new Error('NEXT_PUBLIC_APP_URL is not defined')
@@ -132,7 +131,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
     const formData = new URLSearchParams()
     formData.append('type', hostNameData)
-    console.log("1212",process.env.NEXT_PUBLIC_APP_URL);
     
     try {
       const res = await fetch(baseURL, {
