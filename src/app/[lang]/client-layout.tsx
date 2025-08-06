@@ -121,8 +121,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     // try {
     // setLoading(true);
     const hostNameParts = window.location.hostname.split('.');
-    // const hostNameData = hostNameParts.length > 2 ? 'icbrisbane' : 'icbmyschool';
-    const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
+    const hostNameData = hostNameParts.length > 2 ? 'icbrisbane' : 'icbmyschool';
+    // const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool';
     const baseURL = process.env.NEXT_PUBLIC_APP_URL;
     console.log("hostNameData",hostNameData);
     
