@@ -91,7 +91,7 @@ app.prepare().then(() => {
 # App
 # ---------------------------------------------------------------------
 BASEPATH=
-NEXT_PUBLIC_APP_URL=https://icbapp.sitesss
+NEXT_PUBLIC_APP_URL=https://icbapp.site
 NEXT_PUBLIC_DOCS_URL=https://icbapp.site/docs
 
 # ---------------------------------------------------------------------
