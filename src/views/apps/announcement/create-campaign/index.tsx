@@ -33,7 +33,7 @@ const CreateCampaign = () => {
   const { settings } = useSettings()
   const announcementId = localStorage.getItem('announcementId')
   const searchParams = useSearchParams()
-  const ids = searchParams.get('id')
+  const ids = atob(decodeURIComponent(searchParams.get('id') || ''))
   const adminStore = useSelector((state: RootState) => state.admin)
 
   const [selectedChannel, setSelectedChannel] = useState<string[]>([])
@@ -228,7 +228,7 @@ const CreateCampaign = () => {
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
       if (response.data.status === 200) {
         ShowSuccessToast(response.data.message)
-        router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))
+        router.replace(getLocalizedUrl(`/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`, locale as Locale))
       }
     } catch (error: any) {
       if (error.response?.status === 500) {
@@ -283,7 +283,7 @@ const CreateCampaign = () => {
         <span
           className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
           onClick={() =>
-            router.replace(getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale))
+            router.replace(getLocalizedUrl(`/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`, locale as Locale))
           }
         >
           <i className='ri-arrow-go-back-line text-lg'></i>
@@ -631,7 +631,7 @@ const CreateCampaign = () => {
               variant='outlined'
               onClick={() =>
                 router.replace(
-                  getLocalizedUrl(`/apps/announcement/campaign?id=${announcementId || ''}`, locale as Locale)
+                  getLocalizedUrl(`/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`, locale as Locale)
                 )
               }
             >
