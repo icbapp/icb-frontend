@@ -122,7 +122,6 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     () => [
       columnHelper.accessor('title', {
         header: 'Title',
-        // cell: ({ row }) => <Typography>{row.original.title}</Typography>
         cell: ({ row }) => {
           const htmlToText = (html: string): string => {
             const temp = document.createElement('div')
@@ -135,7 +134,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
           return (
             <Tooltip title={text} arrow placement='bottom-start'>
-              <Typography noWrap>{truncated}</Typography>
+              <Typography noWrap className='text-gray-800 font-medium'>{truncated}</Typography>
             </Tooltip>
           )
         }
@@ -194,7 +193,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       columnHelper.accessor('created_by', {
         header: 'Created By',
-        cell: ({ row }: any) => <Typography>{row.original.created_by ? row.original.created_by.name : '-'}</Typography>
+        cell: ({ row }: any) => <Typography className='text-gray-800 font-medium'>{row.original.created_by ? row.original.created_by.name : '-'}</Typography>
       }),
 
       columnHelper.accessor('updated_at', {
@@ -205,7 +204,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       columnHelper.accessor('updated_by', {
         header: 'Updated By',
         cell: ({ row }: any) => (
-          <Typography>{row?.original?.updated_by ? row.original.updated_by.name : '-'}</Typography>
+          <Typography className='text-gray-800 font-medium'>{row?.original?.updated_by ? row.original.updated_by.name : '-'}</Typography>
         )
       }),
 
@@ -242,7 +241,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   onClick={() => {
                     if (row?.original?.id) {
                       router.replace(
-                        getLocalizedUrl(`/apps/announcement/campaign?id=${row.original.id}`, locale as Locale)
+                        getLocalizedUrl(`/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(row.original.id))}`, locale as Locale)
                       )
                       localStorage.setItem('announcementId', row.original.id.toString())
                     }
@@ -317,7 +316,10 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     setDeleteOpen(true)
   }
   const editUser = async (id: number) => {
-    router.push(`${getLocalizedUrl('/apps/announcement/add-announcement', locale as Locale)}?id=${id}`)
+     const encodedId = encodeURIComponent(btoa(id.toString()))
+    router.push(
+    `${getLocalizedUrl('/apps/announcement/add-announcement', locale as Locale)}?id=${encodedId}`
+  )
   }
 
   const deleteUser = async (id: number | null) => {

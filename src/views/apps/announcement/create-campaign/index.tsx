@@ -501,25 +501,23 @@ const CreateCampaign = () => {
                         borderRadius: 3,
                         height: 200,
                         p: 3,
-                        backgroundColor:
-                          ids
-                            ? '#f5f5f5' // grey-out
-                            : isSelected
-                              ? `${channel.color}20`
-                              : 'transparent',
+                        backgroundColor: ids
+                          ? '#f5f5f5' // grey-out
+                          : isSelected
+                            ? `${channel.color}20`
+                            : 'transparent',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         transition: 'all 0.3s ease',
-                        '&:hover':
-                          ids
-                            ? {}
-                            : {
-                                transform: 'scale(1.03)',
-                                boxShadow: 4,
-                                backgroundColor: isSelected ? `${channel.color}25` : ''
-                              }
+                        '&:hover': ids
+                          ? {}
+                          : {
+                              transform: 'scale(1.03)',
+                              boxShadow: 4,
+                              backgroundColor: isSelected ? `${channel.color}25` : ''
+                            }
                       }}
                     >
                       <Box
@@ -619,15 +617,16 @@ const CreateCampaign = () => {
             >
               In Progress
             </Button>
-            {status === 'stop' ? (
-              <Button variant='contained' onClick={() => launchCampaign('in_progress')} disabled={status === 'done'}>
-                Continue
-              </Button>
-            ) : (
-              <Button variant='contained' onClick={() => launchCampaign('stop')} disabled={status === 'done'}>
-                Stop
+            {ids && (
+              <Button
+                variant='contained'
+                onClick={() => launchCampaign(status === 'stop' ? 'in_progress' : 'stop')}
+                disabled={status === 'done'}
+              >
+                {status === 'stop' ? 'Continue' : 'Stop'}
               </Button>
             )}
+
             <Button
               variant='outlined'
               onClick={() =>

@@ -46,14 +46,14 @@ interface UsersTypeWithAction {
   id: number | string
   action?: string
   note?: string
-  campaign_status?: string
-  channels?: string
-  frequency_type?: string
+  campaign_status_name?: string
+  channel_name?: string
+  frequency_type_name?: string
   campaign_date?: string
   formatted_campaign_time?: string
   frequency_count?: number
-  schedule?: 'now' | 'schedule'
-  publish_mode?: 'one_time' | 'recurring'
+  schedule_name?: 'now' | 'schedule'
+  publish_mode_name?: 'one_time' | 'recurring'
 }
 type DataType = {
   title: string
@@ -133,7 +133,9 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const { lang: locale } = useParams()
   const { settings } = useSettings()
   const searchParams = useSearchParams()
-  const ids = searchParams.get('id')
+  const ids = atob(decodeURIComponent(searchParams.get('campaignId') || ''))
+
+  // const ids = searchParams.get('id')
 
   const [data, setData] = useState<UsersType[]>([])
   const [loaderMain, setloaderMain] = useState(false)
@@ -178,17 +180,61 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           )
         }
       }),
-      columnHelper.accessor('campaign_status', {
+      columnHelper.accessor('campaign_status_name', {
         header: 'Campaign Status',
-        cell: ({ row }) => <Typography>{row.original.campaign_status}</Typography>
+        cell: ({ row }) => {
+          const status = row.original.campaign_status_name
+
+          const statusDisplay: Record<
+            string,
+            {
+              icon: string
+              colorClass: string
+              animate?: boolean
+              label: string
+            }
+          > = {
+            Stopped: {
+              icon: 'ri-close-circle-line',
+              colorClass: 'text-red-600',
+              label: 'Stopped'
+            },
+            'In Progress': {
+              icon: 'ri-loader-4-line',
+              colorClass: 'text-blue-600',
+              animate: true,
+              label: 'In Progress'
+            },
+            Completed: {
+              icon: 'ri-check-line',
+              colorClass: 'text-green-600',
+              label: 'Completed'
+            }
+          }
+
+          const display = statusDisplay[status] || {
+            icon: 'ri-question-line',
+            colorClass: 'text-gray-500',
+            label: status || 'Unknown'
+          }
+
+          return (
+            <div className='flex items-center gap-2'>
+              <i className={`${display.icon} ${display.colorClass} ${display.animate ? 'animate-spin' : ''}`} />
+              <Typography className='text-gray-800 font-medium'>{display.label}</Typography>
+            </div>
+          )
+        }
       }),
-      columnHelper.accessor('channels', {
-        header: 'channels',
-        cell: ({ row }) => <Typography>{row.original.channels}</Typography>
+      columnHelper.accessor('channel_name', {
+        header: 'channel',
+        cell: ({ row }) => <Typography>{row.original.channel_name}</Typography>
       }),
-      columnHelper.accessor('frequency_type', {
+      columnHelper.accessor('frequency_type_name', {
         header: 'frequency Type',
-        cell: ({ row }) => <Typography>{row.original.frequency_type}</Typography>
+        cell: ({ row }) => (
+          <Typography className='text-gray-800 font-medium'>{row.original.frequency_type_name}</Typography>
+        )
       }),
       columnHelper.accessor('campaign_date', {
         header: 'campaign date',
@@ -196,19 +242,21 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
       columnHelper.accessor('formatted_campaign_time', {
         header: 'campaign time',
-        cell: ({ row }) => <Typography>{row.original.formatted_campaign_time}</Typography>
+        cell: ({ row }) => (
+          <Typography className='text-gray-800 font-medium'>{row.original.formatted_campaign_time}</Typography>
+        )
       }),
       columnHelper.accessor('frequency_count', {
         header: 'Repeat',
         cell: ({ row }) => <Typography>{row.original.frequency_count}</Typography>
       }),
-      columnHelper.accessor('schedule', {
+      columnHelper.accessor('schedule_name', {
         header: 'schedule',
-        cell: ({ row }) => <Typography>{row.original.schedule}</Typography>
+        cell: ({ row }) => <Typography className='text-gray-800 font-medium'>{row.original.schedule_name}</Typography>
       }),
-      columnHelper.accessor('publish_mode', {
+      columnHelper.accessor('publish_mode_name', {
         header: 'publish mode',
-        cell: ({ row }) => <Typography>{row.original.publish_mode}</Typography>
+        cell: ({ row }) => <Typography>{row.original.publish_mode_name}</Typography>
       }),
 
       columnHelper.accessor('action', {
@@ -362,7 +410,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   useEffect(() => {
     getViewLog()
-  }, [viewLogId, openDialog, paginationInfoLog.page, paginationInfoLog.perPage,globalFilter])
+  }, [viewLogId, openDialog, paginationInfoLog.page, paginationInfoLog.perPage, globalFilter])
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
