@@ -486,22 +486,23 @@ const CreateCampaign = () => {
               {channels.map(channel => {
                 // const isSelected = selectedChannel === channel.key
                 const isSelected = selectedChannel?.includes(channel.key) ?? false
+
                 return (
                   <Grid item xs={6} sm={3} key={channel.key}>
                     <Box
                       onClick={() => {
-                        if (status !== 'in_progress') toggleChannel(channel.key)
+                        if (ids) toggleChannel(channel.key)
                       }}
                       sx={{
-                        cursor: status === 'in_progress' ? 'not-allowed' : 'pointer',
-                        pointerEvents: status === 'in_progress' ? 'none' : 'auto',
-                        opacity: status === 'in_progress' ? 0.5 : 1,
+                        cursor: ids ? 'not-allowed' : 'pointer',
+                        pointerEvents: ids ? 'none' : 'auto',
+                        opacity: ids ? 0.5 : 1,
                         border: isSelected ? `2px solid ${channel.color}` : '1px solid #e0e0e0',
                         borderRadius: 3,
                         height: 200,
                         p: 3,
                         backgroundColor:
-                          status === 'in_progress'
+                          ids
                             ? '#f5f5f5' // grey-out
                             : isSelected
                               ? `${channel.color}20`
@@ -512,7 +513,7 @@ const CreateCampaign = () => {
                         justifyContent: 'center',
                         transition: 'all 0.3s ease',
                         '&:hover':
-                          status === 'in_progress'
+                          ids
                             ? {}
                             : {
                                 transform: 'scale(1.03)',
