@@ -34,7 +34,9 @@ interface AnnouncementForm {
 const AnnouncementCreatePage = () => {
   const router = useRouter()
   const { lang: locale } = useParams()
-  const editId = useSearchParams()?.get('id')
+  const searchParams = useSearchParams()
+  const editId = atob(decodeURIComponent(searchParams.get('id') || ''))
+
   const { settings } = useSettings()
 
   const [announcementForm, setAnnouncementForm] = useState<AnnouncementForm>({
@@ -115,7 +117,7 @@ const AnnouncementCreatePage = () => {
     } catch (error: any) {
       setLoadings(false)
       // if (error.response.data.message === 'It will send the updated announcement to the remaining audience.') {
-        ShowInfoToast(error.response.data.message || 'Something went wrong!')
+      ShowInfoToast(error.response.data.message || 'Something went wrong!')
       // } else {
       //   ShowInfoToast(error.response.data.message || 'Something went wrong!')
       // }
