@@ -267,9 +267,9 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
               <Tooltip title='Edit'>
                 <IconButton
                   size='small'
-                  onClick={() =>
+                  onClick={() =>                    
                     router.push(
-                      `${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${row.original.id}`
+                      `${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${encodeURIComponent(btoa(row.original.id))}`
                     )
                   }
                 >
