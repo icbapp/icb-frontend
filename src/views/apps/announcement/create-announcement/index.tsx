@@ -114,10 +114,11 @@ const AnnouncementCreatePage = () => {
       }
     } catch (error: any) {
       setLoadings(false)
-      ShowInfoToast(error.response.data.message || 'Something went wrong!')
-      if(error.response.data.message !== 'It will send the updated announcement to the remaining audience.') {
-        ShowErrorToast(error.response.data.message || 'Something went wrong!')
-      }
+      // if (error.response.data.message === 'It will send the updated announcement to the remaining audience.') {
+        ShowInfoToast(error.response.data.message || 'Something went wrong!')
+      // } else {
+      //   ShowInfoToast(error.response.data.message || 'Something went wrong!')
+      // }
     }
   }
 
