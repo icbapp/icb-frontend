@@ -337,7 +337,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           component='div'
           rowsPerPageOptions={[10, 25, 50]}
           className='border-bs'
-          count={totalRows.active_count + totalRows.inactive_count}
+          count={totalRows?.active_count + totalRows?.inactive_count}
           page={paginationInfo.page}
           rowsPerPage={paginationInfo.perPage}
           SelectProps={{ inputProps: { 'aria-label': 'rows per page' } }}

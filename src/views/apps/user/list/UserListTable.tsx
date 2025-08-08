@@ -711,7 +711,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                   {loading ? (
                     <Skeleton variant='text' width={60} height={40} />
                   ) : (
-                    <Typography variant='h4'>{totalUser.active_count - 1}</Typography>
+                    <Typography variant='h4'>{totalUser?.active_count - 1}</Typography>
                   )}
                 </div>
                 {loading ? (
@@ -740,7 +740,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                   {loading ? (
                     <Skeleton variant='text' width={60} height={40} />
                   ) : (
-                    <Typography variant='h4'>{totalUser.inactive_count}</Typography>
+                    <Typography variant='h4'>{totalUser?.inactive_count}</Typography>
                   )}
                 </div>
                 {loading ? (
