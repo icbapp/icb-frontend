@@ -164,6 +164,7 @@ const ImageGallery = ({ open, setOpen, images }: ConfirmationDialogProps) => {
                             alt={`Image ${index + 1}`}
                             sx={{
                               height: 150,
+                              width: 250,
                               objectFit: 'cover',
                               borderRadius: '10px'
                             }}

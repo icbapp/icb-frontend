@@ -47,6 +47,7 @@ export interface EndPointApi {
     getcampaignCount: string
     postCampaignSchedulesStop: string
     postCampaignEmailLogGet: string
+    postCampaignPushNotificationslogGet: string
 }
 
 // Define and export the API endpoint object
@@ -98,6 +99,7 @@ const endPointApi: EndPointApi = {
     getcampaignCount: 'campaign-count',
     postCampaignSchedulesStop: 'campaign-schedules-stop',
     postCampaignEmailLogGet: 'campaign-email-log', //log
+    postCampaignPushNotificationslogGet: 'campaign-push-notifications-log',
 };
 
 export default endPointApi;
