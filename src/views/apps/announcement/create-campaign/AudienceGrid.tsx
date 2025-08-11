@@ -118,7 +118,6 @@ const AudienceGrid = ({ setSelectedIds, selectedData }: Props) => {
   }, [settings])
 
   const onFirstDataRendered = useCallback((params) => {
-    console.log("dsdasdasdasd",params);
     
         params.api.forEachNode((node) => {
             console.log(node, 'check');
