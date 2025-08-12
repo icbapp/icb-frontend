@@ -157,6 +157,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [viewLogId, setViewLogId] = useState('')
   const [channelCounts, setChannelCounts] = useState<DataType[]>([])
   const [viewEmailLog, setViewEmailLog] = useState<EmailLogType[]>([])
+  const [viewNotificationLog, setViewNotificationLog] = useState<EmailLogType[]>([])
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
@@ -411,6 +412,33 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   useEffect(() => {
     getViewLog()
   }, [viewLogId, openDialog, paginationInfoLog.page, paginationInfoLog.perPage, globalFilter])
+
+   const getNotificationViewLog = async () => {
+    const formdata = new FormData()
+
+    formdata.append('announcement_id', ids || '')
+    formdata.append('campaign_id', viewLogId)
+    formdata.append('search', '')
+    formdata.append('per_page', paginationInfoLog.perPage.toString())
+    formdata.append('page', paginationInfoLog.page.toString() + 1)
+    try {
+      const res = await api.post(`${endPointApi.postCampaignPushNotificationslogGet}`, formdata)
+      console.log("res**", res);
+      
+      setViewNotificationLog(res.data)
+      setTotalRowsLog(res.data.total)
+    } catch (err: any) {
+      if (err.response?.status === 500) {
+        toast.error('Internal Server Error.')
+      } else {
+        toast.error(err?.response?.data?.message || 'Something went wrong')
+      }
+    }
+  }
+
+  useEffect(() => {
+    getNotificationViewLog()
+  }, [viewLogId, openDialog, paginationInfoLog.page, paginationInfoLog.perPage, globalFilter])
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
@@ -544,6 +572,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           setOpen={setOpenDialog}
           selectedChannel={channelName}
           viewLogData={viewEmailLog}
+          viewNotificationLog={viewNotificationLog}
           paginationInfoLog={paginationInfoLog}
           setPaginationInfoLog={setPaginationInfoLog}
           totalRowsLog={totalRowsLog}

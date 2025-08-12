@@ -228,7 +228,11 @@ const CreateCampaign = () => {
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
       if (response.data.status === 200) {
         ShowSuccessToast(response.data.message)
-        router.replace(getLocalizedUrl(`/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`, locale as Locale))
+        router.replace(
+          getLocalizedUrl(
+            `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
+            locale as Locale
+          ))
       }
     } catch (error: any) {
       if (error.response?.status === 500) {
@@ -283,7 +287,12 @@ const CreateCampaign = () => {
         <span
           className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
           onClick={() =>
-            router.replace(getLocalizedUrl(`/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`, locale as Locale))
+            router.replace(
+              getLocalizedUrl(
+                `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
+                locale as Locale
+              )
+            )
           }
         >
           <i className='ri-arrow-go-back-line text-lg'></i>
@@ -292,16 +301,15 @@ const CreateCampaign = () => {
       </p>
       <Card>
         <Box p={3} display='flex' justifyContent='space-between' alignItems='center'>
-          {/* Title and Button in one line */}
+          {/* Title */}
           <Typography variant='h6' fontWeight={600}>
             Launch Campaign
           </Typography>
-          {ids ? (
+          {/* Button */}
+          {ids && (
             <Button variant='contained' onClick={() => setOpenDialog(true)}>
               View Log
             </Button>
-          ) : (
-            ''
           )}
         </Box>
       </Card>
@@ -357,7 +365,7 @@ const CreateCampaign = () => {
           {/* <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} /> */}
         </Box>
       </Card>
-      <Card sx={{ mt: 4 }}>
+      <Card sx={{ mt: 4, overflow: 'visible' }}>
         <Box p={6}>
           <Grid container spacing={4}>
             {/* <Grid item xs={12} md={4}>
@@ -491,7 +499,8 @@ const CreateCampaign = () => {
                   <Grid item xs={6} sm={3} key={channel.key}>
                     <Box
                       onClick={() => {
-                        if (ids) toggleChannel(channel.key)
+                        toggleChannel(channel.key)
+                        // if (ids) toggleChannel(channel.key)
                       }}
                       sx={{
                         cursor: ids ? 'not-allowed' : 'pointer',
@@ -601,7 +610,7 @@ const CreateCampaign = () => {
           )}
 
           {/* Action Buttons */}
-          <Box display='flex' justifyContent='flex-start' alignItems='center' gap={2}>
+          <Box display='flex' alignItems='center' gap={2} width='100%'>
             {/* Left-side buttons */}
             <Button
               variant='contained'
@@ -626,26 +635,33 @@ const CreateCampaign = () => {
                 {status === 'stop' ? 'Continue' : 'Stop'}
               </Button>
             )}
-
             <Button
               variant='outlined'
               onClick={() =>
                 router.replace(
-                  getLocalizedUrl(`/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`, locale as Locale)
+                  getLocalizedUrl(
+                    `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
+                    locale as Locale
+                  )
                 )
               }
             >
               Cancel
             </Button>
-            {/* Spacer pushes this button to right */}
-            {/* <div
-              className='relative inline-block group'
-              onMouseEnter={() => setOpenChart(true)}
+
+            {/* Push icon to far right */}
+            <div
+              className='relative inline-block group ml-auto'
+              onMouseEnter={() => setOpenChart(false)}
               onMouseLeave={() => setOpenChart(false)}
             >
-              <i className='ri-home-fill text-2xl cursor-pointer text-gray-700' />
-              {openChart && <StatusFlow />}
-            </div> */}
+              <i className='ri-error-warning-line text-2xl cursor-pointer text-gray-400'></i>
+              {openChart && (
+                <div className='absolute z-50 -bottom-10 right-[100%] -translate-x-1/4'>
+                  <StatusFlow />
+                </div>
+              )}
+            </div>
           </Box>
         </Box>
       </Card>
@@ -655,68 +671,88 @@ const CreateCampaign = () => {
       )}
     </>
   )
-}
-
+} 
 export default CreateCampaign
 
 const StatusFlow = () => {
   return (
-    <div className='p-6 max-w-6xl mx-auto text-center'>
-      <h2 className='text-lg font-semibold text-gray-700 mb-6'>📊 Campaign Status Flow</h2>
-
-      <div className='flex flex-wrap justify-center items-center gap-4'>
-        {/* Draft */}
-        <div className='bg-gray-100 border-2 border-gray-300 rounded-md px-4 py-2 text-gray-800'>
-          📝 Draft
-          <p className='text-xs text-gray-500'>Not sending</p>
-        </div>
-
-        <span className='text-2xl text-gray-400'>→</span>
-
-        {/* Ready */}
-        <div className='bg-blue-50 border-2 border-blue-300 rounded-md px-4 py-2 text-blue-700'>
-          🚀 Ready
-          <p className='text-xs text-blue-500'>Launch campaign</p>
-        </div>
-
-        <span className='text-2xl text-gray-400'>→</span>
-
-        {/* In Progress */}
-        <div className='bg-green-50 border-2 border-green-400 rounded-md px-4 py-2 text-green-700 relative'>
-          📢 In Progress
-          <p className='text-xs text-green-500'>Cannot change settings</p>
-          <div className='absolute top-full mt-3 left-1/2 -translate-x-1/2'>
-            <div className='flex flex-col items-center'>
-              <div className='border border-red-500 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-medium'>
-                ⛔ Stop
-              </div>
-              <div className='w-0 h-0 border-l-4 border-r-4 border-t-8 border-t-red-500 mt-1'></div>
-            </div>
+    <div className='flex flex-col items-center text-center font-sans text-base relative space-y-16 '>
+      <div className='relative z-10'>
+        <div className='p-5 border border-gray-300 rounded-2xl w-60 bg-white shadow-xl'>
+          <div className='flex justify-center items-center gap-3 text-blue-600 text-lg font-semibold'>
+            <i className='ri-edit-box-line text-[22px]'></i>
+            Create Campaign
           </div>
         </div>
-
-        <span className='text-2xl text-gray-400'>→</span>
-
-        {/* Stopped */}
-        <div className='bg-red-50 border-2 border-red-400 rounded-md px-4 py-2 text-red-600 relative'>
-          ⛔ Stopped
-          <p className='text-xs text-red-500'>Paused, no edit</p>
-          <div className='absolute top-full mt-3 left-1/2 -translate-x-1/2'>
-            <div className='flex flex-col items-center'>
-              <div className='border border-green-500 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-medium'>
-                🔄 Continue
-              </div>
-              <div className='w-0 h-0 border-l-4 border-r-4 border-t-8 border-t-green-500 mt-1'></div>
+        <div className='absolute top-full left-1/2 transform -translate-x-1/2 h-16 border-dashed border-l-2 border-gray-400' />
+      </div>
+      <div className='relative w-full flex justify-center items-start h-40'>
+        <div className='absolute top-0 left-1/2 transform -translate-x-1/2 w-[17rem] h-0.5 border-dashed border-t-2 border-gray-400 z-0 ' />
+        <div className='absolute left-[calc(50%-15rem)] top-0 flex flex-col items-center z-10'>
+          <div className='h-8 border-dashed border-l-2 border-gray-400' />
+          <i className='ri-arrow-down-s-fill text-gray-600'></i>
+          <div className='p-5 border mt-[-8px] border-gray-300 rounded-2xl w-48 bg-white shadow-md'>
+            <div className='flex justify-center items-center gap-2 text-yellow-600 text-lg font-semibold'>
+              <i className='ri-sticky-note-add-line text-[20px]'></i>
+              Draft
             </div>
+            <div className='text-sm text-gray-500 mt-1'>(not sent)</div>
           </div>
         </div>
-
-        <span className='text-2xl text-gray-400'>→</span>
-
-        {/* Done */}
-        <div className='bg-gray-200 border-2 border-gray-400 rounded-md px-4 py-2 text-gray-700'>
-          ✅ Done
-          <p className='text-xs text-gray-600'>Final stage</p>
+        <div className='absolute right-[calc(50%-15rem)] top-0 flex flex-col items-center z-10'>
+          <div className='h-8 border-dashed border-l-2 border-gray-400' />
+          <i className='ri-arrow-down-s-fill text-gray-600'></i>
+          <div className='relative'>
+            <div className='absolute right-[-80px] top-1/2 transform -translate-y-1/2 flex flex-col items-center w-[80px] z-10'>
+              <div className='flex items-center w-full mb-1'>
+                <i className='ri-arrow-left-s-fill text-gray-600  '></i>
+                <div className='flex-1 border-t-2 border-dashed border-gray-400'></div>
+              </div>
+              <div className='flex items-center w-full mt-1'>
+                <div className='flex-1 border-t-2 border-dashed border-gray-400'></div>
+                <i className='ri-arrow-right-s-fill text-gray-600  mr-[16px] '></i>
+              </div>
+            </div>
+            <div className='absolute right-[-270px] top-1/2 transform -translate-y-1/2 p-5 border border-gray-300 rounded-2xl w-52 bg-white shadow-md z-10'>
+              <div className='flex justify-center items-center gap-2 text-red-600 text-lg font-semibold'>
+                <i className='ri-stop-fill text-[25px]'></i>
+                Stopped
+              </div>
+              <div className='text-sm text-gray-500 mt-1'>(paused, no edit)</div>
+              <div className='mt-3 border border-gray-400 rounded-lg w-28 mx-auto p-2 text-sm bg-gray-100 shadow-inner text-green-600 font-bold flex items-center justify-center gap-1'>
+                <i className='ri-refresh-line text-[14px]'></i>
+                CONTINUE
+              </div>
+              <div className='absolute left-1/2 top-full transform -translate-x-1/2 h-24 border-dashed border-l-2 border-gray-400 '></div>
+            </div>
+            <div className='p-5 mt-[-8px] border border-gray-300 rounded-2xl w-52 bg-white shadow-md'>
+              <div className='flex justify-center items-center gap-2 text-purple-700 text-lg font-semibold'>
+                <i className='ri-megaphone-line text-[20px]'></i>
+                In Progress
+              </div>
+              <div className='text-sm text-gray-500 mt-1'>(cannot change)</div>
+              <div className='mt-3 border border-gray-400 rounded-lg w-28 mx-auto p-2 text-sm bg-gray-100 shadow-inner text-red-600 font-bold flex items-center justify-center gap-1'>
+                <i className='ri-stop-fill text-[20px]'></i>
+                STOP
+              </div>
+            </div>
+            <div className='absolute left-1/2 top-full transform -translate-x-1/2 h-24 border-dashed border-l-2 border-gray-400 '></div>
+            <div className='absolute top-[calc(100%+3rem)] left-1/2 transform -translate-x-1/2 translate-y-[8px] ml-[140px] p-5 border border-gray-300 rounded-2xl w-40 bg-white shadow-md z-10'>
+              <div className='absolute right-full top-1/2 transform -translate-y-1/2 flex items-center'>
+                <div className='w-[56px] border-t-2 border-dashed border-gray-400'></div>
+                <i className='ri-arrow-right-s-fill text-gray-600 -ml-[10px]'></i>
+              </div>
+              <div className='absolute left-full top-1/2 transform -translate-y-1/2 flex items-center'>
+                <i className='ri-arrow-left-s-fill text-gray-600  -mr-[10px]'></i>
+                <div className='w-[40px] border-t-2 border-dashed border-gray-400'></div>
+              </div>
+              <div className='flex justify-center items-center gap-2 text-green-600 text-lg font-semibold'>
+                <i className='ri-check-line text-[20px]'></i>
+                Done
+              </div>
+              <div className='text-sm text-gray-500 mt-1'>(final stage)</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -40,6 +40,7 @@ type CampaignDialogProps = {
   setOpen: (open: boolean) => void
   selectedChannel: string
   viewLogData: any
+  viewNotificationLog: any
   paginationInfoLog: any
   setPaginationInfoLog: any
   totalRowsLog: any
@@ -73,7 +74,17 @@ interface UsersTypeWithAction {
 }
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
-const CampaignViewLogDialog = ({ open, setOpen, selectedChannel, viewLogData, paginationInfoLog, setPaginationInfoLog, totalRowsLog }: CampaignDialogProps) => {
+const CampaignViewLogDialog = ({
+  open = false,
+  setOpen,
+  selectedChannel = '',
+  viewLogData = [],
+  viewNotificationLog = [],
+  paginationInfoLog = {},
+  setPaginationInfoLog = {},
+  totalRowsLog = 0
+}: CampaignDialogProps) => {
+  
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
   const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
@@ -278,6 +289,13 @@ const CampaignViewLogDialog = ({ open, setOpen, selectedChannel, viewLogData, pa
     setOpen(false)
   }
 
+  const channelMap: Record<string, string> = {
+    wp: 'WhatsApp',
+    push_notification: 'Push Notification',
+    email: 'Email',
+    sms: 'SMS'
+  }
+
   return (
     <Dialog
       fullWidth
@@ -290,21 +308,26 @@ const CampaignViewLogDialog = ({ open, setOpen, selectedChannel, viewLogData, pa
       {/* {loading && <Loader />} */}
 
       <DialogTitle variant='h4' className='flex flex-col gap-2 text-center'>
-        View Log ({selectedChannel})
+        View Log ({channelMap[selectedChannel] || ''})
       </DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent className='overflow-visible'>
           <IconButton onClick={handleClose} className='absolute top-4 right-4'>
             <i className='ri-close-line text-textSecondary' />
           </IconButton>
-
           <div className='flex flex-col overflow-x-auto'>
             <ReactTable
-              data={viewLogData.data}
+              data={
+                viewLogData?.data?.length > 0
+                  ? viewLogData?.data
+                  : viewNotificationLog.data.length > 0
+                    ? viewNotificationLog.data
+                    : []
+              }
               columns={columns}
               count={totalRowsLog}
-              page={paginationInfoLog.page}
-              rowsPerPage={paginationInfoLog.perPage}
+              page={paginationInfoLog.page ?? paginationInfoLog?.page}
+              rowsPerPage={paginationInfoLog.perPage ?? paginationInfoLog?.perPage}
               onPageChange={(_, newPage) => setPaginationInfoLog(prev => ({ ...prev, page: newPage }))}
               onRowsPerPageChange={newSize => setPaginationInfoLog({ page: 0, perPage: newSize })}
             />
