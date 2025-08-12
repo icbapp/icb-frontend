@@ -146,6 +146,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     page: 0,
     perPage: 10
   })
+  
   const [totalRowsLog, setTotalRowsLog] = useState(0)
 
   const [loading, setLoading] = useState(false)
