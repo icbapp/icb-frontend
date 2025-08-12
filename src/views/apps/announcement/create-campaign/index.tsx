@@ -499,7 +499,8 @@ const CreateCampaign = () => {
                   <Grid item xs={6} sm={3} key={channel.key}>
                     <Box
                       onClick={() => {
-                        if (ids) toggleChannel(channel.key)
+                        toggleChannel(channel.key)
+                        // if (ids) toggleChannel(channel.key)
                       }}
                       sx={{
                         cursor: ids ? 'not-allowed' : 'pointer',
