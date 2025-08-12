@@ -135,8 +135,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const searchParams = useSearchParams()
   const ids = atob(decodeURIComponent(searchParams.get('campaignId') || ''))
 
-  // const ids = searchParams.get('id')
-
   const [data, setData] = useState<UsersType[]>([])
   const [loaderMain, setloaderMain] = useState(false)
   const [totalRows, setTotalRows] = useState(0)
