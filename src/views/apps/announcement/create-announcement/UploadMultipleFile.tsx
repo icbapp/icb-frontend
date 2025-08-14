@@ -26,19 +26,19 @@ import { toast } from 'react-toastify'
 import { getShortFileName } from '../../chat/utils'
 
 export type FileProp = {
-  id?: number; // existing files will have ID
-  name: string;
-  type: string;
-  size: number;
-  file?: File; // for new uploads
-  file_url?: string;
-  preview?: string;
-  file_path: string;
+  id?: number // existing files will have ID
+  name: string
+  type: string
+  size: number
+  file?: File // for new uploads
+  file_url?: string
+  preview?: string
+  file_path: string
 }
 
 interface UploadMultipleFileProps {
-  files: FileProp[];
-  setFiles: React.Dispatch<React.SetStateAction<FileProp[]>>;
+  files: FileProp[]
+  setFiles: React.Dispatch<React.SetStateAction<FileProp[]>>
 }
 // Styled Dropzone Component
 const Dropzone = styled(AppReactDropzone)<BoxProps>(({ theme }) => ({
@@ -60,93 +60,88 @@ const Dropzone = styled(AppReactDropzone)<BoxProps>(({ theme }) => ({
 const UploadMultipleFile: React.FC<UploadMultipleFileProps> = ({ files, setFiles }) => {
   // Hooks
 
-  const MAX_TOTAL_FILES = 5;
-  const MAX_TOTAL_SIZE_MB = 20;
+  const MAX_TOTAL_FILES = 5
+  const MAX_TOTAL_SIZE_MB = 20
 
-const { getRootProps, getInputProps } = useDropzone({
-  onDrop: (acceptedFiles: File[]) => {
-    const currentFiles = Array.isArray(files) ? [...files] : [];
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: (acceptedFiles: File[]) => {
+      const currentFiles = Array.isArray(files) ? [...files] : []
 
-    // Combine new + existing
-    const totalFiles = [...currentFiles, ...acceptedFiles];
+      // Combine new + existing
+      const totalFiles = [...currentFiles, ...acceptedFiles]
 
-    if (totalFiles.length > MAX_TOTAL_FILES) {
-      toast.error(`Maximum ${MAX_TOTAL_FILES} files allowed.`);
-      return;
+      if (totalFiles.length > MAX_TOTAL_FILES) {
+        toast.error(`Maximum ${MAX_TOTAL_FILES} files allowed.`)
+        return
+      }
+
+      const totalSizeBytes = totalFiles.reduce((acc, file) => acc + file.size, 0)
+      const maxBytes = MAX_TOTAL_SIZE_MB * 1024 * 1024
+
+      // if (totalSizeBytes > maxBytes) {
+      //   toast.error(`Total file size should not exceed ${MAX_TOTAL_SIZE_MB} MB.`);
+      //   return;
+      // }
+
+      const newFiles: FileProp[] = acceptedFiles.map(file => ({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        file: file,
+        file_path: '',
+        file_url: URL.createObjectURL(file),
+        preview: URL.createObjectURL(file)
+      }))
+
+      setFiles([...currentFiles, ...newFiles])
+    },
+    accept: {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'video/mp4': ['.mp4'],
+      'audio/mpeg': ['.mp3'],
+      'application/pdf': ['.pdf']
+    }
+  })
+
+  const renderFilePreview = (file: FileProp | any) => {
+    const isImage =
+      file?.type?.startsWith('image') ||
+      file?.file_type?.startsWith('image') ||
+      /\.(jpg|jpeg|png|gif|webp)$/i.test(file?.file_path || '')
+
+    if (isImage) {
+      let src = ''
+
+      if (file?.preview) {
+        src = file.preview
+      } else if (file?.file?.preview) {
+        src = file.file.preview
+      } else if (file?.file_path?.startsWith('http')) {
+        src = file.file_path
+      } else {
+        src = file?.file_url || ''
+      }
+
+      return <img width={38} height={38} alt={file.name || 'file'} src={src} onLoad={() => URL.revokeObjectURL(src)} />
     }
 
-    const totalSizeBytes = totalFiles.reduce((acc, file) => acc + file.size, 0);
-    const maxBytes = MAX_TOTAL_SIZE_MB * 1024 * 1024;
-
-    // if (totalSizeBytes > maxBytes) {
-    //   toast.error(`Total file size should not exceed ${MAX_TOTAL_SIZE_MB} MB.`);
-    //   return;
-    // }
-
-    const newFiles: FileProp[] = acceptedFiles.map(file => ({
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      file: file,
-      file_path: '',
-      file_url: URL.createObjectURL(file),
-      preview: URL.createObjectURL(file),
-    }));
-
-    setFiles([...currentFiles, ...newFiles]);
-  },
-  accept: {
-    'image/jpeg': ['.jpg', '.jpeg'],
-    'image/png': ['.png'],
-    'video/mp4': ['.mp4'],
-    'audio/mpeg': ['.mp3'],
-    'application/pdf': ['.pdf'],
-  }
-});
-
-
-const renderFilePreview = (file: FileProp | any) => { 
-  const isImage =
-    file?.type?.startsWith('image') ||
-    file?.file_type?.startsWith('image') ||
-    /\.(jpg|jpeg|png|gif|webp)$/i.test(file?.file_path || '')
-
-  if (isImage) {
-    let src = ''
-
-  if (file?.preview) {
-  src = file.preview
-} else if (file?.file?.preview) {
-  src = file.file.preview
-} else if (file?.file_path?.startsWith('http')) {
-  src = file.file_path
-} else {
-  src = file?.file_url || ''
-}
-
-    return <img width={38} height={38} alt={file.name || 'file'} src={src} onLoad={() => URL.revokeObjectURL(src)}/>
+    return <i className='ri-file-text-line' />
   }
 
-  return <i className='ri-file-text-line' />
-}
+  const handleRemoveFile = (fileToRemove: FileProp) => {
+    if (fileToRemove.id) {
+      api.delete(`${endPointApi.deleteImageAnnouncements}/${fileToRemove.id}`).then(response => {
+        if (response.data.status === 200) {
+          toast.success('File deleted successfully!')
+        }
+      })
+    }
 
-
-const handleRemoveFile = (fileToRemove: FileProp) => {
-  if (fileToRemove.id){
-   api.delete(`${endPointApi.deleteImageAnnouncements}/${fileToRemove.id}`)
-   .then((response) => {
-     if(response.data.status === 200){
-       toast.success("File deleted successfully!");
-     }
-   })  
-  }
-   
-  setFiles(prevFiles =>
-    prevFiles.filter(file =>
-      file.id ? file.id !== fileToRemove.id : file.name !== fileToRemove.name
+    setFiles(prevFiles =>
+      prevFiles.filter(file => (file.id ? file.id !== fileToRemove.id : file.name !== fileToRemove.name))
     )
-  )
-}
+  }
 
   const fileList = files?.map((file: FileProp) => (
     <ListItem key={file.name} className='pis-4 plb-3'>
@@ -154,9 +149,9 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
         <div className='file-preview'>{renderFilePreview(file)}</div>
         <div>
           <Typography className='file-name font-medium' color='text.primary'>
-           {getShortFileName(file.name || file.file_path?.split('/').pop() || '')}
-            </Typography>
-            {/* <Typography className='file-size' variant='body2'>
+            {getShortFileName(file.name || file.file_path?.split('/').pop() || '')}
+          </Typography>
+          {/* <Typography className='file-size' variant='body2'>
             {file.size
                 ? Math.round(file.size / 100) / 10 > 1000
                 ? `${(Math.round(file.size / 100) / 10000).toFixed(1)} mb`
@@ -174,7 +169,11 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
   return (
     <Dropzone>
       <Card>
+        {' '}
+        {/* Removes shadow */}
         <CardContent>
+          {' '}
+          {/* Removes padding */}
           <div {...getRootProps({ className: 'dropzone' })}>
             <input {...getInputProps()} />
             <div className='flex items-center flex-col gap-2 text-center'>
@@ -191,11 +190,6 @@ const handleRemoveFile = (fileToRemove: FileProp) => {
           {files?.length ? (
             <>
               <List sx={{ maxHeight: 375, overflowY: 'auto' }}>{fileList}</List>
-              {/* <div className='buttons'>
-                <Button color='secondary' variant='outlined' onClick={handleRemoveAllFiles}>
-                  Remove All
-                </Button>
-              </div> */}
             </>
           ) : null}
         </CardContent>

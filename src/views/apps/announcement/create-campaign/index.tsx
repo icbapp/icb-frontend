@@ -52,6 +52,20 @@ const CreateCampaign = () => {
   const [selectedLabels, setSelectedLabels] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
   const [openChart, setOpenChart] = useState(false)
+  const [viewEmailLog, setViewEmailLog] = useState([])
+  const [viewNotificationLog, setViewNotificationLog] = useState([])
+  const [paginationInfoLog, setPaginationInfoLog] = useState({
+    page: 0,
+    perPage: 10
+  })
+  // Email
+  const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 10 })
+  const [totalRowsEmail, setTotalRowsEmail] = useState(0)
+
+  // Notification
+  const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
+  const [totalRowsNotification, setTotalRowsNotification] = useState(0)
+
   const isRecurring = mode === 'recurring'
 
   const channels = [
@@ -124,28 +138,49 @@ const CreateCampaign = () => {
     fetchRoles()
   }, [])
 
+  // useEffect(() => {
+  //   const fetchRoleWiseUsers = async () => {
+  //     if (selectedLabels.length === 0) return
+  //     try {
+  //       const select = selectedLabels.map((val: any) => val.id)
+  //       const body = {
+  //         tenant_id: adminStore.tenant_id,
+  //         school_id: adminStore.school_id,
+  //         role_ids: select ?? ''
+  //       }
+  //       const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
+
+  //       // if (ids) {
+  //       setSelectedData(response.data.users)
+  //       // }
+  //     } catch (error) {
+  //       console.error('Error fetching role-wise users:', error)
+  //     }
+  //   }
+
+  //   fetchRoleWiseUsers()
+  // }, [selectedLabels])
+
   useEffect(() => {
-    const fetchRoleWiseUsers = async () => {
-      if (selectedLabels.length === 0) return
-      try {
-        const select = selectedLabels.map((val: any) => val.id)
-        const body = {
-          tenant_id: adminStore.tenant_id,
-          school_id: adminStore.school_id,
-          role_ids: select ?? ''
+    if (!ids && selectedLabels.length > 0) {
+      const fetchRoleWiseUsers = async () => {
+        try {
+          const select = selectedLabels.map((val: any) => val.id)
+          const body = {
+            tenant_id: adminStore.tenant_id,
+            school_id: adminStore.school_id,
+            role_ids: select
+          }
+          const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
+          setSelectedData(response.data.users)
+        } catch (error) {
+          console.error('Error fetching role-wise users:', error)
         }
-        const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
-
-        // if (ids) {
-        setSelectedData(response.data.users)
-        // }
-      } catch (error) {
-        console.error('Error fetching role-wise users:', error)
       }
+      fetchRoleWiseUsers()
     }
+  }, [selectedLabels, ids])
 
-    fetchRoleWiseUsers()
-  }, [selectedLabels])
 
   const fetchEditCampign = async () => {
     // setloaderMain(true)
@@ -165,7 +200,6 @@ const CreateCampaign = () => {
         setSelectedLabels(selected)
       }
       setSelectedData(res.data.users)
-
       setNote(res.data.note)
       setStatus(res.data.campaign_status)
       setMode(res.data.publish_mode)
@@ -223,7 +257,8 @@ const CreateCampaign = () => {
         frequency_count: recurringCount || 0,
         campaign_date: date,
         campaign_time: time,
-        campaign_ampm: timeampm
+        campaign_ampm: timeampm,
+        role_ids: '1'
       }
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
       if (response.data.status === 200) {
@@ -232,7 +267,8 @@ const CreateCampaign = () => {
           getLocalizedUrl(
             `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
             locale as Locale
-          ))
+          )
+        )
       }
     } catch (error: any) {
       if (error.response?.status === 500) {
@@ -281,6 +317,60 @@ const CreateCampaign = () => {
     })
   }
 
+  const getViewLog = async () => {
+    if (selectedChannel === 'email') {
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', announcementId || '')
+      formdata.append('campaign_id', ids)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationEmail.perPage.toString())
+      formdata.append('page', (paginationEmail.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postCampaignEmailLogGet}`, formdata)
+        setViewEmailLog(res.data)
+        setTotalRowsEmail(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    getViewLog()
+  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
+
+  const getNotificationViewLog = async () => {
+    if (selectedChannel === 'push_notification') {
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', announcementId || '')
+      formdata.append('campaign_id', ids)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationNotification.perPage.toString())
+      formdata.append('page', (paginationNotification.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postCampaignPushNotificationslogGet}`, formdata)
+
+        setViewNotificationLog(res.data)
+        setTotalRowsNotification(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    getNotificationViewLog()
+  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
@@ -652,7 +742,7 @@ const CreateCampaign = () => {
             {/* Push icon to far right */}
             <div
               className='relative inline-block group ml-auto'
-              onMouseEnter={() => setOpenChart(false)}
+              onMouseEnter={() => setOpenChart(true)}
               onMouseLeave={() => setOpenChart(false)}
             >
               <i className='ri-error-warning-line text-2xl cursor-pointer text-gray-400'></i>
@@ -667,11 +757,25 @@ const CreateCampaign = () => {
       </Card>
 
       {openDialog && (
-        <CampaignViewLogDialog open={openDialog} setOpen={setOpenDialog} selectedChannel={selectedChannel} />
+        <CampaignViewLogDialog
+          open={openDialog}
+          setOpen={setOpenDialog}
+          selectedChannel={selectedChannel}
+          viewLogData={viewEmailLog}
+          viewNotificationLog={viewNotificationLog}
+          paginationInfoLog={paginationInfoLog}
+          setPaginationInfoLog={setPaginationInfoLog}
+          setPaginationEmail={setPaginationEmail}
+          setPaginationNotification={setPaginationNotification}
+          totalRowsNotification={totalRowsNotification}
+          totalRowsEmail={totalRowsEmail}
+          paginationNotification={paginationNotification}
+          paginationEmail={paginationEmail}
+        />
       )}
     </>
   )
-} 
+}
 export default CreateCampaign
 
 const StatusFlow = () => {
