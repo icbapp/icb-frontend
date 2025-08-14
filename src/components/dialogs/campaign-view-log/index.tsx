@@ -44,6 +44,12 @@ type CampaignDialogProps = {
   paginationInfoLog: any
   setPaginationInfoLog: any
   totalRowsLog: any
+  setPaginationEmail: any
+  setPaginationNotification: any
+  totalRowsNotification: any
+  totalRowsEmail: any
+  paginationEmail: any
+  paginationNotification: any
 }
 type ErrorType = {
   message: string[]
@@ -74,6 +80,13 @@ interface UsersTypeWithAction {
 }
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
+const statusStyles = {
+  Queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
+  Send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
+  Fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
+  Open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+}
+
 const CampaignViewLogDialog = ({
   open = false,
   setOpen,
@@ -82,9 +95,15 @@ const CampaignViewLogDialog = ({
   viewNotificationLog = [],
   paginationInfoLog = {},
   setPaginationInfoLog = {},
-  totalRowsLog = 0
+  totalRowsLog = 0,
+  setPaginationEmail = {},
+  setPaginationNotification = {},
+  totalRowsNotification = 0,
+  totalRowsEmail = 0,
+  paginationEmail = {},
+  paginationNotification={}
 }: CampaignDialogProps) => {
-  
+
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
   const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
@@ -113,7 +132,34 @@ const CampaignViewLogDialog = ({
         }),
         columnHelper.accessor('status', {
           header: 'Status',
-          cell: ({ row }) => <Typography>{row.original.status}</Typography>
+          cell: ({ row }) => {
+            const status = String(row.original.status || '').toLowerCase()
+
+            // Status → Icon + Color mapping
+            const statusMap = {
+              queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
+              send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
+              fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
+              open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+            }
+
+            // Fallback if status doesn't match
+            const { icon, color } = statusMap[status] || {
+              icon: 'ri-question-line',
+              color: 'text-gray-500',
+              label: row.original.status || 'Unknown'
+            }
+
+            return (
+              <div className='flex items-center gap-2'>
+                <Tooltip title={row.original.status}>
+                  <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
+                    <i className={`${icon} text-lg`} />
+                  </span>
+                </Tooltip>
+              </div>
+            )
+          }
         }),
         columnHelper.accessor('sent_date', {
           header: 'SentDate',
@@ -307,9 +353,24 @@ const CampaignViewLogDialog = ({
     >
       {/* {loading && <Loader />} */}
 
-      <DialogTitle variant='h4' className='flex flex-col gap-2 text-center'>
-        View Log ({channelMap[selectedChannel] || ''})
+      <DialogTitle className='flex flex-col gap-1 text-center'>
+        <span className='text-xl font-semibold'>View Log ({channelMap[selectedChannel] || ''})</span>
+        <div className='flex justify-center gap-4 text-sm'>
+          <div className='flex items-center gap-1 text-yellow-500'>
+            <i className='ri-time-line' /> Queued
+          </div>
+          <div className='flex items-center gap-1 text-blue-500'>
+            <i className='ri-send-plane-line' /> Sent
+          </div>
+          <div className='flex items-center gap-1 text-red-500'>
+            <i className='ri-close-circle-line' /> Failed
+          </div>
+          <div className='flex items-center gap-1 text-green-500'>
+            <i className='ri-mail-open-line' /> Open
+          </div>
+        </div>
       </DialogTitle>
+
       <form onSubmit={handleSubmit}>
         <DialogContent className='overflow-visible'>
           <IconButton onClick={handleClose} className='absolute top-4 right-4'>
@@ -320,25 +381,37 @@ const CampaignViewLogDialog = ({
               data={
                 viewLogData?.data?.length > 0
                   ? viewLogData?.data
-                  : viewNotificationLog.data.length > 0
-                    ? viewNotificationLog.data
+                  : viewNotificationLog?.data?.length > 0
+                    ? viewNotificationLog?.data
                     : []
               }
               columns={columns}
-              count={totalRowsLog}
-              page={paginationInfoLog.page ?? paginationInfoLog?.page}
-              rowsPerPage={paginationInfoLog.perPage ?? paginationInfoLog?.perPage}
-              onPageChange={(_, newPage) => setPaginationInfoLog(prev => ({ ...prev, page: newPage }))}
-              onRowsPerPageChange={newSize => setPaginationInfoLog({ page: 0, perPage: newSize })}
+              count={selectedChannel === 'email' ? totalRowsEmail : totalRowsNotification}
+              page={selectedChannel === 'email' ? paginationEmail.page : paginationNotification.page}
+              rowsPerPage={selectedChannel === 'email' ? paginationEmail.perPage : paginationNotification.perPage}
+              onPageChange={(_, newPage) => {
+                if (selectedChannel === 'email') {
+                  setPaginationEmail(prev => ({ ...prev, page: newPage }))
+                } else {
+                  setPaginationNotification(prev => ({ ...prev, page: newPage }))
+                }
+              }}
+              onRowsPerPageChange={newSize => {
+                if (selectedChannel === 'email') {
+                  setPaginationEmail({ page: 0, perPage: newSize })
+                } else {
+                  setPaginationNotification({ page: 0, perPage: newSize })
+                }
+              }}
             />
           </div>
         </DialogContent>
 
-        <DialogActions className='justify-center py-6'>
+        {/* <DialogActions className='justify-center py-6'>
           <Button variant='outlined' color='secondary' onClick={handleClose}>
             Cancel
           </Button>
-        </DialogActions>
+        </DialogActions> */}
       </form>
     </Dialog>
   )
