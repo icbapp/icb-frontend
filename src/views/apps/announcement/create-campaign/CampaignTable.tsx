@@ -135,8 +135,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const searchParams = useSearchParams()
   const ids = atob(decodeURIComponent(searchParams.get('campaignId') || ''))
 
-  // const ids = searchParams.get('id')
-
   const [data, setData] = useState<UsersType[]>([])
   const [loaderMain, setloaderMain] = useState(false)
   const [totalRows, setTotalRows] = useState(0)
@@ -144,11 +142,19 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     page: 0,
     perPage: 10
   })
-  const [paginationInfoLog, setPaginationInfoLog] = useState({
-    page: 0,
-    perPage: 10
-  })
-  const [totalRowsLog, setTotalRowsLog] = useState(0)
+ 
+  // Email
+  const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 10 })
+  const [totalRowsEmail, setTotalRowsEmail] = useState(0)
+
+  // Notification
+  const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
+  const [totalRowsNotification, setTotalRowsNotification] = useState(0)
+
+  // Sms
+  const [paginationSms, setPaginationSms] = useState({ page: 0, perPage: 10 })
+  const [totalRowsSms, setTotalRowsSms] = useState(0)
+ 
 
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -268,7 +274,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
               <Tooltip title='Edit'>
                 <IconButton
                   size='small'
-                  onClick={() =>                    
+                  onClick={() =>
                     router.push(
                       `${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${encodeURIComponent(btoa(row.original.id))}`
                     )
@@ -389,56 +395,86 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   }, [ids])
 
   const getViewLog = async () => {
-    const formdata = new FormData()
+    if (channelName === 'email') {
+      const formdata = new FormData()
 
-    formdata.append('announcement_id', ids || '')
-    formdata.append('campaign_id', viewLogId)
-    formdata.append('search', '')
-    formdata.append('per_page', paginationInfoLog.perPage.toString())
-    formdata.append('page', paginationInfoLog.page.toString() + 1)
-    try {
-      const res = await api.post(`${endPointApi.postCampaignEmailLogGet}`, formdata)
-      setViewEmailLog(res.data)
-      setTotalRowsLog(res.data.total)
-    } catch (err: any) {
-      if (err.response?.status === 500) {
-        toast.error('Internal Server Error.')
-      } else {
-        toast.error(err?.response?.data?.message || 'Something went wrong')
+      formdata.append('announcement_id', ids || '')
+      formdata.append('campaign_id', viewLogId)
+      formdata.append('search', '')
+       formdata.append('per_page', paginationEmail.perPage.toString())
+      formdata.append('page', (paginationEmail.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postCampaignEmailLogGet}`, formdata)
+       setViewEmailLog(res.data)
+        setTotalRowsEmail(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
       }
     }
   }
 
   useEffect(() => {
     getViewLog()
-  }, [viewLogId, openDialog, paginationInfoLog.page, paginationInfoLog.perPage, globalFilter])
+  }, [viewLogId, openDialog, paginationEmail.page, paginationEmail.perPage, globalFilter])
 
-   const getNotificationViewLog = async () => {
-    const formdata = new FormData()
+  const getNotificationViewLog = async () => {
+    if (channelName === 'push_notification') {
+      const formdata = new FormData()
 
-    formdata.append('announcement_id', ids || '')
-    formdata.append('campaign_id', viewLogId)
-    formdata.append('search', '')
-    formdata.append('per_page', paginationInfoLog.perPage.toString())
-    formdata.append('page', paginationInfoLog.page.toString() + 1)
-    try {
-      const res = await api.post(`${endPointApi.postCampaignPushNotificationslogGet}`, formdata)
-      console.log("res**", res);
-      
-      setViewNotificationLog(res.data)
-      setTotalRowsLog(res.data.total)
-    } catch (err: any) {
-      if (err.response?.status === 500) {
-        toast.error('Internal Server Error.')
-      } else {
-        toast.error(err?.response?.data?.message || 'Something went wrong')
+      formdata.append('announcement_id', ids || '')
+      formdata.append('campaign_id', viewLogId)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationNotification.perPage.toString())
+      formdata.append('page', (paginationNotification.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postCampaignPushNotificationslogGet}`, formdata)
+
+        setViewNotificationLog(res.data)
+        setTotalRowsNotification(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
       }
     }
   }
 
   useEffect(() => {
     getNotificationViewLog()
-  }, [viewLogId, openDialog, paginationInfoLog.page, paginationInfoLog.perPage, globalFilter])
+  }, [viewLogId, openDialog, paginationNotification.page, paginationNotification.perPage, globalFilter])
+  const getSmsViewLog = async () => {
+    if (channelName === 'sms') {
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', ids || '')
+      formdata.append('campaign_id', viewLogId)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationSms.perPage.toString())
+      formdata.append('page', (paginationSms.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postcampaignSmsLogGet}`, formdata)
+
+        setViewNotificationLog(res.data)
+        setTotalRowsSms(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    getSmsViewLog()
+  }, [viewLogId, openDialog, paginationSms.page, paginationSms.perPage, globalFilter])
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
@@ -573,9 +609,18 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           selectedChannel={channelName}
           viewLogData={viewEmailLog}
           viewNotificationLog={viewNotificationLog}
-          paginationInfoLog={paginationInfoLog}
-          setPaginationInfoLog={setPaginationInfoLog}
-          totalRowsLog={totalRowsLog}
+
+          setPaginationEmail={setPaginationEmail}
+          setPaginationNotification={setPaginationNotification}
+          setPaginationSms={setPaginationSms}
+
+          totalRowsNotification={totalRowsNotification}
+          totalRowsEmail={totalRowsEmail}
+          totalRowsSms={totalRowsSms}
+
+          paginationEmail={paginationEmail}
+          paginationNotification={paginationNotification}
+          paginationSms={paginationSms}
         />
       )}
     </>

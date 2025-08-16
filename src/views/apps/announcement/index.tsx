@@ -134,7 +134,9 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
           return (
             <Tooltip title={text} arrow placement='bottom-start'>
-              <Typography noWrap className='text-gray-800 font-medium'>{truncated}</Typography>
+              <Typography noWrap className='text-gray-800 font-medium'>
+                {truncated}
+              </Typography>
             </Tooltip>
           )
         }
@@ -193,7 +195,11 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
       columnHelper.accessor('created_by', {
         header: 'Created By',
-        cell: ({ row }: any) => <Typography className='text-gray-800 font-medium'>{row.original.created_by ? row.original.created_by.name : '-'}</Typography>
+        cell: ({ row }: any) => (
+          <Typography className='text-gray-800 font-medium'>
+            {row.original.created_by ? row.original.created_by.name : '-'}
+          </Typography>
+        )
       }),
 
       columnHelper.accessor('updated_at', {
@@ -204,7 +210,9 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       columnHelper.accessor('updated_by', {
         header: 'Updated By',
         cell: ({ row }: any) => (
-          <Typography className='text-gray-800 font-medium'>{row?.original?.updated_by ? row.original.updated_by.name : '-'}</Typography>
+          <Typography className='text-gray-800 font-medium'>
+            {row?.original?.updated_by ? row.original.updated_by.name : '-'}
+          </Typography>
         )
       }),
 
@@ -235,23 +243,31 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   <i className='ri-multi-image-line text-blue-600' />
                 </IconButton>
               </Tooltip>
-              <Tooltip title='Campaign'>
-                <IconButton
-                  size='small'
-                  onClick={() => {
-                    if (row?.original?.id) {
-                      router.replace(
-                        getLocalizedUrl(`/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(row.original.id))}`, locale as Locale)
-                      )
-                      localStorage.setItem('announcementId', row.original.id.toString())
-                    }
-                  }}
-                >
-                  <i className='ri-megaphone-line text-orange-500' />
-                </IconButton>
+              {console.log('row.original.status', row.original.status)}
+
+              <Tooltip title={Number(row.original.status) == 1 ? 'Cannot launch — campaign is still a draft' : 'Campaign'}>
+                <span className='cursor-pointer'>
+                  <IconButton
+                    size='small'
+                    onClick={() => {
+                      if (row?.original?.id) {
+                        router.replace(
+                          getLocalizedUrl(
+                            `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(row.original.id))}`,
+                            locale as Locale
+                          )
+                        )
+                        localStorage.setItem('announcementId', row.original.id.toString())
+                      }
+                    }}
+                    disabled={Number(row.original.status) == 1}
+                  >
+                    <i className='ri-megaphone-line text-orange-500' />
+                  </IconButton>
+                </span>
               </Tooltip>
               <Tooltip title={Number(row.original.status) == 3 ? 'Cannot delete published item' : 'Delete'}>
-                <span>
+                <span className='cursor-pointer'>
                   <IconButton
                     size='small'
                     onClick={() => handleDeleteClick(Number(row.original.id))}
@@ -316,10 +332,8 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     setDeleteOpen(true)
   }
   const editUser = async (id: number) => {
-     const encodedId = encodeURIComponent(btoa(id.toString()))
-    router.push(
-    `${getLocalizedUrl('/apps/announcement/add-announcement', locale as Locale)}?id=${encodedId}`
-  )
+    const encodedId = encodeURIComponent(btoa(id.toString()))
+    router.push(`${getLocalizedUrl('/apps/announcement/add-announcement', locale as Locale)}?id=${encodedId}`)
   }
 
   const deleteUser = async (id: number | null) => {

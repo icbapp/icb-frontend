@@ -12,6 +12,7 @@ import {
 } from 'ag-grid-community'
 import { ColumnMenuModule, ColumnsToolPanelModule, ContextMenuModule, RowGroupingModule } from 'ag-grid-enterprise'
 import { ModuleRegistry } from 'ag-grid-community'
+import { RowApiModule } from 'ag-grid-community';
 import { IconButton, Tooltip } from '@mui/material'
 import { useSettings } from '@/@core/hooks/useSettings'
 // Register required AG Grid modules
@@ -24,6 +25,7 @@ ModuleRegistry.registerModules([
   RowGroupingModule,
   RowSelectionModule,
   PaginationModule,
+  RowApiModule, 
   ...(process.env.NODE_ENV !== 'production' ? [ValidationModule] : [])
 ])
 
@@ -63,19 +65,19 @@ const AudienceGrid = ({ setSelectedIds, selectedData }: Props) => {
     { field: 'full_name', headerName: 'Full Name' },
     { field: 'email' },
     { field: 'username', headerName: 'User Name' },
-    {
-      headerName: 'Action',
-      field: 'action',
-      cellRenderer: (params: any) => {
-        return params.data?.role_name ? (
-          <Tooltip title='Delete'>
-            <IconButton size='small'>
-              <i className='ri-delete-bin-7-line text-red-600' />
-            </IconButton>
-          </Tooltip>
-        ) : null
-      }
-    }
+    // {
+    //   headerName: 'Action',
+    //   field: 'action',
+    //   cellRenderer: (params: any) => {
+    //     return params.data?.role_name ? (
+    //       <Tooltip title='Delete'>
+    //         <IconButton size='small'>
+    //           <i className='ri-delete-bin-7-line text-red-600' />
+    //         </IconButton>
+    //       </Tooltip>
+    //     ) : null
+    //   }
+    // }
   ])
   const defaultColDef = useMemo(
     () => ({
@@ -117,17 +119,13 @@ const AudienceGrid = ({ setSelectedIds, selectedData }: Props) => {
     document.body.dataset.agThemeMode = settings.mode === 'light' ? 'light-red' : 'dark-red'
   }, [settings])
 
-  const onFirstDataRendered = useCallback((params) => {
-    
-        params.api.forEachNode((node) => {
-            console.log(node, 'check');
-            if (
-                node.data.check == "true"
-            ) {
-                node.setSelected(true);
-            }
-        });
-    }, []);
+   const onFirstDataRendered = useCallback(params => {
+    params.api.forEachNode(node => {
+      if (!node.group && node.data?.check === true) {
+        node.setSelected(true)
+      }
+    })
+  }, [])
 
   return (
     <>
@@ -153,6 +151,7 @@ const AudienceGrid = ({ setSelectedIds, selectedData }: Props) => {
               onSelectionChanged={handleSelectionChanged}
               groupIncludeFooter={true}
               onFirstDataRendered={onFirstDataRendered}
+              overlayNoRowsTemplate={'<span >Choose filters to display data</span>'} F
             />
           </div>
         </div>

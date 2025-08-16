@@ -2,7 +2,18 @@
 import { Locale } from '@/configs/i18n'
 import { getLocalizedUrl } from '@/utils/i18n'
 // src/views/announcements/CampaignDialog.tsx
-import { Button, TextField, Grid, Box, Typography, Autocomplete, Card, MenuItem, InputAdornment } from '@mui/material'
+import {
+  Button,
+  TextField,
+  Grid,
+  Box,
+  Typography,
+  Autocomplete,
+  Card,
+  MenuItem,
+  InputAdornment,
+  Tooltip
+} from '@mui/material'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AudienceGrid from './AudienceGrid'
@@ -52,6 +63,21 @@ const CreateCampaign = () => {
   const [selectedLabels, setSelectedLabels] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
   const [openChart, setOpenChart] = useState(false)
+  const [viewEmailLog, setViewEmailLog] = useState([])
+  const [viewNotificationLog, setViewNotificationLog] = useState([])
+  const [error, setError] = useState('')
+  const [paginationInfoLog, setPaginationInfoLog] = useState({
+    page: 0,
+    perPage: 10
+  })
+  // Email
+  const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 10 })
+  const [totalRowsEmail, setTotalRowsEmail] = useState(0)
+
+  // Notification
+  const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
+  const [totalRowsNotification, setTotalRowsNotification] = useState(0)
+
   const isRecurring = mode === 'recurring'
 
   const channels = [
@@ -86,13 +112,19 @@ const CreateCampaign = () => {
       key: 'push_notification',
       label: 'Push',
       icon: '<i class="ri-notification-3-line"></i>',
-      sub: 'Mobile push alerts',
+      sub: 'Mobile app notification',
       bg: '#FEF9C3',
       color: '#CA8A04',
       text: 'text-yellow-600'
     }
   ]
 
+  const channelMap = {
+    wp: 'WhatsApp',
+    push_notification: 'Mobile App Notification',
+    email: 'Email',
+    sms: 'SMS'
+  }
   const handleFilterChange = (newValues: any) => {
     setSelectedLabels(newValues)
 
@@ -124,28 +156,48 @@ const CreateCampaign = () => {
     fetchRoles()
   }, [])
 
+  // useEffect(() => {
+  //   const fetchRoleWiseUsers = async () => {
+  //     if (selectedLabels.length === 0) return
+  //     try {
+  //       const select = selectedLabels.map((val: any) => val.id)
+  //       const body = {
+  //         tenant_id: adminStore.tenant_id,
+  //         school_id: adminStore.school_id,
+  //         role_ids: select ?? ''
+  //       }
+  //       const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
+
+  //       // if (ids) {
+  //       setSelectedData(response.data.users)
+  //       // }
+  //     } catch (error) {
+  //       console.error('Error fetching role-wise users:', error)
+  //     }
+  //   }
+
+  //   fetchRoleWiseUsers()
+  // }, [selectedLabels])
+
   useEffect(() => {
-    const fetchRoleWiseUsers = async () => {
-      if (selectedLabels.length === 0) return
-      try {
-        const select = selectedLabels.map((val: any) => val.id)
-        const body = {
-          tenant_id: adminStore.tenant_id,
-          school_id: adminStore.school_id,
-          role_ids: select ?? ''
+    if (!ids && selectedLabels.length > 0) {
+      const fetchRoleWiseUsers = async () => {
+        try {
+          const select = selectedLabels.map((val: any) => val.id)
+          const body = {
+            tenant_id: adminStore.tenant_id,
+            school_id: adminStore.school_id,
+            role_ids: select
+          }
+          const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
+          setSelectedData(response.data.users)
+        } catch (error) {
+          console.error('Error fetching role-wise users:', error)
         }
-        const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
-
-        // if (ids) {
-        setSelectedData(response.data.users)
-        // }
-      } catch (error) {
-        console.error('Error fetching role-wise users:', error)
       }
+      fetchRoleWiseUsers()
     }
-
-    fetchRoleWiseUsers()
-  }, [selectedLabels])
+  }, [selectedLabels, ids])
 
   const fetchEditCampign = async () => {
     // setloaderMain(true)
@@ -165,7 +217,6 @@ const CreateCampaign = () => {
         setSelectedLabels(selected)
       }
       setSelectedData(res.data.users)
-
       setNote(res.data.note)
       setStatus(res.data.campaign_status)
       setMode(res.data.publish_mode)
@@ -185,8 +236,14 @@ const CreateCampaign = () => {
   useEffect(() => {
     fetchEditCampign()
   }, [ids])
+  console.log("recurringCount",recurringCount);
+  
   const launchCampaign = async (status: string) => {
     try {
+      if (recurringCount < 2 || recurringCount > 99 || recurringCount == '' || recurringCount == undefined) {
+        setError('Please enter a number between 2 and 99')
+      }
+
       if (!selectedIds || selectedIds.length === 0) {
         ShowErrorToast('Please select at least one user to launch the campaign.')
         return
@@ -200,14 +257,19 @@ const CreateCampaign = () => {
       let time = ''
       let timeampm = ''
 
-      if (startDateTime && dayjs(startDateTime).isValid()) {
+      if (dayjs(startDateTime).isValid()) {
         const formatted = dayjs(startDateTime).format('YYYY-MM-DD hh:mm A')
         const [datePart, timePart, ampm] = formatted.split(' ')
         date = datePart || ''
         time = timePart || ''
         timeampm = ampm || ''
+      } else {
+        const formatted = dayjs().format('YYYY-MM-DD hh:mm A')
+        const [datePart, timePart, ampm] = formatted.split(' ')
+        date = datePart || ''
+        time = timePart || ''
+        timeampm = ampm || ''
       }
-
       const body = {
         id: ids ? Number(ids) : 0,
         note: note || '',
@@ -221,9 +283,10 @@ const CreateCampaign = () => {
         publish_mode: mode,
         schedule: scheduleType || '',
         frequency_count: recurringCount || 0,
-        campaign_date: date,
+         campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
         campaign_time: time,
-        campaign_ampm: timeampm
+        campaign_ampm: timeampm,
+        role_ids: '1'
       }
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
       if (response.data.status === 200) {
@@ -232,7 +295,8 @@ const CreateCampaign = () => {
           getLocalizedUrl(
             `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
             locale as Locale
-          ))
+          )
+        )
       }
     } catch (error: any) {
       if (error.response?.status === 500) {
@@ -246,9 +310,10 @@ const CreateCampaign = () => {
 
   const scheduleDates = []
   const maxDates = Math.min(recurringCount, 5) // ✅ limit to 5
+  console.log('startDateTime', startDateTime)
 
   for (let i = 0; i < maxDates; i++) {
-    let nextDate = dayjs(startDateTime)
+    let nextDate = dayjs(startDateTime).isValid() ? dayjs(startDateTime) : dayjs()
 
     switch (recurringType) {
       case 'year':
@@ -281,38 +346,99 @@ const CreateCampaign = () => {
     })
   }
 
+  const getViewLog = async () => {
+    if (selectedChannel === 'email') {
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', announcementId || '')
+      formdata.append('campaign_id', ids)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationEmail.perPage.toString())
+      formdata.append('page', (paginationEmail.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postCampaignEmailLogGet}`, formdata)
+        setViewEmailLog(res.data)
+        setTotalRowsEmail(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    getViewLog()
+  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
+
+  const getNotificationViewLog = async () => {
+    if (selectedChannel === 'push_notification') {
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', announcementId || '')
+      formdata.append('campaign_id', ids)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationNotification.perPage.toString())
+      formdata.append('page', (paginationNotification.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postCampaignPushNotificationslogGet}`, formdata)
+
+        setViewNotificationLog(res.data)
+        setTotalRowsNotification(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    getNotificationViewLog()
+  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
   return (
     <>
-      <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
-        <span
-          className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
-          onClick={() =>
-            router.replace(
-              getLocalizedUrl(
-                `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
-                locale as Locale
+      <p style={{ color: settings.primaryColor }} className='font-bold flex items-center justify-between gap-2 mb-1'>
+        <span className='flex items-center gap-2'>
+          <span
+            className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
+            onClick={() =>
+              router.replace(
+                getLocalizedUrl(
+                  `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
+                  locale as Locale
+                )
               )
-            )
-          }
-        >
-          <i className='ri-arrow-go-back-line text-lg'></i>
+            }
+          >
+            <i className='ri-arrow-go-back-line text-lg'></i>
+          </span>
+          Announcement / {'Create'} Campaign
         </span>
-        Announcement / {'Create'} Campaign
+
+        {ids && (
+          <Button variant='contained' onClick={() => setOpenDialog(true)}>
+            View Log
+          </Button>
+        )}
       </p>
-      <Card>
+
+      {/* <Card>
         <Box p={3} display='flex' justifyContent='space-between' alignItems='center'>
-          {/* Title */}
           <Typography variant='h6' fontWeight={600}>
             Launch Campaign
           </Typography>
-          {/* Button */}
           {ids && (
             <Button variant='contained' onClick={() => setOpenDialog(true)}>
               View Log
             </Button>
           )}
         </Box>
-      </Card>
+      </Card> */}
 
       <Card sx={{ mt: 4 }}>
         <Box p={6}>
@@ -352,6 +478,27 @@ const CreateCampaign = () => {
             error={note?.length > 100}
             helperText={`${note?.length || 0}/100 characters`}
           />
+
+          {/* Icon positioned at bottom right */}
+          <Box
+            position='absolute'
+            bottom={8}
+            right={20}
+            display='flex'
+            alignItems='center'
+            color='text.secondary'
+            sx={{ pointerEvents: 'none' }}
+          >
+            <Tooltip
+              title='Private note for internal use only, it will not be used to show or send to users'
+              placement='left'
+            >
+              <i
+                className='ri-error-warning-line text-2xl cursor-pointer text-gray-400'
+                style={{ pointerEvents: 'auto' }}
+              ></i>
+            </Tooltip>
+          </Box>
         </Box>
       </Card>
 
@@ -464,6 +611,8 @@ const CreateCampaign = () => {
                       endAdornment: <InputAdornment position='end'>times</InputAdornment>
                     }}
                     disabled={status === 'in_progress'}
+                    error={!!error}
+                    helperText={error}
                   />
                 </Grid>
                 <Grid item xs={6} md={4}>
@@ -560,38 +709,111 @@ const CreateCampaign = () => {
           </Box>
 
           {/* Preview */}
-          {scheduleType === 'schedule' && (
-            <Grid item xs={12} mb={2}>
-              <Box sx={{ background: '#f4f6f8', p: 2, borderRadius: 2 }}>
-                <Typography variant='subtitle1' fontWeight='600'>
-                  Preview:
-                </Typography>
-                <Typography>
-                  {/* This campaign will be send <b>{announcementTitle}</b> to select  advisor via  <b>{selectedChannel}</b> on{' '}
-                  <b>{startDateTime ? startDateTime.format('DD-MM-YYYY hh:mm A') : ''}</b> this will repeat for <b>{recurringCount} {recurringType}(s)</b> at same time(s). */}
-                  This campaign will send <b>{announcementTitle}</b> to the selected advisor via{' '}
-                  <b>{ids ? selectedChannel : selectedChannel && selectedChannel.map(x => x).join(', ')}</b> on{' '}
-                  <b>
-                    {dayjs(startDateTime).isValid()
-                      ? dayjs(startDateTime).format('DD-MM-YYYY hh:mm A')
-                      : 'DD-MM-YYYY hh:mm A'}
-                  </b>
-                  . It will repeat{' '}
-                  <b>
-                    {recurringCount} {recurringType}
-                    {recurringCount > 1 ? 's' : ''}
-                  </b>{' '}
-                  at the same time.
-                  {/* {isRecurring && (
+          {/* {scheduleType === 'schedule' && ( */}
+          <Grid item xs={12} mb={2}>
+            <Box sx={{ background: '#f4f6f8', p: 2, borderRadius: 2 }}>
+              <Typography variant='subtitle1' fontWeight='600'>
+                Preview:
+              </Typography>
+              <Typography>
+                {mode === 'one_time' && scheduleType === 'now' && (
+                  <>
+                    This campaign will be sent immediately to the selected audience via{' '}
+                    <b>
+                      {ids
+                        ? selectedChannel
+                        : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
+                    </b>
+                    .
+                  </>
+                )}
+                {mode === 'one_time' && scheduleType === 'schedule' && (
+                  <>
+                    This campaign will be sent to the selected audience via{' '}
+                    <b>
+                      {ids
+                        ? selectedChannel
+                        : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
+                    </b>
+                    on{' '}
+                    <b>
+                      {dayjs(startDateTime).isValid()
+                        ? dayjs(startDateTime).format('DD-MM-YYYY hh:mm A')
+                        : 'DD-MM-YYYY hh:mm A'}
+                    </b>
+                    .
+                  </>
+                )}
+                {mode === 'recurring' && scheduleType === 'now' && (
+                  <>
+                    This campaign will be sent to the selected audience via{' '}
+                    <b>
+                      {ids
+                        ? selectedChannel
+                        : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
+                    </b>{' '}
+                    starting from{' '}
+                    <b>{dayjs().isValid() ? dayjs().format('DD-MM-YYYY hh:mm A') : 'DD-MM-YYYY hh:mm A'}</b>. and will
+                    repeat once a day for{' '}
+                    <b>
+                      {recurringCount} {recurringType}
+                      {recurringCount > 1 ? `'s` : ''}
+                    </b>
+                    .
+                  </>
+                )}
+                {mode === 'recurring' && scheduleType === 'schedule' && (
+                  <>
+                    This campaign will be sent to the selected audience via{' '}
+                    <b>
+                      {ids
+                        ? selectedChannel
+                        : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
+                    </b>
+                    , starting from{' '}
+                    <b>
+                      {dayjs(startDateTime).isValid()
+                        ? dayjs(startDateTime).format('DD-MM-YYYY hh:mm A')
+                        : 'DD-MM-YYYY hh:mm A'}
+                    </b>
+                    . and will repeat once a day for{' '}
+                    <b>
+                      {recurringCount} {recurringType}
+                      {recurringCount > 1 ? `'s` : ''}
+                    </b>
+                    .
+                  </>
+                )}
+                {/* <b>
+                  {ids
+                    ? selectedChannel
+                    : selectedChannel && selectedChannel.map(item => channelMap[item] || item).join(', ')}
+                </b>{' '}
+                on{' '}
+                <b>
+                  {dayjs(startDateTime).isValid()
+                    ? dayjs(startDateTime).format('DD-MM-YYYY hh:mm A')
+                    : 'DD-MM-YYYY hh:mm A'}
+                </b>
+                . It will repeat{' '}
+                <b>
+                  {recurringCount} {recurringType}
+                  {recurringCount > 1 ? 's' : ''}
+                </b>{' '}
+                at the same time. */}
+                {/* {isRecurring && (
                     <>
                       {' '}
                       This will repeat <b>{recurringCount}</b> at same time <b>{recurringType}</b>.
                     </>
                   )} */}
-                </Typography>
+              </Typography>
+
+              {mode === 'recurring' && (
                 <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
                   <h4 className='text-sm font-semibold text-blue-700 mb-3 flex items-center'>
-                    <i className='ri-calendar-event-line mr-2 text-base' /> Scheduled Dates {recurringType}
+                    <i className='ri-calendar-event-line mr-2 text-base' />
+                    Display Preview: {recurringType}
                   </h4>
                   <ul className='space-y-2'>
                     {scheduleDates.map((date, idx) => (
@@ -605,9 +827,10 @@ const CreateCampaign = () => {
                     ))}
                   </ul>
                 </div>
-              </Box>
-            </Grid>
-          )}
+              )}
+            </Box>
+          </Grid>
+          {/* )} */}
 
           {/* Action Buttons */}
           <Box display='flex' alignItems='center' gap={2} width='100%'>
@@ -652,7 +875,7 @@ const CreateCampaign = () => {
             {/* Push icon to far right */}
             <div
               className='relative inline-block group ml-auto'
-              onMouseEnter={() => setOpenChart(false)}
+              onMouseEnter={() => setOpenChart(true)}
               onMouseLeave={() => setOpenChart(false)}
             >
               <i className='ri-error-warning-line text-2xl cursor-pointer text-gray-400'></i>
@@ -667,11 +890,25 @@ const CreateCampaign = () => {
       </Card>
 
       {openDialog && (
-        <CampaignViewLogDialog open={openDialog} setOpen={setOpenDialog} selectedChannel={selectedChannel} />
+        <CampaignViewLogDialog
+          open={openDialog}
+          setOpen={setOpenDialog}
+          selectedChannel={selectedChannel}
+          viewLogData={viewEmailLog}
+          viewNotificationLog={viewNotificationLog}
+          paginationInfoLog={paginationInfoLog}
+          setPaginationInfoLog={setPaginationInfoLog}
+          setPaginationEmail={setPaginationEmail}
+          setPaginationNotification={setPaginationNotification}
+          totalRowsNotification={totalRowsNotification}
+          totalRowsEmail={totalRowsEmail}
+          paginationNotification={paginationNotification}
+          paginationEmail={paginationEmail}
+        />
       )}
     </>
   )
-} 
+}
 export default CreateCampaign
 
 const StatusFlow = () => {

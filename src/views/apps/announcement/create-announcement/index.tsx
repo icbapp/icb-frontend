@@ -42,7 +42,7 @@ const AnnouncementCreatePage = () => {
   const [announcementForm, setAnnouncementForm] = useState<AnnouncementForm>({
     title: '',
     description: '',
-    status: '',
+    status: statusTypeDropDown[0]?.id || '',
     category: '',
     attachments: [] as File[],
     location: ''
@@ -133,7 +133,7 @@ const AnnouncementCreatePage = () => {
       {/* <p style={{ color: settings.primaryColor }} className="font-bold"><i className="ri-arrow-go-back-line mr-2"></i>Announcement / {editId ? 'Edit' : 'Create'} Announcement</p> */}
       {loadings && <Loader />}
 
-      <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
+      <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-4'>
         <span
           className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
           onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}
@@ -175,7 +175,12 @@ const AnnouncementCreatePage = () => {
                         fullWidth
                         options={statusTypeDropDown}
                         getOptionLabel={option => option.name}
-                        value={statusTypeDropDown.find(item => item.id === String(announcementForm.status)) || null}
+                        // value={statusTypeDropDown.find(item => item.id === String(announcementForm.status)) || null}
+                        value={
+                          statusTypeDropDown.find(item => item.id === String(announcementForm.status)) ||
+                          statusTypeDropDown[0] ||
+                          null
+                        }
                         onChange={(event, newValue) => {
                           setAnnouncementForm(prev => ({
                             ...prev,
