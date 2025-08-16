@@ -65,19 +65,19 @@ const AudienceGrid = ({ setSelectedIds, selectedData }: Props) => {
     { field: 'full_name', headerName: 'Full Name' },
     { field: 'email' },
     { field: 'username', headerName: 'User Name' },
-    {
-      headerName: 'Action',
-      field: 'action',
-      cellRenderer: (params: any) => {
-        return params.data?.role_name ? (
-          <Tooltip title='Delete'>
-            <IconButton size='small'>
-              <i className='ri-delete-bin-7-line text-red-600' />
-            </IconButton>
-          </Tooltip>
-        ) : null
-      }
-    }
+    // {
+    //   headerName: 'Action',
+    //   field: 'action',
+    //   cellRenderer: (params: any) => {
+    //     return params.data?.role_name ? (
+    //       <Tooltip title='Delete'>
+    //         <IconButton size='small'>
+    //           <i className='ri-delete-bin-7-line text-red-600' />
+    //         </IconButton>
+    //       </Tooltip>
+    //     ) : null
+    //   }
+    // }
   ])
   const defaultColDef = useMemo(
     () => ({
@@ -151,6 +151,7 @@ const AudienceGrid = ({ setSelectedIds, selectedData }: Props) => {
               onSelectionChanged={handleSelectionChanged}
               groupIncludeFooter={true}
               onFirstDataRendered={onFirstDataRendered}
+              overlayNoRowsTemplate={'<span >Choose filters to display data</span>'} F
             />
           </div>
         </div>

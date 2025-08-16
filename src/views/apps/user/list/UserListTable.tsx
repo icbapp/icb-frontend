@@ -131,34 +131,75 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed
 }
 
+// const DebouncedInput = ({
+//   value: initialValue,
+//   onChange,
+//   debounce = 500,
+//   ...props
+// }: {
+//   value: string | number
+//   onChange: (value: string | number) => void
+//   debounce?: number
+// } & Omit<TextFieldProps, 'onChange'>) => {
+//   // States
+//   const [value, setValue] = useState(initialValue)
+
+//   useEffect(() => {
+//     setValue(initialValue)
+//   }, [initialValue])
+
+//   useEffect(() => {
+//     const timeout = setTimeout(() => {
+//       onChange(value)
+//     }, debounce)
+
+//     return () => clearTimeout(timeout)
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [value])
+
+//   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
+// }
+
 const DebouncedInput = ({
   value: initialValue,
-  onChange,
+  onEnter,
   debounce = 500,
   ...props
 }: {
-  value: string | number
-  onChange: (value: string | number) => void
-  debounce?: number
+  value: string | number;
+  onEnter: (value: string | number) => void;
+  debounce?: number;
 } & Omit<TextFieldProps, 'onChange'>) => {
-  // States
-  const [value, setValue] = useState(initialValue)
+  const [value, setValue] = useState(initialValue);
 
   useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
+    setValue(initialValue);
+  }, [initialValue]);
 
+  // Debounce for empty value case
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
+    if (String(value).trim() === '') {
+      const timeout = setTimeout(() => {
+        onEnter(value); // Call API when input cleared
+      }, debounce);
+      return () => clearTimeout(timeout);
+    }
+  }, [value, debounce, onEnter]);
 
-    return () => clearTimeout(timeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
-
-  return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
-}
+  return (
+    <TextField
+      {...props}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          onEnter(value); // Only run API call on Enter
+        }
+      }}
+      size="small"
+    />
+  );
+};
 
 const userStatusObj: UserStatusType = {
   active: 'success',
@@ -383,17 +424,16 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
               size='small'
               color={row.original.status === 'inactive' ? 'error' : userStatusObj[row.original.status]}
               className='capitalize'
-               onClick={() => {
-          if (row.original.status === 'active') {
-            setDeleteOpen(true) // open confirmation popup
-            handleOpenDeleteDialog(row.original.id, '0') // or '0' depending on your backend
-          }else if (row.original.status === 'inactive') {
-            setDeleteOpen(true)
-            handleOpenDeleteDialog(row.original.id, '1')
-          }
-        }}
+              onClick={() => {
+                if (row.original.status === 'active') {
+                  setDeleteOpen(true) // open confirmation popup
+                  handleOpenDeleteDialog(row.original.id, '0') // or '0' depending on your backend
+                } else if (row.original.status === 'inactive') {
+                  setDeleteOpen(true)
+                  handleOpenDeleteDialog(row.original.id, '1')
+                }
+              }}
             />
-         
           </div>
         )
       }),
@@ -540,7 +580,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
       setTotalRows(response.data.users.total)
       setData(users || [])
-      getUserCount()
+      // getUserCount()
       if (response.data.message === 'Data not found for this User') {
         toast.error('Data not found for this User')
         setData([])
@@ -558,12 +598,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   }, [role, status, searchData, page, rowsPerPage])
 
   useEffect(() => {
-     getUserCount()
-  },[role, status])
+    getUserCount()
+  }, [role, status])
 
   const getUserCount = () => {
-     api.get(`${endPointApi.getUserCount}`)
-     .then(res => setTotalUser(res.data.data))
+    api.get(`${endPointApi.getUserCount}`).then(res => setTotalUser(res.data.data))
   }
   const editUser = async (id: number) => {
     setSelectedUser(id)
@@ -798,9 +837,32 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 <div className='w-full flex flex-wrap items-center justify-between gap-4'>
                   {/* Left Side: Search */}
                   <div className='flex-1 min-w-[150px] max-w-[200px]'>
-                    <DebouncedInput
+                    {/* <DebouncedInput
                       value={searchData ?? ''}
                       onChange={value => setSearchData(String(value))}
+                      placeholder='Search User'
+                      className='w-full'
+                    /> */}
+                    {/* <DebouncedInput
+                      value={searchData ?? ''}
+                      onEnter={val => {
+                        setSearchData(String(val))
+                      }}
+                      placeholder='Search User'
+                      className='w-full'
+                    /> */}
+                    <DebouncedInput
+                      value={searchData ?? ''}
+                      onEnter={val => {
+                        setSearchData(String(val))
+                        // fetchUsers() // Enter press pe API call
+                      }}
+                      onChange={val => {
+                        setSearchData(String(val))
+                        if (String(val).trim() === '') {
+                          fetchUsers() // Agar input empty ho gaya to API call
+                        }
+                      }}
                       placeholder='Search User'
                       className='w-full'
                     />

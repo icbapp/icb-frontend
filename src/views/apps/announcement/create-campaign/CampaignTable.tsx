@@ -142,10 +142,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     page: 0,
     perPage: 10
   })
-  const [paginationInfoLog, setPaginationInfoLog] = useState({
-    page: 0,
-    perPage: 10
-  })
+ 
   // Email
   const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 10 })
   const [totalRowsEmail, setTotalRowsEmail] = useState(0)
@@ -153,7 +150,11 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   // Notification
   const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
-  const [totalRowsLog, setTotalRowsLog] = useState(0)
+
+  // Sms
+  const [paginationSms, setPaginationSms] = useState({ page: 0, perPage: 10 })
+  const [totalRowsSms, setTotalRowsSms] = useState(0)
+ 
 
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -418,7 +419,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   useEffect(() => {
     getViewLog()
-  }, [viewLogId, openDialog, paginationInfoLog.page, paginationInfoLog.perPage, globalFilter])
+  }, [viewLogId, openDialog, paginationEmail.page, paginationEmail.perPage, globalFilter])
 
   const getNotificationViewLog = async () => {
     if (channelName === 'push_notification') {
@@ -446,7 +447,34 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   useEffect(() => {
     getNotificationViewLog()
-  }, [viewLogId, openDialog, paginationInfoLog.page, paginationInfoLog.perPage, globalFilter])
+  }, [viewLogId, openDialog, paginationNotification.page, paginationNotification.perPage, globalFilter])
+  const getSmsViewLog = async () => {
+    if (channelName === 'sms') {
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', ids || '')
+      formdata.append('campaign_id', viewLogId)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationSms.perPage.toString())
+      formdata.append('page', (paginationSms.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postcampaignSmsLogGet}`, formdata)
+
+        setViewNotificationLog(res.data)
+        setTotalRowsSms(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    getSmsViewLog()
+  }, [viewLogId, openDialog, paginationSms.page, paginationSms.perPage, globalFilter])
   return (
     <>
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
@@ -581,15 +609,18 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           selectedChannel={channelName}
           viewLogData={viewEmailLog}
           viewNotificationLog={viewNotificationLog}
-          paginationInfoLog={paginationInfoLog}
-          setPaginationInfoLog={setPaginationInfoLog}
-          totalRowsLog={totalRowsLog}
+
           setPaginationEmail={setPaginationEmail}
           setPaginationNotification={setPaginationNotification}
+          setPaginationSms={setPaginationSms}
+
           totalRowsNotification={totalRowsNotification}
           totalRowsEmail={totalRowsEmail}
-          paginationNotification={paginationNotification}
+          totalRowsSms={totalRowsSms}
+
           paginationEmail={paginationEmail}
+          paginationNotification={paginationNotification}
+          paginationSms={paginationSms}
         />
       )}
     </>

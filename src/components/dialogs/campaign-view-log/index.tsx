@@ -21,18 +21,13 @@ import {
 } from '@mui/material'
 
 import type { RoleType } from '@/types/apps/roleType'
-import tableStyles from '@core/styles/table.module.css'
 import { api } from '@/utils/axiosInstance'
 import { useParams, useRouter } from 'next/navigation'
 import { getLocalizedUrl } from '@/utils/i18n'
 import type { Locale } from '@configs/i18n'
-import { useSettings } from '@core/hooks/useSettings'
-import Loader from '@/components/Loader'
 import { toast } from 'react-toastify'
 import ReactTable from '@/comman/table/ReactTable'
 import { createColumnHelper } from '@tanstack/react-table'
-import { ThemeColor } from '@/@core/types'
-import CustomAvatar from '@/@core/components/mui/Avatar'
 import { ColumnDef } from '@tanstack/table-core'
 
 type CampaignDialogProps = {
@@ -41,15 +36,18 @@ type CampaignDialogProps = {
   selectedChannel: string
   viewLogData: any
   viewNotificationLog: any
-  paginationInfoLog: any
-  setPaginationInfoLog: any
-  totalRowsLog: any
-  setPaginationEmail: any
-  setPaginationNotification: any
+
   totalRowsNotification: any
-  totalRowsEmail: any
   paginationEmail: any
+  setPaginationEmail: any
+
+  totalRowsEmail: any
   paginationNotification: any
+  setPaginationNotification: any
+
+  totalRowsSms: any
+  paginationSms: any
+  setPaginationSms: any
 }
 type ErrorType = {
   message: string[]
@@ -93,16 +91,20 @@ const CampaignViewLogDialog = ({
   selectedChannel = '',
   viewLogData = [],
   viewNotificationLog = [],
-  paginationInfoLog = {},
-  setPaginationInfoLog = {},
-  totalRowsLog = 0,
-  setPaginationEmail = {},
-  setPaginationNotification = {},
-  totalRowsNotification = 0,
+
   totalRowsEmail = 0,
   paginationEmail = {},
-  paginationNotification={}
+  setPaginationEmail = {},
+
+  totalRowsNotification = 0,
+  paginationNotification = {},
+  setPaginationNotification = {},
+
+  totalRowsSms = 0,
+  paginationSms = {},
+  setPaginationSms = {}
 }: CampaignDialogProps) => {
+  console.log('selectedChannel', selectedChannel)
 
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
@@ -386,21 +388,43 @@ const CampaignViewLogDialog = ({
                     : []
               }
               columns={columns}
-              count={selectedChannel === 'email' ? totalRowsEmail : totalRowsNotification}
-              page={selectedChannel === 'email' ? paginationEmail.page : paginationNotification.page}
-              rowsPerPage={selectedChannel === 'email' ? paginationEmail.perPage : paginationNotification.perPage}
+              count={
+                selectedChannel === 'email'
+                  ? totalRowsEmail
+                  : selectedChannel === 'push_notification'
+                    ? totalRowsNotification
+                    : totalRowsSms
+              }
+              page={
+                selectedChannel === 'email'
+                  ? paginationEmail.page
+                  : selectedChannel === 'push_notification'
+                    ? paginationNotification.page
+                    : paginationSms.page
+              }
+              rowsPerPage={
+                selectedChannel === 'email'
+                  ? paginationEmail.perPage
+                  : selectedChannel === 'push_notification'
+                    ? paginationNotification.perPage
+                    : paginationSms.perPage
+              }
               onPageChange={(_, newPage) => {
                 if (selectedChannel === 'email') {
                   setPaginationEmail(prev => ({ ...prev, page: newPage }))
-                } else {
+                } else if (selectedChannel === 'push_notification') {
                   setPaginationNotification(prev => ({ ...prev, page: newPage }))
+                } else {
+                  setPaginationSms(prev => ({ ...prev, page: newPage }))
                 }
               }}
               onRowsPerPageChange={newSize => {
                 if (selectedChannel === 'email') {
                   setPaginationEmail({ page: 0, perPage: newSize })
-                } else {
+                } else if (selectedChannel === 'push_notification') {
                   setPaginationNotification({ page: 0, perPage: newSize })
+                } else {
+                  setPaginationSms({ page: 0, perPage: newSize })
                 }
               }}
             />
