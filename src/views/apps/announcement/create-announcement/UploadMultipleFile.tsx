@@ -168,7 +168,7 @@ const UploadMultipleFile: React.FC<UploadMultipleFileProps> = ({ files, setFiles
 
   return (
     <Dropzone>
-      <Card>
+      <Card className="shadow-none border border-gray-100">
         {' '}
         {/* Removes shadow */}
         <CardContent>

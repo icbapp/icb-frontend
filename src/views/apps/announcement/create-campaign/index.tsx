@@ -873,7 +873,7 @@ const CreateCampaign = () => {
             </Button>
 
             {/* Push icon to far right */}
-            <div
+            {/* <div
               className='relative inline-block group ml-auto'
               onMouseEnter={() => setOpenChart(true)}
               onMouseLeave={() => setOpenChart(false)}
@@ -884,7 +884,7 @@ const CreateCampaign = () => {
                   <StatusFlow />
                 </div>
               )}
-            </div>
+            </div> */}
           </Box>
         </Box>
       </Card>

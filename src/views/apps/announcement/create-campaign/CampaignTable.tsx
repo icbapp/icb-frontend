@@ -22,7 +22,7 @@ import type { UsersType } from '@/types/apps/userTypes'
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 import { api } from '@/utils/axiosInstance'
-import { Button, Typography, Skeleton, Tooltip, CardContent, TextField, TextFieldProps, Box } from '@mui/material'
+import { Button, Typography, Skeleton, Tooltip, CardContent, TextField, TextFieldProps, Box, Grid } from '@mui/material'
 import endPointApi from '@/utils/endPointApi'
 import ReactTable from '@/comman/table/ReactTable'
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -32,6 +32,7 @@ import { toast } from 'react-toastify'
 import { useSettings } from '@/@core/hooks/useSettings'
 import CampaignViewLogDialog from '@/components/dialogs/campaign-view-log'
 import { useTheme } from '@emotion/react'
+import CustomAvatar from '@/@core/components/mui/Avatar'
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -142,7 +143,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
     page: 0,
     perPage: 10
   })
- 
+
   // Email
   const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 10 })
   const [totalRowsEmail, setTotalRowsEmail] = useState(0)
@@ -154,7 +155,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   // Sms
   const [paginationSms, setPaginationSms] = useState({ page: 0, perPage: 10 })
   const [totalRowsSms, setTotalRowsSms] = useState(0)
- 
+
 
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -372,7 +373,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           bg: '#E0E7FF'
         },
         {
-          title: 'Notification',
+          title: 'Mobile App Notification',
           value: response.push_sent?.toString() || '0',
           color: '#CA8A04',
           iconClass: '<i class="ri-notification-3-line"></i>',
@@ -401,11 +402,11 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       formdata.append('announcement_id', ids || '')
       formdata.append('campaign_id', viewLogId)
       formdata.append('search', '')
-       formdata.append('per_page', paginationEmail.perPage.toString())
+      formdata.append('per_page', paginationEmail.perPage.toString())
       formdata.append('page', (paginationEmail.page + 1).toString())
       try {
         const res = await api.post(`${endPointApi.postCampaignEmailLogGet}`, formdata)
-       setViewEmailLog(res.data)
+        setViewEmailLog(res.data)
         setTotalRowsEmail(res.data.total)
       } catch (err: any) {
         if (err.response?.status === 500) {
@@ -477,7 +478,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   }, [viewLogId, openDialog, paginationSms.page, paginationSms.perPage, globalFilter])
   return (
     <>
-      <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-1'>
+      <p style={{ color: settings.primaryColor }} className='font-bold flex items-center gap-2 mb-6'>
         <span
           className='inline-flex items-center justify-center border border-gray-400 rounded-md p-2 cursor-pointer'
           onClick={() => router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))}
@@ -486,7 +487,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         </span>
         Announcement / Campaign
       </p>
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-6'>
+      {/* <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-6'>
         {channelCounts.map((item, i) => (
           <div
             key={i}
@@ -524,7 +525,55 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
             </div>
           </div>
         ))}
-      </div>
+      </div> */}
+
+      <Grid container spacing={6} className='mb-6'>
+        {channelCounts.map((item, i) => (
+          <Grid key={i} item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent className="flex flex-wrap items-center gap-4">
+                <CustomAvatar variant="rounded">
+                  {/* <i className={item.iconClass} /> */}
+                  <Box
+                    sx={{
+                      width: 52,
+                      height: 52,
+                      backgroundColor: item.bg,
+                      color: item.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 32,
+                      boxShadow: 2,
+                      mb: 0 
+                    }}
+                    dangerouslySetInnerHTML={{ __html: item.iconClass }}
+                  />
+                </CustomAvatar>
+
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <Typography variant="h5">{item.value}</Typography>
+                    {/* <div className="flex items-center">
+                      <i
+                        className={classNames(
+                          "text-xl",
+                          "ri-arrow-up-s-line text-success"
+                        )}
+                      />
+                      <Typography variant="body2" color={"success.main"}>
+                        {item.percentage}%
+                      </Typography>
+                    </div> */}
+                  </div>
+                  <Typography>{item.title}</Typography>
+                </div>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
 
       <Card>
         {/* <CardHeader title='Filters' className='pbe-4' /> */}
