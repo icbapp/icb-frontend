@@ -75,6 +75,7 @@ interface UsersTypeWithAction {
   read_time?: string
   action?: string
   hours?: string
+  full_name?: string
 }
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
@@ -179,26 +180,26 @@ const CampaignViewLogDialog = ({
           header: 'Read Time'
           // cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         }),
-        columnHelper.accessor('action', {
-          header: 'Action',
-          cell: ({ row }) => (
-            <div className='flex items-center'>
-              <>
-                <Tooltip title='Delete'>
-                  <IconButton size='small'>
-                    <i className='ri-delete-bin-7-line text-red-600' />
-                  </IconButton>
-                </Tooltip>
-              </>
-            </div>
-          )
-        })
+        // columnHelper.accessor('action', {
+        //   header: 'Action',
+        //   cell: ({ row }) => (
+        //     <div className='flex items-center'>
+        //       <>
+        //         <Tooltip title='Delete'>
+        //           <IconButton size='small'>
+        //             <i className='ri-delete-bin-7-line text-red-600' />
+        //           </IconButton>
+        //         </Tooltip>
+        //       </>
+        //     </div>
+        //   )
+        // })
       ]
     } else if (selectedChannel === 'sms') {
       return [
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('full_name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
         }),
         columnHelper.accessor('hours', {
           header: 'Phone',
@@ -208,13 +209,40 @@ const CampaignViewLogDialog = ({
           header: 'Message',
           cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('sent_time', {
           header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
         }),
-        columnHelper.accessor('hours', {
+         columnHelper.accessor('status', {
           header: 'Status',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => {
+            const status = String(row.original.status || '').toLowerCase()
+
+            // Status → Icon + Color mapping
+            const statusMap = {
+              queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
+              send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
+              fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
+              open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+            }
+
+            // Fallback if status doesn't match
+            const { icon, color } = statusMap[status] || {
+              icon: 'ri-question-line',
+              color: 'text-gray-500',
+              label: row.original.status || 'Unknown'
+            }
+
+            return (
+              <div className='flex items-center gap-2'>
+                <Tooltip title={row.original.status}>
+                  <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
+                    <i className={`${icon} text-lg`} />
+                  </span>
+                </Tooltip>
+              </div>
+            )
+          }
         }),
         columnHelper.accessor('hours', {
           header: 'delivered Time',
@@ -223,25 +251,52 @@ const CampaignViewLogDialog = ({
       ]
     } else if (selectedChannel === 'push_notification') {
       return [
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('full_name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
         }),
-        columnHelper.accessor('hours', {
-          header: 'Phone',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        }),
+        // columnHelper.accessor('hours', {
+        //   header: 'Phone',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // }),
         columnHelper.accessor('hours', {
           header: 'Message',
           cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('sent_time', {
           header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
         }),
-        columnHelper.accessor('hours', {
+         columnHelper.accessor('status', {
           header: 'Status',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => {
+            const status = String(row.original.status || '').toLowerCase()
+
+            // Status → Icon + Color mapping
+            const statusMap = {
+              queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
+              send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
+              fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
+              open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+            }
+
+            // Fallback if status doesn't match
+            const { icon, color } = statusMap[status] || {
+              icon: 'ri-question-line',
+              color: 'text-gray-500',
+              label: row.original.status || 'Unknown'
+            }
+
+            return (
+              <div className='flex items-center gap-2'>
+                <Tooltip title={row.original.status}>
+                  <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
+                    <i className={`${icon} text-lg`} />
+                  </span>
+                </Tooltip>
+              </div>
+            )
+          }
         }),
         columnHelper.accessor('hours', {
           header: 'delivered Time',

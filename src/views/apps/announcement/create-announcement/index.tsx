@@ -215,7 +215,7 @@ const AnnouncementCreatePage = () => {
                     {/* Description */}
                     <Grid item xs={12}>
                       <Typography className='mbe-1'>Description (Optional)</Typography>
-                      <Card>
+                      <Card className='shadow-none border border-gray-100'>
                         <CardContent>
                           <div className='bg-white rounded-xl'>
                             <MyCKEditor value={description} onChange={setDescription} settingMode={settings.mode} />
@@ -285,7 +285,7 @@ const AnnouncementSkeleton = () => {
           {/* Description Editor */}
           <Grid item xs={12}>
             <Typography className='mbe-1'>Description (Optional)</Typography>
-            <Card className='p-0shadow-none' sx={{ mt: 1 }}>
+            <Card className='p-0 shadow-none' sx={{ mt: 1 }}>
               <div className='bg-white rounded-xl shadow p-4'>
                 <Skeleton variant='rectangular' height={380} sx={{ borderRadius: 1 }} />
               </div>
