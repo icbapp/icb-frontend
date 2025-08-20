@@ -213,10 +213,14 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const permissions = useSelector((state: RootState) => state.sidebarPermission)
   const adminStore = useSelector((state: RootState) => state.admin)
   const [statuConnected, setStatusConnected] = useState(0)
+  const [dataBaseConnect, setDataBaseConnect] = useState(0)  
   const [roleName, setRoleName] = useState<{ id: string | number; name: string }[]>([])
   useEffect(() => {
     api.get(`${endPointApi.microsoftAuthTokenValide}`).then(response => {
       setStatusConnected(response.data.satus)
+    })
+    api.get(`${endPointApi.getConnectionView}`).then(response => {
+      setDataBaseConnect(response.data.data[0].status_view)
     })
   }, [])
 
@@ -964,6 +968,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                             onChange={handleStatusChange}
                             onSync={SyncMicrosoftUser}
                             statuConnected={statuConnected}
+                            dataBaseConnect={dataBaseConnect}
                           />
                         }
                       />
@@ -1133,9 +1138,10 @@ interface StatusOptionMenuProps {
   onChange?: (status: 'active' | 'inactive') => void
   onSync?: () => void
   statuConnected: Number
+  dataBaseConnect: Number
 }
 
-const StatusOptionMenu: React.FC<StatusOptionMenuProps> = ({ onChange, onSync, statuConnected }) => {
+const StatusOptionMenu: React.FC<StatusOptionMenuProps> = ({ onChange, onSync, statuConnected, dataBaseConnect }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
 
@@ -1197,6 +1203,15 @@ const StatusOptionMenu: React.FC<StatusOptionMenuProps> = ({ onChange, onSync, s
               <img src='/images/logos/Microsoft-Icon.png' alt='Microsoft' className='w-[17px] h-[17px]' />
             </CustomAvatar>
             Sync With Microsoft
+          </MenuItem>
+        )}
+        {dataBaseConnect === 1 && (
+          <MenuItem onClick={handleSync}>
+            <CustomAvatar color='info' skin='light' variant='rounded' size={25}>
+              {/* <img src='/images/logos/Microsoft-Icon.png' alt='Microsoft' className='w-[17px] h-[17px]' /> */}
+              <i className={classnames('ri-database-line', 'text-[16px]')} />
+            </CustomAvatar>
+            Connect
           </MenuItem>
         )}
       </Menu>
