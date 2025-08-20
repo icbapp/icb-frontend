@@ -131,7 +131,6 @@ const Login = ({ mode }: { mode: Mode }) => {
     formData.append('username', data.username);
     formData.append('password', data.password);
     formData.append('tenant_id', adminStore?.tenant_id || '');
-    // formData.append('tenant_id', "myschool" || '');
 
     api.post(`${endPointApi.login}`, formData, {
       headers: {
