@@ -93,6 +93,7 @@ const CreateCampaign = () => {
   const [connectDataLack, setConnectDataLack] = useState('')
   const [loadingDataLack, setloadingDataLack] = useState(false)
   const [isLoading, setisLoading] = useState(false)
+  const [loaderMain, setloaderMain] = useState(false)
 
   const isRecurring = mode === 'recurring'
 
@@ -256,7 +257,7 @@ const CreateCampaign = () => {
   }, [selectedLabels, ids])
 
   const fetchEditCampign = async () => {
-    // setloaderMain(true)
+    setloaderMain(true)
     try {
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
@@ -264,33 +265,36 @@ const CreateCampaign = () => {
           campaign_id: ids
         }
       })
-
-      if (Array.isArray(res?.data?.role_only)) {
-        const selected = res.data.role_only.map((item: any) => ({
-          id: item.role_id,
-          name: item.role_name
+      if (res.data.status === 200) {
+        if (Array.isArray(res?.data?.role_only)) {
+          const selected = res.data.role_only.map((item: any) => ({
+            id: item.role_id,
+            name: item.role_name
+          }))
+          setSelectedLabels(selected)
+          setSelectedLabelsDataLack(selected)
+        }
+        const formatted = res.data.column_name.split(',').map(val => ({
+          id: val,
+          name: val
         }))
-        setSelectedLabels(selected)
-        setSelectedLabelsDataLack(selected)
+        setSelectedData(res.data.users)
+        setNote(res.data.note)
+        setStatus(res.data.campaign_status)
+        setMode(res.data.publish_mode)
+        setScheduleType(res.data.schedule)
+        setRecurringCount(res.data.frequency_count)
+        setRecurringType(res.data.frequency_type)
+        setSelectedChannel(res.data.channels)
+        setStartDateTime(dayjs(res.data.campaign_date + ' ' + res.data.formatted_campaign_time))
+        setAnnouncementTitle(res.data.announcement.title)
+        setFilterWishSelectedLabelsDataLack(formatted)
+        setloaderMain(false)
       }
-      const formatted = res.data.column_name.split(',').map(val => ({
-        id: val,
-        name: val
-      }))
-      setSelectedData(res.data.users)
-      setNote(res.data.note)
-      setStatus(res.data.campaign_status)
-      setMode(res.data.publish_mode)
-      setScheduleType(res.data.schedule)
-      setRecurringCount(res.data.frequency_count)
-      setRecurringType(res.data.frequency_type)
-      setSelectedChannel(res.data.channels)
-      setStartDateTime(dayjs(res.data.campaign_date + ' ' + res.data.formatted_campaign_time))
-      setAnnouncementTitle(res.data.announcement.title)
-      setFilterWishSelectedLabelsDataLack(formatted)
     } catch (err: any) {
       if (err.response?.status === 500) {
         toast.error('Internal Server Error.')
+        setloaderMain(false)
       }
     }
   }
@@ -508,7 +512,7 @@ const CreateCampaign = () => {
 
       const body = {
         roles: select,
-        column_name: selectColumn,
+        column_name: filterWishSelectedLabelsDataLack,
         tenant_id: adminStore.tenant_id,
         school_id: adminStore.school_id.toString(),
         page: 1,
@@ -521,12 +525,17 @@ const CreateCampaign = () => {
         setSelectedData(res.data.data)
       } else {
         console.warn('Unexpected response:', res.data)
+        // setFilterWishSelectedLabelsDataLack([])
+        // setFilterWishDataLack([])
+
         // Optionally: ShowErrorToast(res.data.message)
       }
     } catch (err: any) {
       console.error('Error fetching data:', err)
     } finally {
       setisLoading(false)
+      // setFilterWishSelectedLabelsDataLack([])
+      // setFilterWishDataLack([])
     }
   }
 
@@ -535,6 +544,16 @@ const CreateCampaign = () => {
       goFilterData()
     }
   }, [])
+
+  const groupedData = filterWishDataLack.reduce((acc: any, item) => {
+    if (!acc[item.rol_name]) acc[item.rol_name] = []
+    acc[item.rol_name].push(item)
+    return acc
+  }, {})
+
+  const handleSelect = (id: number) => {
+    setFilterWishSelectedLabelsDataLack(prev => (prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]))
+  }
   return (
     <>
       {isLoading && <Loader />}
@@ -597,34 +616,82 @@ const CreateCampaign = () => {
           ) : connectDataLack ? (
             <>
               <Grid item xs={12} md={12}>
-                <Stack direction='row' spacing={2} alignItems='center'>
-                  <Autocomplete
-                    multiple
-                    disableCloseOnSelect
-                    options={rolesListDataLack}
-                    getOptionLabel={option => option.name}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    value={selectedLabelsDataLack}
-                    onChange={(event, newValue) => handleFilterChangeDataLack(newValue)}
-                    sx={{ width: 300 }}
-                    renderInput={params => <TextField {...params} label='Select Roles' />}
-                  />
+                <Stack spacing={3}>
+                  {/* Top Row: Role Select + Go Button */}
+                  <Stack direction='row' spacing={2} alignItems='center'>
+                    <Autocomplete
+                      multiple
+                      disableCloseOnSelect
+                      options={rolesListDataLack}
+                      getOptionLabel={option => option.name}
+                      isOptionEqualToValue={(option, value) => option.id === value.id}
+                      value={selectedLabelsDataLack}
+                      onChange={(event, newValue) => handleFilterChangeDataLack(newValue)}
+                      sx={{ width: 600 }}
+                      renderInput={params => <TextField {...params} label='Select Roles' />}
+                    />
 
-                  <Autocomplete
-                    multiple
-                    disableCloseOnSelect
-                    options={filterWishDataLack}
-                    getOptionLabel={option => option.name}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    value={filterWishSelectedLabelsDataLack}
-                    onChange={(event, newValue) => handleFilterRoleUserChangeDataLack(newValue)}
-                    sx={{ width: 300 }}
-                    renderInput={params => <TextField {...params} label='Select Filter' />}
-                  />
+                    <Button variant='contained' onClick={goFilterData} sx={{ height: 52 }}>
+                      Go
+                    </Button>
+                  </Stack>
 
-                  <Button variant='contained' onClick={goFilterData}>
-                    Go
-                  </Button>
+                  {/* Role-wise Filters */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                      p: 2,
+                      border: '1px solid #e0e0e0',
+                      borderRadius: 2,
+                      backgroundColor: '#fafafa'
+                    }}
+                  >
+                    {Object.keys(groupedData).map(role => {
+                      // agar role ka data empty hai to skip karo
+                      if (!groupedData[role] || groupedData[role].length === 0) {
+                        return null
+                      }
+
+                      return (
+                        <Box key={role}>
+                          <Typography variant='h6' sx={{ mb: 1, fontWeight: 'bold', color: 'text.primary', ml: 2 }}>
+                            {role.toUpperCase()}
+                          </Typography>
+
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            {groupedData[role].map((item: any) => (
+                              <Button
+                                key={item.id}
+                                variant={filterWishSelectedLabelsDataLack.includes(item.id) ? 'contained' : 'outlined'}
+                                size='small'
+                                color={filterWishSelectedLabelsDataLack.includes(item.id) ? 'error' : 'inherit'}
+                                sx={{
+                                  borderRadius: '20px',
+                                  textTransform: 'none',
+                                  borderColor: filterWishSelectedLabelsDataLack.includes(item.id) ? '#1f5634' : 'gray',
+                                  backgroundColor: filterWishSelectedLabelsDataLack.includes(item.id)
+                                    ? '#1f5634'
+                                    : 'transparent',
+                                  color: filterWishSelectedLabelsDataLack.includes(item.id) ? 'white' : 'inherit',
+                                  '&:hover': {
+                                    borderColor: '#1f5634',
+                                    backgroundColor: filterWishSelectedLabelsDataLack.includes(item.id)
+                                      ? '#144327'
+                                      : 'rgba(31, 86, 52, 0.08)'
+                                  }
+                                }}
+                                onClick={() => handleSelect(item.id)}
+                              >
+                                {item.name}
+                              </Button>
+                            ))}
+                          </Box>
+                        </Box>
+                      )
+                    })}
+                  </Box>
                 </Stack>
               </Grid>
             </>
@@ -647,22 +714,29 @@ const CreateCampaign = () => {
       </Card>
       <Card sx={{ mt: 4 }}>
         <Box p={6} position='relative'>
-          <TextField
-            label='Note'
-            placeholder='Note.....'
-            value={note}
-            onChange={e => {
-              if (e.target.value?.length <= 100) {
-                setNote(e.target.value)
-              }
-            }}
-            fullWidth
-            multiline
-            minRows={2}
-            error={note?.length > 100}
-            helperText={`${note?.length || 0}/100 characters`}
-          />
-
+          {loadingDataLack ? (
+            <Grid container spacing={2}>
+              <Grid item>
+                <Skeleton variant='rectangular' width={1340} height={60} className='rounded-md' />
+              </Grid>
+            </Grid>
+          ) : (
+            <TextField
+              label='Note'
+              placeholder='Note.....'
+              value={note}
+              onChange={e => {
+                if (e.target.value?.length <= 100) {
+                  setNote(e.target.value)
+                }
+              }}
+              fullWidth
+              multiline
+              minRows={2}
+              error={note?.length > 100}
+              helperText={`${note?.length || 0}/100 characters`}
+            />
+          )}
           {/* Icon positioned at bottom right */}
           <Box
             position='absolute'
@@ -1026,11 +1100,12 @@ const CreateCampaign = () => {
           <Box display='flex' alignItems='center' gap={2} width='100%'>
             {/* Left-side buttons */}
             <Button
-              variant='contained'
+              // variant='contained'
               onClick={() => launchCampaign('draft')}
               disabled={status === 'stop' || status === 'in_progress' || status === 'done'}
+              style={{ backgroundColor: '#8d8d8dff', color: 'white' }}
             >
-              Draft
+              Save as Draft
             </Button>
             <Button
               variant='contained'
@@ -1044,6 +1119,17 @@ const CreateCampaign = () => {
                 variant='contained'
                 onClick={() => launchCampaign(status === 'stop' ? 'in_progress' : 'stop')}
                 disabled={status === 'done'}
+                sx={{
+                  backgroundColor: status !== 'stop' ? '#c40c0c' : '#1f5634',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: status !== 'stop' ? '#a80808' : '#144d28'
+                  },
+                  '&.Mui-disabled': {
+                    backgroundColor: '#e0e0e0',
+                    color: '#a0a0a0'
+                  }
+                }}
               >
                 {status === 'stop' ? 'Continue' : 'Stop'}
               </Button>

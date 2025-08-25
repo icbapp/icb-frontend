@@ -77,6 +77,7 @@ import DeleteGialog from '@/comman/dialog/DeleteDialog'
 import ConfirmDialog from '@/comman/dialog/ConfirmDialog'
 import { api } from '@/utils/axiosInstance'
 import endPointApi from '@/utils/endPointApi'
+import CircularProgress, { CircularProgressProps } from '@mui/material/CircularProgress'
 
 const MenuProps = {
   PaperProps: {
@@ -210,6 +211,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [searchData, setSearchData] = useState<string>('')
   const [selectedUser, setSelectedUser] = useState<any>(null) // ideally type this
   const [loading, setLoading] = useState(false)
+  const [loadingSyn, setLoadingsync] = useState(false)
   const [totalRows, setTotalRows] = useState(0)
   const [totalUser, setTotalUser] = useState<{ active_count: number; inactive_count: number }>({
     active_count: 0,
@@ -734,9 +736,67 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     }
   }
 
+  const [progress, setProgress] = useState(10)
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (loading) {
+      setProgress(0)
+      timer = setInterval(() => {
+        setProgress(prev => (prev >= 100 ? 1 : prev + 1))
+      }, 80)
+    } else {
+      clearInterval(timer)
+      setProgress(0) // reset
+    }
+    return () => clearInterval(timer)
+  }, [loading])
+
   return (
     <>
-      {/* {loading && <Loader />} */}
+      {loading && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999
+          }}
+        >
+          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+            <CircularProgress
+              variant='determinate'
+              value={progress}
+              size={64} // same size as w-16 h-16
+              thickness={4} // same as border-4
+            />
+            <Box
+              sx={{
+                top: 0,
+                left: 0,
+                bottom: 0,
+                right: 0,
+                position: 'absolute',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Typography
+                variant='caption'
+                component='div'
+                sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 500 }}
+              >
+                {`${Math.round(progress)}%`}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
+
       <Grid container spacing={6} sx={{ mt: 0, mb: 5 }}>
         {/* Active Users */}
         <Grid item xs={12} sm={12} md={6} lg={6} className='pt-0'>

@@ -11,7 +11,7 @@ import {
   themeQuartz,
   ColDef
 } from 'ag-grid-community'
-import { ColumnMenuModule, ColumnsToolPanelModule, ContextMenuModule, RowGroupingModule } from 'ag-grid-enterprise'
+import { ColumnMenuModule, ColumnsToolPanelModule, ContextMenuModule, RowGroupingModule,SetFilterModule } from 'ag-grid-enterprise'
 import { ModuleRegistry } from 'ag-grid-community'
 import { RowApiModule } from 'ag-grid-community'
 import { IconButton, Tooltip } from '@mui/material'
@@ -27,6 +27,7 @@ ModuleRegistry.registerModules([
   RowSelectionModule,
   PaginationModule,
   RowApiModule,
+  SetFilterModule,
   ...(process.env.NODE_ENV !== 'production' ? [ValidationModule] : [])
 ])
 
@@ -73,7 +74,7 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack }: Props) 
   useEffect(() => {
     if (selectedData && selectedData.length > 0) {
       const dynamicCols: ColDef[] = Object.keys(selectedData[0])
-        .filter((key: string) => key !== 'user_id' && key !== 'role_name')
+        .filter((key: string) => key !== 'user_id' && key !== 'role_name' && key !== 'check' && key !== 'id' && key !== 'school_id' && key !== 'role_id' && key !== 'tenant_id')
         .map(key => ({
           field: key,
           headerName: key.replace(/_/g, ' ').toUpperCase()
@@ -82,7 +83,8 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack }: Props) 
       dynamicCols.unshift({
         field: 'role_name',
         rowGroup: true,
-        hide: true
+        hide: true,
+        filter: true
       })
 
       setColumn(dynamicCols)

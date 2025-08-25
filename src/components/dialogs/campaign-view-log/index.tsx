@@ -403,8 +403,12 @@ const CampaignViewLogDialog = ({
       {/* {loading && <Loader />} */}
 
       <DialogTitle className='flex flex-col gap-1 text-center'>
-        <span className='text-xl font-semibold'>View Log ({channelMap[selectedChannel] || ''})</span>
+        <span className='text-xl font-semibold'>Campaign Performance Logs ({channelMap[selectedChannel] || ''})</span>
+        <hr className="my-2 border-t border-gray-300" />
         <div className='flex justify-center gap-4 text-sm'>
+          <div className='flex items-center gap-1'>
+            Status of delivery : 
+          </div>
           <div className='flex items-center gap-1 text-yellow-500'>
             <i className='ri-time-line' /> Queued
           </div>

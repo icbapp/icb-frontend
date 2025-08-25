@@ -185,7 +185,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
 
       columnHelper.accessor('total_campaigns', {
-        header: 'No of Cam.'
+        header: 'Campaigns'
       }),
 
       columnHelper.accessor('created_at', {
