@@ -79,11 +79,12 @@ interface UsersTypeWithAction {
 }
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
-const statusStyles = {
-  Queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
-  Send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
-  Fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
-  Open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+type StatusType = 'queued' | 'send' | 'fails' | 'open'
+
+type StatusInfo = {
+  icon: string
+  color: string
+  label: string
 }
 
 const CampaignViewLogDialog = ({
@@ -138,20 +139,17 @@ const CampaignViewLogDialog = ({
           cell: ({ row }) => {
             const status = String(row.original.status || '').toLowerCase()
 
-            // Status → Icon + Color mapping
-            const statusMap = {
+            const statusMap: Record<StatusType, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
               send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
               fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
               open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
             }
 
-            // Fallback if status doesn't match
-            const { icon, color } = statusMap[status] || {
-              icon: 'ri-question-line',
-              color: 'text-gray-500',
-              label: row.original.status || 'Unknown'
-            }
+            const { icon, color, label } =
+              status in statusMap
+                ? statusMap[status as StatusType]
+                : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
 
             return (
               <div className='flex items-center gap-2'>
@@ -179,7 +177,7 @@ const CampaignViewLogDialog = ({
         columnHelper.accessor('read_time', {
           header: 'Read Time'
           // cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        }),
+        })
         // columnHelper.accessor('action', {
         //   header: 'Action',
         //   cell: ({ row }) => (
@@ -213,25 +211,22 @@ const CampaignViewLogDialog = ({
           header: 'SentTime',
           cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
         }),
-         columnHelper.accessor('status', {
+        columnHelper.accessor('status', {
           header: 'Status',
           cell: ({ row }) => {
             const status = String(row.original.status || '').toLowerCase()
 
-            // Status → Icon + Color mapping
-            const statusMap = {
+            const statusMap: Record<StatusType, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
               send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
               fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
               open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
             }
 
-            // Fallback if status doesn't match
-            const { icon, color } = statusMap[status] || {
-              icon: 'ri-question-line',
-              color: 'text-gray-500',
-              label: row.original.status || 'Unknown'
-            }
+            const { icon, color, label } =
+              status in statusMap
+                ? statusMap[status as StatusType]
+                : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
 
             return (
               <div className='flex items-center gap-2'>
@@ -267,25 +262,22 @@ const CampaignViewLogDialog = ({
           header: 'SentTime',
           cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
         }),
-         columnHelper.accessor('status', {
+        columnHelper.accessor('status', {
           header: 'Status',
           cell: ({ row }) => {
             const status = String(row.original.status || '').toLowerCase()
 
-            // Status → Icon + Color mapping
-            const statusMap = {
+            const statusMap: Record<StatusType, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
               send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
               fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
               open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
             }
 
-            // Fallback if status doesn't match
-            const { icon, color } = statusMap[status] || {
-              icon: 'ri-question-line',
-              color: 'text-gray-500',
-              label: row.original.status || 'Unknown'
-            }
+            const { icon, color, label } =
+              status in statusMap
+                ? statusMap[status as StatusType]
+                : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
 
             return (
               <div className='flex items-center gap-2'>
@@ -466,11 +458,11 @@ const CampaignViewLogDialog = ({
               }
               onPageChange={(_, newPage) => {
                 if (selectedChannel === 'email') {
-                  setPaginationEmail(prev => ({ ...prev, page: newPage }))
+                  setPaginationEmail((prev: any) => ({ ...prev, page: newPage }))
                 } else if (selectedChannel === 'push_notification') {
-                  setPaginationNotification(prev => ({ ...prev, page: newPage }))
+                  setPaginationNotification((prev: any) => ({ ...prev, page: newPage }))
                 } else {
-                  setPaginationSms(prev => ({ ...prev, page: newPage }))
+                  setPaginationSms((prev: any) => ({ ...prev, page: newPage }))
                 }
               }}
               onRowsPerPageChange={newSize => {

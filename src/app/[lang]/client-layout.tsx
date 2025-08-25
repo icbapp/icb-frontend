@@ -133,7 +133,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     formData.append('type', hostNameData)
     
     try {
-      const res = await fetch(baseURL, {
+      const res = await fetch(`${baseURL}test-domain`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'

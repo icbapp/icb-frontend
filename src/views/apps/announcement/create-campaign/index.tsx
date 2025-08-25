@@ -56,7 +56,7 @@ const CreateCampaign = () => {
   const [status, setStatus] = useState('One Time')
   const [mode, setMode] = useState('One Time')
   const [scheduleType, setScheduleType] = useState('Now')
-  const [recurringCount, setRecurringCount] = useState(5)
+  const [recurringCount, setRecurringCount] = useState<string>('')
   const [recurringType, setRecurringType] = useState('month')
   const [note, setNote] = useState('')
   const [announcementTitle, setAnnouncementTitle] = useState('')
@@ -119,7 +119,7 @@ const CreateCampaign = () => {
     }
   ]
 
-  const channelMap = {
+  const channelMap: Record<string, string> = {
     wp: 'WhatsApp',
     push_notification: 'Mobile App Notification',
     email: 'Email',
@@ -236,11 +236,12 @@ const CreateCampaign = () => {
   useEffect(() => {
     fetchEditCampign()
   }, [ids])
-  console.log("recurringCount",recurringCount);
-  
+
   const launchCampaign = async (status: string) => {
     try {
-      if (recurringCount < 2 || recurringCount > 99 || recurringCount == '' || recurringCount == undefined) {
+      const repeatNum = Number(recurringCount)
+
+      if (!recurringCount || isNaN(repeatNum) || repeatNum < 2 || repeatNum > 99) {
         setError('Please enter a number between 2 and 99')
       }
 
@@ -249,7 +250,7 @@ const CreateCampaign = () => {
         return
       }
 
-      if (selectedChannel === '' || selectedChannel == undefined) {
+      if (!selectedChannel || selectedChannel == undefined) {
         ShowErrorToast('The Communication Channels required.')
         return
       }
@@ -283,7 +284,7 @@ const CreateCampaign = () => {
         publish_mode: mode,
         schedule: scheduleType || '',
         frequency_count: recurringCount || 0,
-         campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
+        campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
         campaign_time: time,
         campaign_ampm: timeampm,
         role_ids: '1'
@@ -291,12 +292,16 @@ const CreateCampaign = () => {
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
       if (response.data.status === 200) {
         ShowSuccessToast(response.data.message)
-        router.replace(
-          getLocalizedUrl(
-            `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
-            locale as Locale
+        if (announcementId) {
+          router.replace(
+            getLocalizedUrl(
+              `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId))}`,
+              locale as Locale
+            )
           )
-        )
+        } else {
+          ShowErrorToast('Invalid announcementId')
+        }
       }
     } catch (error: any) {
       if (error.response?.status === 500) {
@@ -309,7 +314,7 @@ const CreateCampaign = () => {
   type StatusType = (typeof statuses)[number]
 
   const scheduleDates = []
-  const maxDates = Math.min(recurringCount, 5) // ✅ limit to 5
+  const maxDates = Math.min(Number(recurringCount), 5) // ✅ limit to 5
   console.log('startDateTime', startDateTime)
 
   for (let i = 0; i < maxDates; i++) {
@@ -347,7 +352,7 @@ const CreateCampaign = () => {
   }
 
   const getViewLog = async () => {
-    if (selectedChannel === 'email') {
+    if (selectedChannel.includes('email')) {
       const formdata = new FormData()
 
       formdata.append('announcement_id', announcementId || '')
@@ -374,7 +379,7 @@ const CreateCampaign = () => {
   }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
 
   const getNotificationViewLog = async () => {
-    if (selectedChannel === 'push_notification') {
+    if (selectedChannel.includes('push_notification')) {
       const formdata = new FormData()
 
       formdata.append('announcement_id', announcementId || '')
@@ -409,7 +414,7 @@ const CreateCampaign = () => {
             onClick={() =>
               router.replace(
                 getLocalizedUrl(
-                  `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
+                  `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId ?? ''))}`,
                   locale as Locale
                 )
               )
@@ -606,7 +611,13 @@ const CreateCampaign = () => {
                     fullWidth
                     inputProps={{ min: 1, max: 10 }}
                     value={recurringCount}
-                    onChange={e => setRecurringCount(Number(e.target.value))}
+                    onChange={e => {
+                      const value = e.target.value
+                      if (value === '' || /^[0-9\b]+$/.test(value)) {
+                        setRecurringCount(value)
+                        setError('')
+                      }
+                    }}
                     InputProps={{
                       endAdornment: <InputAdornment position='end'>times</InputAdornment>
                     }}
@@ -757,7 +768,7 @@ const CreateCampaign = () => {
                     repeat once a day for{' '}
                     <b>
                       {recurringCount} {recurringType}
-                      {recurringCount > 1 ? `'s` : ''}
+                      {Number(recurringCount) > 1 ? `'s` : ''}
                     </b>
                     .
                   </>
@@ -779,7 +790,7 @@ const CreateCampaign = () => {
                     . and will repeat once a day for{' '}
                     <b>
                       {recurringCount} {recurringType}
-                      {recurringCount > 1 ? `'s` : ''}
+                      {Number(recurringCount) > 1 ? `'s` : ''}
                     </b>
                     .
                   </>
@@ -863,7 +874,7 @@ const CreateCampaign = () => {
               onClick={() =>
                 router.replace(
                   getLocalizedUrl(
-                    `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId)) || ''}`,
+                    `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId ?? ''))}`,
                     locale as Locale
                   )
                 )
