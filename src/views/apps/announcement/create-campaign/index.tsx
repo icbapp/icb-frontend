@@ -59,12 +59,11 @@ const CreateCampaign = () => {
   const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState([])
   const [filterWishDataLack, setFilterWishDataLack] = useState<RoleOption[]>([])
   const [filterWishSelectedLabelsDataLack, setFilterWishSelectedLabelsDataLack] = useState([])
-  console.log('filterWishDataLack', filterWishDataLack)
 
   const [selectedIds, setSelectedIds] = useState([])
   const [status, setStatus] = useState('One Time')
-  const [mode, setMode] = useState('One Time')
-  const [scheduleType, setScheduleType] = useState('Now')
+  const [mode, setMode] = useState('one_time')
+  const [scheduleType, setScheduleType] = useState('now')
   const [recurringCount, setRecurringCount] = useState<string>('')
   const [recurringType, setRecurringType] = useState('month')
   const [note, setNote] = useState('')
@@ -75,6 +74,11 @@ const CreateCampaign = () => {
   const [viewEmailLog, setViewEmailLog] = useState([])
   const [viewNotificationLog, setViewNotificationLog] = useState([])
   const [error, setError] = useState('')
+  const [errorMode, setErrorMode] = useState('')
+  //   const [error, setError] = useState({
+  //   message: '',
+  //   mode: ''
+  // })
   const [paginationInfoLog, setPaginationInfoLog] = useState({
     page: 0,
     perPage: 10
@@ -200,7 +204,6 @@ const CreateCampaign = () => {
   }, [])
 
   const fetchFilterDataLack = async () => {
-    
     setisLoading(true)
     try {
       const select = selectedLabelsDataLack.map((val: any) => val.id)
@@ -226,8 +229,10 @@ const CreateCampaign = () => {
     }
   }
 
-  useEffect(() => {
-    fetchFilterDataLack()
+  useEffect(() => { 
+    if (selectedLabelsDataLack.length > 0) {
+      fetchFilterDataLack()
+    }
   }, [selectedLabelsDataLack])
 
   useEffect(() => {
@@ -307,7 +312,11 @@ const CreateCampaign = () => {
         return
       }
 
-      if (!selectedChannel || selectedChannel == undefined) {
+      if (mode === '') {
+        ShowErrorToast('Please select publishing mode.')
+        return
+      }
+      if (selectedChannel.length == 0 || !selectedChannel || selectedChannel == undefined) {
         ShowErrorToast('The Communication Channels required.')
         return
       }
@@ -515,7 +524,9 @@ const CreateCampaign = () => {
   }
 
   useEffect(() => {
-    goFilterData()
+    if(selectedLabelsDataLack.length > 0){
+      goFilterData()
+    }
   }, [])
   return (
     <>

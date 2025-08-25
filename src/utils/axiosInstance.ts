@@ -39,7 +39,6 @@ apiAdminInstance.interceptors.response.use(
   },
   error => {
     const { response } = error;
-    console.log("throw", response);
   
     if (response.status === 401) {
       localStorage.removeItem('auth_token');
