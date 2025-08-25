@@ -39,6 +39,7 @@ import {
   scheduleTypeDropDown
 } from '@/comman/dropdownOptions/DropdownOptions'
 import { ShowErrorToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
+import Loader from '@/components/Loader'
 
 const CreateCampaign = () => {
   const router = useRouter()
@@ -58,6 +59,7 @@ const CreateCampaign = () => {
   const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState([])
   const [filterWishDataLack, setFilterWishDataLack] = useState<RoleOption[]>([])
   const [filterWishSelectedLabelsDataLack, setFilterWishSelectedLabelsDataLack] = useState([])
+  console.log('filterWishDataLack', filterWishDataLack)
 
   const [selectedIds, setSelectedIds] = useState([])
   const [status, setStatus] = useState('One Time')
@@ -86,6 +88,7 @@ const CreateCampaign = () => {
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
   const [connectDataLack, setConnectDataLack] = useState('')
   const [loadingDataLack, setloadingDataLack] = useState(false)
+  const [isLoading, setisLoading] = useState(false)
 
   const isRecurring = mode === 'recurring'
 
@@ -197,19 +200,30 @@ const CreateCampaign = () => {
   }, [])
 
   const fetchFilterDataLack = async () => {
-    const select = selectedLabelsDataLack.map((val: any) => val.id)
+    
+    setisLoading(true)
+    try {
+      const select = selectedLabelsDataLack.map((val: any) => val.id)
 
-    const body = {
-      roles: select
+      const body = {
+        roles: select
+      }
+
+      const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
+
+      if (res.data.status === 'success') {
+        const filterData: RoleOption[] = res.data.filters.map((r: any) => ({
+          id: r.column_name,
+          name: r.filter_name,
+          rol_name: r.rol_name
+        }))
+        setFilterWishDataLack(filterData)
+      }
+    } catch (err) {
+      console.error('Error fetching filter data:', err)
+    } finally {
+      setisLoading(false)
     }
-    const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
-    const filterData: RoleOption[] = res.data.filters.map((r: any) => ({
-      id: r.column_name,
-      name: r.filter_name,
-      rol_name: r.rol_name
-    }))
-
-    setFilterWishDataLack(filterData)
   }
 
   useEffect(() => {
@@ -245,7 +259,6 @@ const CreateCampaign = () => {
           campaign_id: ids
         }
       })
-      console.log('resres', [res.data.column_name])
 
       if (Array.isArray(res?.data?.role_only)) {
         const selected = res.data.role_only.map((item: any) => ({
@@ -471,19 +484,34 @@ const CreateCampaign = () => {
   }, [])
 
   const goFilterData = async () => {
-    const select = selectedLabelsDataLack.map((val: any) => val.id)
-    const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
+    setisLoading(true)
 
-    const body = {
-      roles: select,
-      column_name: selectColumn,
-      tenant_id: adminStore.tenant_id,
-      school_id: adminStore.school_id.toString(),
-      page: 1,
-      per_page: 10
+    try {
+      const select = selectedLabelsDataLack.map((val: any) => val.id)
+      const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
+
+      const body = {
+        roles: select,
+        column_name: selectColumn,
+        tenant_id: adminStore.tenant_id,
+        school_id: adminStore.school_id.toString(),
+        page: 1,
+        per_page: 10
+      }
+
+      const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
+
+      if (res.data.status === 'success') {
+        setSelectedData(res.data.data)
+      } else {
+        console.warn('Unexpected response:', res.data)
+        // Optionally: ShowErrorToast(res.data.message)
+      }
+    } catch (err: any) {
+      console.error('Error fetching data:', err)
+    } finally {
+      setisLoading(false)
     }
-    const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
-    setSelectedData(res.data.data)
   }
 
   useEffect(() => {
@@ -491,6 +519,7 @@ const CreateCampaign = () => {
   }, [])
   return (
     <>
+      {isLoading && <Loader />}
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center justify-between gap-2 mb-1'>
         <span className='flex items-center gap-2'>
           <span
