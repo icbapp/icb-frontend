@@ -136,6 +136,13 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack }: Props) 
       }
     })
   }, [])
+  const onRowDataUpdated = useCallback((params: any) => {
+    params.api.forEachNode((node: any) => {
+      if (!node.group && node.data?.check === true) {
+        node.setSelected(true)
+      }
+    })
+  }, [])
 
   return (
     <>
@@ -161,6 +168,7 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack }: Props) 
               onSelectionChanged={handleSelectionChanged}
               groupIncludeFooter={true}
               onFirstDataRendered={onFirstDataRendered}
+              onRowDataUpdated={onRowDataUpdated}
               overlayNoRowsTemplate={'<span >Choose filters to display data</span>'}
             />
           </div>
