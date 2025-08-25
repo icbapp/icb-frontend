@@ -68,7 +68,7 @@ interface UsersTypeWithAction {
   id: number | string
   name: string
   email: string
-  status: 'failed'
+  status: string
   sent_time?: string
   sent_date?: string
   delivered_time?: string
@@ -79,7 +79,7 @@ interface UsersTypeWithAction {
 }
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
-type StatusType = 'queued' | 'send' | 'fails' | 'open'
+type StatusType = 'queued' | 'sending' | 'failed' | 'open'
 
 type StatusInfo = {
   icon: string
@@ -141,8 +141,8 @@ const CampaignViewLogDialog = ({
 
             const statusMap: Record<StatusType, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
-              send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
-              fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
+              sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
+              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
               open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
             }
 
@@ -218,8 +218,8 @@ const CampaignViewLogDialog = ({
 
             const statusMap: Record<StatusType, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
-              send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
-              fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
+              sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
+              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
               open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
             }
 
@@ -269,8 +269,8 @@ const CampaignViewLogDialog = ({
 
             const statusMap: Record<StatusType, StatusInfo> = {
               queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
-              send: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
-              fails: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
+              sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Sent' },
+              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
               open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
             }
 
@@ -409,7 +409,7 @@ const CampaignViewLogDialog = ({
             <i className='ri-time-line' /> Queued
           </div>
           <div className='flex items-center gap-1 text-blue-500'>
-            <i className='ri-send-plane-line' /> Sent
+            <i className='ri-send-plane-line' /> Send
           </div>
           <div className='flex items-center gap-1 text-red-500'>
             <i className='ri-close-circle-line' /> Failed

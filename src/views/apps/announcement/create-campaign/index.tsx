@@ -229,7 +229,7 @@ const CreateCampaign = () => {
     }
   }
 
-  useEffect(() => { 
+  useEffect(() => {
     if (selectedLabelsDataLack.length > 0) {
       fetchFilterDataLack()
     }
@@ -301,6 +301,7 @@ const CreateCampaign = () => {
 
   const launchCampaign = async (status: string) => {
     try {
+      setisLoading(true)
       const repeatNum = Number(recurringCount)
 
       if (!recurringCount || isNaN(repeatNum) || repeatNum < 2 || repeatNum > 99) {
@@ -359,6 +360,7 @@ const CreateCampaign = () => {
       }
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
       if (response.data.status === 200) {
+        setisLoading(false)
         ShowSuccessToast(response.data.message)
         if (announcementId) {
           router.replace(
@@ -372,6 +374,7 @@ const CreateCampaign = () => {
         }
       }
     } catch (error: any) {
+      setisLoading(false)
       if (error.response?.status === 500) {
         ShowErrorToast('Internal Server Error.')
       }
@@ -524,7 +527,7 @@ const CreateCampaign = () => {
   }
 
   useEffect(() => {
-    if(selectedLabelsDataLack.length > 0){
+    if (selectedLabelsDataLack.length > 0) {
       goFilterData()
     }
   }, [])

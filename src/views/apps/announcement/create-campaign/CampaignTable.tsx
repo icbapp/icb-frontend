@@ -275,6 +275,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
               <Tooltip title='Edit'>
                 <IconButton
                   size='small'
+                  disabled={row.original.campaign_status_name === "Done"}
                   onClick={() =>
                     router.push(
                       `${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${encodeURIComponent(btoa(row.original.id))}`
