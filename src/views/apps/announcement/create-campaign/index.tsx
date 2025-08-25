@@ -1112,7 +1112,7 @@ const CreateCampaign = () => {
               onClick={() => launchCampaign('in_progress')}
               disabled={status === 'stop' || status === 'in_progress' || status === 'done'}
             >
-              In Progress
+              Ready to publish
             </Button>
             {ids && (
               <Button

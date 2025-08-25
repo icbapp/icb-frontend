@@ -156,7 +156,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [paginationSms, setPaginationSms] = useState({ page: 0, perPage: 10 })
   const [totalRowsSms, setTotalRowsSms] = useState(0)
 
-
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -165,6 +164,10 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [channelCounts, setChannelCounts] = useState<DataType[]>([])
   const [viewEmailLog, setViewEmailLog] = useState<EmailLogType[]>([])
   const [viewNotificationLog, setViewNotificationLog] = useState<EmailLogType[]>([])
+  const [loaderEmailView, setLoaderEmailView] = useState(false)
+  const [loaderNotifiView, setLoaderNotifiView] = useState(false)
+  const [loaderSmsView, setLoaderSmsView] = useState(false)
+  const [loaderWpView, setLoaderWpView] = useState(false)
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
@@ -275,7 +278,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
               <Tooltip title='Edit'>
                 <IconButton
                   size='small'
-                  disabled={row.original.campaign_status_name === "Done"}
+                  disabled={row.original.campaign_status_name === 'Done'}
                   onClick={() =>
                     router.push(
                       `${getLocalizedUrl('/apps/announcement/add-campaign', locale as Locale)}?id=${encodeURIComponent(btoa(row.original.id))}`
@@ -398,6 +401,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const getViewLog = async () => {
     if (channelName === 'email') {
+      setLoaderEmailView(true)
       const formdata = new FormData()
 
       formdata.append('announcement_id', ids || '')
@@ -409,22 +413,28 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         const res = await api.post(`${endPointApi.postCampaignEmailLogGet}`, formdata)
         setViewEmailLog(res.data)
         setTotalRowsEmail(res.data.total)
+        setLoaderEmailView(false)
       } catch (err: any) {
         if (err.response?.status === 500) {
           toast.error('Internal Server Error.')
+          setLoaderEmailView(false)
         } else {
           toast.error(err?.response?.data?.message || 'Something went wrong')
+          setLoaderEmailView(false)
         }
       }
     }
   }
 
   useEffect(() => {
-    getViewLog()
+    if (openDialog) {
+      getViewLog()
+    }
   }, [viewLogId, openDialog, paginationEmail.page, paginationEmail.perPage, globalFilter])
 
   const getNotificationViewLog = async () => {
     if (channelName === 'push_notification') {
+      setLoaderNotifiView(true)
       const formdata = new FormData()
 
       formdata.append('announcement_id', ids || '')
@@ -437,21 +447,27 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
         setViewNotificationLog(res.data)
         setTotalRowsNotification(res.data.total)
+        setLoaderNotifiView(false)
       } catch (err: any) {
         if (err.response?.status === 500) {
           toast.error('Internal Server Error.')
+          setLoaderNotifiView(false)
         } else {
           toast.error(err?.response?.data?.message || 'Something went wrong')
+          setLoaderNotifiView(false)
         }
       }
     }
   }
 
   useEffect(() => {
-    getNotificationViewLog()
+    if (openDialog) {
+      getNotificationViewLog()
+    }
   }, [viewLogId, openDialog, paginationNotification.page, paginationNotification.perPage, globalFilter])
   const getSmsViewLog = async () => {
     if (channelName === 'sms') {
+      setLoaderSmsView(true)
       const formdata = new FormData()
 
       formdata.append('announcement_id', ids || '')
@@ -464,18 +480,23 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
         setViewNotificationLog(res.data)
         setTotalRowsSms(res.data.total)
+        setLoaderSmsView(false)
       } catch (err: any) {
         if (err.response?.status === 500) {
           toast.error('Internal Server Error.')
+          setLoaderSmsView(false)
         } else {
           toast.error(err?.response?.data?.message || 'Something went wrong')
+          setLoaderSmsView(false)
         }
       }
     }
   }
 
   useEffect(() => {
-    getSmsViewLog()
+    if (openDialog) {
+      getSmsViewLog()
+    }
   }, [viewLogId, openDialog, paginationSms.page, paginationSms.perPage, globalFilter])
   return (
     <>
@@ -532,8 +553,8 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
         {channelCounts.map((item, i) => (
           <Grid key={i} item xs={12} sm={6} md={3}>
             <Card>
-              <CardContent className="flex flex-wrap items-center gap-4">
-                <CustomAvatar variant="rounded">
+              <CardContent className='flex flex-wrap items-center gap-4'>
+                <CustomAvatar variant='rounded'>
                   {/* <i className={item.iconClass} /> */}
                   <Box
                     sx={{
@@ -546,15 +567,15 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                       justifyContent: 'center',
                       fontSize: 32,
                       boxShadow: 2,
-                      mb: 0 
+                      mb: 0
                     }}
                     dangerouslySetInnerHTML={{ __html: item.iconClass }}
                   />
                 </CustomAvatar>
 
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <Typography variant="h5">{item.value}</Typography>
+                <div className='flex flex-col'>
+                  <div className='flex items-center gap-2'>
+                    <Typography variant='h5'>{item.value}</Typography>
                     {/* <div className="flex items-center">
                       <i
                         className={classNames(
@@ -574,7 +595,6 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           </Grid>
         ))}
       </Grid>
-
 
       <Card>
         {/* <CardHeader title='Filters' className='pbe-4' /> */}
@@ -658,19 +678,21 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           setOpen={setOpenDialog}
           selectedChannel={channelName}
           viewLogData={viewEmailLog}
+          setViewEmailLog={setViewEmailLog}
+          setViewNotificationLog={setViewNotificationLog}
           viewNotificationLog={viewNotificationLog}
-
           setPaginationEmail={setPaginationEmail}
           setPaginationNotification={setPaginationNotification}
           setPaginationSms={setPaginationSms}
-
           totalRowsNotification={totalRowsNotification}
           totalRowsEmail={totalRowsEmail}
           totalRowsSms={totalRowsSms}
-
           paginationEmail={paginationEmail}
           paginationNotification={paginationNotification}
           paginationSms={paginationSms}
+          loaderEmailView={loaderEmailView}
+          loaderNotifiView={loaderNotifiView}
+          loaderSmsView={loaderSmsView}
         />
       )}
     </>

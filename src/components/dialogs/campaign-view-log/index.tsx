@@ -35,6 +35,7 @@ type CampaignDialogProps = {
   setOpen: (open: boolean) => void
   selectedChannel: string[]
   viewLogData: any
+  setViewEmailLog: any
   viewNotificationLog: any
 
   totalRowsNotification: any
@@ -48,6 +49,10 @@ type CampaignDialogProps = {
   totalRowsSms: any
   paginationSms: any
   setPaginationSms: any
+
+  loaderEmailView: boolean
+  loaderNotifiView?: boolean
+  loaderSmsView?: boolean
 }
 type ErrorType = {
   message: string[]
@@ -91,6 +96,8 @@ const CampaignViewLogDialog = ({
   open = false,
   setOpen,
   selectedChannel = '',
+  setViewEmailLog,
+  setViewNotificationLog,
   viewLogData = [],
   viewNotificationLog = [],
 
@@ -104,7 +111,11 @@ const CampaignViewLogDialog = ({
 
   totalRowsSms = 0,
   paginationSms = {},
-  setPaginationSms = {}
+  setPaginationSms = {},
+
+  loaderEmailView,
+  loaderNotifiView,
+  loaderSmsView
 }: CampaignDialogProps) => {
   console.log('selectedChannel', selectedChannel)
 
@@ -382,6 +393,8 @@ const CampaignViewLogDialog = ({
     setSelectedCheckbox([])
     setIsIndeterminateCheckbox(false)
     setOpen(false)
+    setViewEmailLog([])
+    setViewNotificationLog([])
   }
 
   const channelMap: Record<string, string> = {
@@ -401,14 +414,16 @@ const CampaignViewLogDialog = ({
       sx={{ '& .MuiDialog-paper': { width: '100%', maxWidth: '1200px' } }}
     >
       {/* {loading && <Loader />} */}
-
+      {(loaderEmailView || loaderNotifiView || loaderSmsView) && (
+        <div className='absolute inset-0 flex items-center justify-center bg-white/60 z-50'>
+          <div className='w-10 h-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin'></div>
+        </div>
+      )}
       <DialogTitle className='flex flex-col gap-1 text-center'>
         <span className='text-xl font-semibold'>Campaign Performance Logs ({channelMap[selectedChannel] || ''})</span>
-        <hr className="my-2 border-t border-gray-300" />
+        <hr className='my-2 border-t border-gray-300' />
         <div className='flex justify-center gap-4 text-sm'>
-          <div className='flex items-center gap-1'>
-            Status of delivery : 
-          </div>
+          <div className='flex items-center gap-1'>Status of delivery :</div>
           <div className='flex items-center gap-1 text-yellow-500'>
             <i className='ri-time-line' /> Queued
           </div>
