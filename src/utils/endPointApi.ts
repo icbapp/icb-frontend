@@ -31,6 +31,7 @@ export interface EndPointApi {
     //Microsoft
     microsoftAuthTokenValide: string
     microsoftFetchUsers: string
+    dataLackFetchUsers: string
     postConnectionView: string
     getConnectionView: string
 
@@ -50,6 +51,10 @@ export interface EndPointApi {
     postCampaignEmailLogGet: string
     postCampaignPushNotificationslogGet: string
     postcampaignSmsLogGet: string
+
+    //Datalack
+    getAllRolesDataLack :string
+    postfilterDataLack :string
 }
 
 // Define and export the API endpoint object
@@ -86,6 +91,7 @@ const endPointApi: EndPointApi = {
     //Microsoft
     microsoftAuthTokenValide: '/ms-auth-token/school-token-valide',
     microsoftFetchUsers: 'auth/microsoft/fetch-users',
+    dataLackFetchUsers: 'fetched-role-user',
     postConnectionView: 'connection-view',  
     getConnectionView: 'connection-view-fetch',
 
@@ -104,6 +110,10 @@ const endPointApi: EndPointApi = {
     postCampaignEmailLogGet: 'campaign-email-log', //log
     postCampaignPushNotificationslogGet: 'campaign-push-notifications-log',
     postcampaignSmsLogGet: 'campaign-sms-log',
+
+    //Datalack
+    getAllRolesDataLack : 'db/roles',
+    postfilterDataLack : 'db/filters'
 };
 
 export default endPointApi;

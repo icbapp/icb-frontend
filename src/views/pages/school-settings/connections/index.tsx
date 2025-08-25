@@ -109,7 +109,7 @@ const Connections = () => {
   const [statuConnected, setStatusConnected] = useState(0)
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
-  const [checked, setChecked] = useState(true)
+  const [checked, setChecked] = useState('')
   const redirectTo = async () => {
     const response = await api.get('ms-auth/redirect', {
       params: {
@@ -198,6 +198,7 @@ const Connections = () => {
       const response = await api.post(`${endPointApi.postConnectionView}`, formData)
 
       if (response?.data?.success) {
+        getfetchData()
         toast.success(response?.data?.message)
       } else {
         console.error('Failed to update status_view.')
@@ -207,6 +208,14 @@ const Connections = () => {
     }
   }
 
+  const getfetchData = async () =>{
+      const res = await api.get(`${endPointApi.getConnectionView}`)
+      setChecked(res.data.data[0].status_view)
+  }
+
+  useEffect(() =>{
+    getfetchData()
+  },[])
   return (
     <>
       <Card>

@@ -1,7 +1,7 @@
 'use client'
 import '@tanstack/table-core'
 // React Imports
-import { useEffect, useState, useMemo, MouseEvent } from 'react'
+import { useEffect, useState, useMemo, MouseEvent, useRef } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -131,75 +131,46 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed
 }
 
-// const DebouncedInput = ({
-//   value: initialValue,
-//   onChange,
-//   debounce = 500,
-//   ...props
-// }: {
-//   value: string | number
-//   onChange: (value: string | number) => void
-//   debounce?: number
-// } & Omit<TextFieldProps, 'onChange'>) => {
-//   // States
-//   const [value, setValue] = useState(initialValue)
-
-//   useEffect(() => {
-//     setValue(initialValue)
-//   }, [initialValue])
-
-//   useEffect(() => {
-//     const timeout = setTimeout(() => {
-//       onChange(value)
-//     }, debounce)
-
-//     return () => clearTimeout(timeout)
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [value])
-
-//   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
-// }
-
 const DebouncedInput = ({
   value: initialValue,
   onEnter,
   debounce = 500,
   ...props
 }: {
-  value: string | number;
-  onEnter: (value: string | number) => void;
-  debounce?: number;
+  value: string | number
+  onEnter: (value: string | number) => void
+  debounce?: number
 } & Omit<TextFieldProps, 'onChange'>) => {
-  const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState(initialValue)
 
   useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+    setValue(initialValue)
+  }, [initialValue])
 
   // Debounce for empty value case
   useEffect(() => {
     if (String(value).trim() === '') {
       const timeout = setTimeout(() => {
-        onEnter(value); // Call API when input cleared
-      }, debounce);
-      return () => clearTimeout(timeout);
+        onEnter(value) // Call API when input cleared
+      }, debounce)
+      return () => clearTimeout(timeout)
     }
-  }, [value, debounce, onEnter]);
+  }, [value, debounce, onEnter])
 
   return (
     <TextField
       {...props}
       value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onKeyDown={(e) => {
+      onChange={e => setValue(e.target.value)}
+      onKeyDown={e => {
         if (e.key === 'Enter') {
-          onEnter(value); // Only run API call on Enter
+          onEnter(value) // Only run API call on Enter
         }
       }}
-      size="small"
+      size='small'
     />
-  );
-};
+  )
+}
 
 const userStatusObj: UserStatusType = {
   active: 'success',
@@ -213,7 +184,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const permissions = useSelector((state: RootState) => state.sidebarPermission)
   const adminStore = useSelector((state: RootState) => state.admin)
   const [statuConnected, setStatusConnected] = useState(0)
-  const [dataBaseConnect, setDataBaseConnect] = useState(0)  
+  const [dataBaseConnect, setDataBaseConnect] = useState(0)
   const [roleName, setRoleName] = useState<{ id: string | number; name: string }[]>([])
   useEffect(() => {
     api.get(`${endPointApi.microsoftAuthTokenValide}`).then(response => {
@@ -265,7 +236,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [selectedDeleteIdStatus, setSelectedDeleteStatus] = useState<string | null>(null)
   const [rolesList, setRolesList] = useState<{ id: string | number; name: string }[]>([])
 
+  const fetchedRef = useRef(false)
   useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
+
     const fetchRoles = async () => {
       try {
         setLoading(true)
@@ -599,11 +574,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   useEffect(() => {
     fetchUsers()
-  }, [role, status, searchData, page, rowsPerPage])
-
-  useEffect(() => {
     getUserCount()
-  }, [role, status])
+  }, [role, status, searchData, page, rowsPerPage])
 
   const getUserCount = () => {
     api.get(`${endPointApi.getUserCount}`).then(res => setTotalUser(res.data.data))
@@ -666,6 +638,29 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       setLoading(false)
     }
   }
+  const connectDataLack = async () => {
+    try {
+      setLoading(true)
+
+      const response = await api.get(`${endPointApi.dataLackFetchUsers}`, {
+        params: {
+          sync: true,
+          tenant_id: adminStore?.tenant_id?.toString(),
+          school_id: adminStore?.school_id?.toString(),
+          return_records: 1
+        }
+      })
+
+      if (response.data.status === 'success') {
+        toast.success('Users synced successfully')
+        fetchUsers()
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred while syncing users')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleStatusChange = async (value: 'active' | 'inactive') => {
     setStatusUser(value) // Update UI dropdown
@@ -704,8 +699,6 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   }
 
   const handleOpenMultipleRoleDialog = () => {
-    console.log('clicked save')
-
     if (selectedUserIds.length === 0) {
       toast.warning('Please select at least one user.')
       setRoleName([])
@@ -967,6 +960,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                           <StatusOptionMenu
                             onChange={handleStatusChange}
                             onSync={SyncMicrosoftUser}
+                            onSyncDataLack={connectDataLack}
                             statuConnected={statuConnected}
                             dataBaseConnect={dataBaseConnect}
                           />
@@ -1137,11 +1131,18 @@ export default UserListTable
 interface StatusOptionMenuProps {
   onChange?: (status: 'active' | 'inactive') => void
   onSync?: () => void
+  onSyncDataLack?: () => void
   statuConnected: Number
   dataBaseConnect: Number
 }
 
-const StatusOptionMenu: React.FC<StatusOptionMenuProps> = ({ onChange, onSync, statuConnected, dataBaseConnect }) => {
+const StatusOptionMenu: React.FC<StatusOptionMenuProps> = ({
+  onChange,
+  onSync,
+  onSyncDataLack,
+  statuConnected,
+  dataBaseConnect
+}) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
 
@@ -1160,6 +1161,11 @@ const StatusOptionMenu: React.FC<StatusOptionMenuProps> = ({ onChange, onSync, s
 
   const handleSync = () => {
     if (onSync) onSync()
+    handleClose()
+  }
+
+  const handleConnectDataLack = () => {
+    if (onSyncDataLack) onSyncDataLack()
     handleClose()
   }
 
@@ -1206,7 +1212,7 @@ const StatusOptionMenu: React.FC<StatusOptionMenuProps> = ({ onChange, onSync, s
           </MenuItem>
         )}
         {dataBaseConnect === 1 && (
-          <MenuItem onClick={handleSync}>
+          <MenuItem onClick={handleConnectDataLack}>
             <CustomAvatar color='info' skin='light' variant='rounded' size={25}>
               {/* <img src='/images/logos/Microsoft-Icon.png' alt='Microsoft' className='w-[17px] h-[17px]' /> */}
               <i className={classnames('ri-database-line', 'text-[16px]')} />

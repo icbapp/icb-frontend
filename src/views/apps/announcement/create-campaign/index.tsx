@@ -12,7 +12,9 @@ import {
   Card,
   MenuItem,
   InputAdornment,
-  Tooltip
+  Tooltip,
+  Stack,
+  Skeleton
 } from '@mui/material'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -37,6 +39,7 @@ import {
   scheduleTypeDropDown
 } from '@/comman/dropdownOptions/DropdownOptions'
 import { ShowErrorToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
+import Loader from '@/components/Loader'
 
 const CreateCampaign = () => {
   const router = useRouter()
@@ -51,6 +54,12 @@ const CreateCampaign = () => {
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
   const [selectedData, setSelectedData] = useState([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
+  //dataLack
+  const [rolesListDataLack, setRolesListDataLack] = useState<RoleOption[]>([])
+  const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState([])
+  const [filterWishDataLack, setFilterWishDataLack] = useState<RoleOption[]>([])
+  const [filterWishSelectedLabelsDataLack, setFilterWishSelectedLabelsDataLack] = useState([])
+  console.log('filterWishDataLack', filterWishDataLack)
 
   const [selectedIds, setSelectedIds] = useState([])
   const [status, setStatus] = useState('One Time')
@@ -77,6 +86,9 @@ const CreateCampaign = () => {
   // Notification
   const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
+  const [connectDataLack, setConnectDataLack] = useState('')
+  const [loadingDataLack, setloadingDataLack] = useState(false)
+  const [isLoading, setisLoading] = useState(false)
 
   const isRecurring = mode === 'recurring'
 
@@ -140,6 +152,23 @@ const CreateCampaign = () => {
     }
   }
 
+  const handleFilterChangeDataLack = (newValues: any) => {
+    setSelectedLabelsDataLack(newValues)
+
+    if (newValues && newValues.length > 0) {
+    } else {
+      setSelectedData([]) // or show all
+    }
+  }
+  const handleFilterRoleUserChangeDataLack = (newValues: any) => {
+    setFilterWishSelectedLabelsDataLack(newValues)
+
+    if (newValues && newValues.length > 0) {
+    } else {
+      setSelectedData([]) // or show all
+    }
+  }
+
   const fetchRoles = async () => {
     try {
       const response = await api.get(`${endPointApi.getRolesDropdown}`)
@@ -156,28 +185,50 @@ const CreateCampaign = () => {
     fetchRoles()
   }, [])
 
-  // useEffect(() => {
-  //   const fetchRoleWiseUsers = async () => {
-  //     if (selectedLabels.length === 0) return
-  //     try {
-  //       const select = selectedLabels.map((val: any) => val.id)
-  //       const body = {
-  //         tenant_id: adminStore.tenant_id,
-  //         school_id: adminStore.school_id,
-  //         role_ids: select ?? ''
-  //       }
-  //       const response = await api.post(`${endPointApi.postRoleWiseUsersList}`, body)
+  const fetchDataLack = async () => {
+    try {
+      const response = await api.get(`${endPointApi.getAllRolesDataLack}`)
+      const roles: RoleOption[] = response.data.roles.map((r: any) => ({ id: r.rol_name, name: r.rol_name }))
+      setRolesListDataLack(roles)
+    } catch (err) {
+      return null
+    }
+  }
 
-  //       // if (ids) {
-  //       setSelectedData(response.data.users)
-  //       // }
-  //     } catch (error) {
-  //       console.error('Error fetching role-wise users:', error)
-  //     }
-  //   }
+  useEffect(() => {
+    fetchDataLack()
+  }, [])
 
-  //   fetchRoleWiseUsers()
-  // }, [selectedLabels])
+  const fetchFilterDataLack = async () => {
+    
+    setisLoading(true)
+    try {
+      const select = selectedLabelsDataLack.map((val: any) => val.id)
+
+      const body = {
+        roles: select
+      }
+
+      const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
+
+      if (res.data.status === 'success') {
+        const filterData: RoleOption[] = res.data.filters.map((r: any) => ({
+          id: r.column_name,
+          name: r.filter_name,
+          rol_name: r.rol_name
+        }))
+        setFilterWishDataLack(filterData)
+      }
+    } catch (err) {
+      console.error('Error fetching filter data:', err)
+    } finally {
+      setisLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchFilterDataLack()
+  }, [selectedLabelsDataLack])
 
   useEffect(() => {
     if (!ids && selectedLabels.length > 0) {
@@ -215,7 +266,12 @@ const CreateCampaign = () => {
           name: item.role_name
         }))
         setSelectedLabels(selected)
+        setSelectedLabelsDataLack(selected)
       }
+      const formatted = res.data.column_name.split(',').map(val => ({
+        id: val,
+        name: val
+      }))
       setSelectedData(res.data.users)
       setNote(res.data.note)
       setStatus(res.data.campaign_status)
@@ -226,6 +282,7 @@ const CreateCampaign = () => {
       setSelectedChannel(res.data.channels)
       setStartDateTime(dayjs(res.data.campaign_date + ' ' + res.data.formatted_campaign_time))
       setAnnouncementTitle(res.data.announcement.title)
+      setFilterWishSelectedLabelsDataLack(formatted)
     } catch (err: any) {
       if (err.response?.status === 500) {
         toast.error('Internal Server Error.')
@@ -271,6 +328,7 @@ const CreateCampaign = () => {
         time = timePart || ''
         timeampm = ampm || ''
       }
+      const selectedFilter = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
       const body = {
         id: ids ? Number(ids) : 0,
         note: note || '',
@@ -283,11 +341,12 @@ const CreateCampaign = () => {
         campaign_status: status,
         publish_mode: mode,
         schedule: scheduleType || '',
-        frequency_count: recurringCount || 0,
+        frequency_count: mode == 'one_time' ? 1 : recurringCount,
         campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
         campaign_time: time,
         campaign_ampm: timeampm,
-        role_ids: '1'
+        role_ids: '1',
+        column_name: selectedFilter
       }
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
       if (response.data.status === 200) {
@@ -315,7 +374,6 @@ const CreateCampaign = () => {
 
   const scheduleDates = []
   const maxDates = Math.min(Number(recurringCount), 5) // ✅ limit to 5
-  console.log('startDateTime', startDateTime)
 
   for (let i = 0; i < maxDates; i++) {
     let nextDate = dayjs(startDateTime).isValid() ? dayjs(startDateTime) : dayjs()
@@ -405,8 +463,63 @@ const CreateCampaign = () => {
   useEffect(() => {
     getNotificationViewLog()
   }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
+
+  const getfetchData = async () => {
+    try {
+      setloadingDataLack(true)
+      const res = await api.get(endPointApi.getConnectionView)
+
+      if (res.data.status === 200) {
+        setConnectDataLack(res.data.data[0].status_view)
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setloadingDataLack(false)
+    }
+  }
+
+  useEffect(() => {
+    getfetchData()
+  }, [])
+
+  const goFilterData = async () => {
+    setisLoading(true)
+
+    try {
+      const select = selectedLabelsDataLack.map((val: any) => val.id)
+      const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
+
+      const body = {
+        roles: select,
+        column_name: selectColumn,
+        tenant_id: adminStore.tenant_id,
+        school_id: adminStore.school_id.toString(),
+        page: 1,
+        per_page: 10
+      }
+
+      const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
+
+      if (res.data.status === 'success') {
+        setSelectedData(res.data.data)
+      } else {
+        console.warn('Unexpected response:', res.data)
+        // Optionally: ShowErrorToast(res.data.message)
+      }
+    } catch (err: any) {
+      console.error('Error fetching data:', err)
+    } finally {
+      setisLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    goFilterData()
+  }, [])
   return (
     <>
+      {isLoading && <Loader />}
       <p style={{ color: settings.primaryColor }} className='font-bold flex items-center justify-between gap-2 mb-1'>
         <span className='flex items-center gap-2'>
           <span
@@ -451,19 +564,67 @@ const CreateCampaign = () => {
           <Typography variant='h6' fontWeight={600} mb={3}>
             Filter
           </Typography>
-          <Grid container spacing={2} mb={4}>
-            <Autocomplete
-              multiple
-              disableCloseOnSelect
-              options={rolesList}
-              getOptionLabel={option => option.name}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={selectedLabels}
-              onChange={(event, newValue) => handleFilterChange(newValue)}
-              sx={{ width: 400, marginBottom: 2 }}
-              renderInput={params => <TextField {...params} label='Select Roles' />}
-            />
-          </Grid>
+          {loadingDataLack ? (
+            <Grid container spacing={2}>
+              <Grid item>
+                <Skeleton variant='rectangular' width={300} height={56} className='rounded-md' />
+              </Grid>
+              <Grid item>
+                <Skeleton variant='rectangular' width={300} height={56} className='rounded-md' />
+              </Grid>
+              <Grid item>
+                <Skeleton variant='rectangular' height={40} width={80} className='rounded-md mt-2' />
+              </Grid>
+            </Grid>
+          ) : connectDataLack ? (
+            <>
+              <Grid item xs={12} md={12}>
+                <Stack direction='row' spacing={2} alignItems='center'>
+                  <Autocomplete
+                    multiple
+                    disableCloseOnSelect
+                    options={rolesListDataLack}
+                    getOptionLabel={option => option.name}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    value={selectedLabelsDataLack}
+                    onChange={(event, newValue) => handleFilterChangeDataLack(newValue)}
+                    sx={{ width: 300 }}
+                    renderInput={params => <TextField {...params} label='Select Roles' />}
+                  />
+
+                  <Autocomplete
+                    multiple
+                    disableCloseOnSelect
+                    options={filterWishDataLack}
+                    getOptionLabel={option => option.name}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    value={filterWishSelectedLabelsDataLack}
+                    onChange={(event, newValue) => handleFilterRoleUserChangeDataLack(newValue)}
+                    sx={{ width: 300 }}
+                    renderInput={params => <TextField {...params} label='Select Filter' />}
+                  />
+
+                  <Button variant='contained' onClick={goFilterData}>
+                    Go
+                  </Button>
+                </Stack>
+              </Grid>
+            </>
+          ) : (
+            <Grid container spacing={2} mb={4}>
+              <Autocomplete
+                multiple
+                disableCloseOnSelect
+                options={rolesList}
+                getOptionLabel={option => option.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                value={selectedLabels}
+                onChange={(event, newValue) => handleFilterChange(newValue)}
+                sx={{ width: 400, marginBottom: 2 }}
+                renderInput={params => <TextField {...params} label='Select Roles' />}
+              />
+            </Grid>
+          )}
         </Box>
       </Card>
       <Card sx={{ mt: 4 }}>
@@ -513,7 +674,7 @@ const CreateCampaign = () => {
               Bulk Delete
             </Button> */}
           {/* Grid */}
-          <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} />
+          <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} connectDataLack={connectDataLack} />
           {/* <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} /> */}
         </Box>
       </Card>

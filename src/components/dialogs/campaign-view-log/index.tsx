@@ -33,7 +33,7 @@ import { ColumnDef } from '@tanstack/table-core'
 type CampaignDialogProps = {
   open: boolean
   setOpen: (open: boolean) => void
-  selectedChannel: string
+  selectedChannel: string[]
   viewLogData: any
   viewNotificationLog: any
 
