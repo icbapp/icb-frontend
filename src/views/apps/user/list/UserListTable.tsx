@@ -790,7 +790,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 component='div'
                 sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 500 }}
               >
-                {`${Math.round(progress)}%`}
+                {/* {`${Math.round(progress)}%`} */}
               </Typography>
             </Box>
           </Box>

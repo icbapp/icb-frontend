@@ -220,19 +220,24 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
               icon: 'ri-check-line',
               colorClass: 'text-green-600',
               label: 'Completed'
+            },
+            Done: {
+              icon: 'ri-check-line',
+              colorClass: 'text-green-600',
+              label: 'Done'
             }
           }
 
           const display = statusDisplay[status] || {
-            icon: 'ri-question-line',
-            colorClass: 'text-gray-500',
+            icon: '',
+            colorClass: '',
             label: status || 'Unknown'
           }
 
           return (
             <div className='flex items-center gap-2'>
               <i className={`${display.icon} ${display.colorClass} ${display.animate ? 'animate-spin' : ''}`} />
-              <Typography className='text-gray-800 font-medium'>{display.label}</Typography>
+              <Typography>{display.label}</Typography>
             </div>
           )
         }
@@ -244,7 +249,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       columnHelper.accessor('frequency_type_name', {
         header: 'frequency Type',
         cell: ({ row }) => (
-          <Typography className='text-gray-800 font-medium'>{row.original.frequency_type_name}</Typography>
+          <Typography>{row.original.frequency_type_name}</Typography>
         )
       }),
       columnHelper.accessor('campaign_date', {
@@ -254,7 +259,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       columnHelper.accessor('formatted_campaign_time', {
         header: 'campaign time',
         cell: ({ row }) => (
-          <Typography className='text-gray-800 font-medium'>{row.original.formatted_campaign_time}</Typography>
+          <Typography>{row.original.formatted_campaign_time}</Typography>
         )
       }),
       columnHelper.accessor('frequency_count', {
@@ -263,7 +268,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
       columnHelper.accessor('schedule_name', {
         header: 'schedule',
-        cell: ({ row }) => <Typography className='text-gray-800 font-medium'>{row.original.schedule_name}</Typography>
+        cell: ({ row }) => <Typography>{row.original.schedule_name}</Typography>
       }),
       columnHelper.accessor('publish_mode_name', {
         header: 'publish mode',

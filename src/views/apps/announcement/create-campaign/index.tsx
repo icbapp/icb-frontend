@@ -14,7 +14,9 @@ import {
   InputAdornment,
   Tooltip,
   Stack,
-  Skeleton
+  Skeleton,
+  Chip,
+  Paper
 } from '@mui/material'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -33,13 +35,14 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { toast } from 'react-toastify'
 import CampaignViewLogDialog from '@/components/dialogs/campaign-view-log'
 import {
-  campaignStatusType,
   frequencyTypeDropDown,
   publishingModeType,
   scheduleTypeDropDown
 } from '@/comman/dropdownOptions/DropdownOptions'
 import { ShowErrorToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
 import Loader from '@/components/Loader'
+import FilterCampaign from './FilterCampaign'
+import { email } from 'valibot'
 
 const CreateCampaign = () => {
   const router = useRouter()
@@ -59,6 +62,7 @@ const CreateCampaign = () => {
   const [selectedLabelsDataLack, setSelectedLabelsDataLack] = useState([])
   const [filterWishDataLack, setFilterWishDataLack] = useState<RoleOption[]>([])
   const [filterWishSelectedLabelsDataLack, setFilterWishSelectedLabelsDataLack] = useState([])
+  const [filterWishCommonColumn, setFilterWishCommonColumn] = useState(['f_name', 'email', 'l_name', 'phone'])
 
   const [selectedIds, setSelectedIds] = useState([])
   const [status, setStatus] = useState('One Time')
@@ -94,6 +98,71 @@ const CreateCampaign = () => {
   const [loadingDataLack, setloadingDataLack] = useState(false)
   const [isLoading, setisLoading] = useState(false)
   const [loaderMain, setloaderMain] = useState(false)
+
+  // Comman column Filter
+  const [commanColumnFilter, setCommanColumnFilter] = useState<any>({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    gender: ''
+  })
+
+  const [parentForm, setParentForm] = useState<any>({
+    par_code: '',
+    par_name: '',
+    contact_type: [],
+    email: '',
+    mobile_phone1: '',
+    mobile_phone2: '',
+    addr1: '',
+    addr2: '',
+    town_sub: '',
+    state_code: '',
+    post_code: '',
+    home_phone: ''
+  })
+
+  const [teacherForm, setTeacherForm] = useState<any>({
+    first_name: '',
+    gender: '',
+    teacher_code: '',
+    emp_code: '',
+    salutation: '',
+    surname: '',
+    other_name: '',
+    preferred_name: '',
+    dob: '',
+    start_date: '',
+    end_date: '',
+    emp_status: '',
+    award_code: '',
+    award_description: '',
+    rol_code: '',
+    rol_description: '',
+    position_title: '',
+    p_mobile: '',
+    p_email: '',
+    school_email: ''
+  })
+
+  const [studentForm, setStudentForm] = useState<any>({
+    first_name: '',
+    gender: '',
+    last_name: '',
+    mobile_phone1: '',
+    email: '',
+    par_code: '',
+    student_code: '',
+    preferred_name: '',
+    year_group: '',
+    class_code: '',
+    dob: '',
+    entry_date: '',
+    exit_date: '',
+    status: '',
+    house: ''
+  })
 
   const isRecurring = mode === 'recurring'
 
@@ -142,29 +211,7 @@ const CreateCampaign = () => {
     email: 'Email',
     sms: 'SMS'
   }
-  const handleFilterChange = (newValues: any) => {
-    setSelectedLabels(newValues)
 
-    if (newValues && newValues.length > 0) {
-      const selectedRoles = newValues.map((val: any) => val.name.toLowerCase())
-      // Example filter logic (if your data has 'role' field)
-      // const filtered = data.filter(item =>
-      //   selectedRoles.includes(item.role.toLowerCase())
-      // );
-      // setFilteredData(filtered);
-    } else {
-      setSelectedData([]) // or show all
-    }
-  }
-
-  const handleFilterChangeDataLack = (newValues: any) => {
-    setSelectedLabelsDataLack(newValues)
-
-    if (newValues && newValues.length > 0) {
-    } else {
-      setSelectedData([]) // or show all
-    }
-  }
   const handleFilterRoleUserChangeDataLack = (newValues: any) => {
     setFilterWishSelectedLabelsDataLack(newValues)
 
@@ -193,7 +240,10 @@ const CreateCampaign = () => {
   const fetchDataLack = async () => {
     try {
       const response = await api.get(`${endPointApi.getAllRolesDataLack}`)
-      const roles: RoleOption[] = response.data.roles.map((r: any) => ({ id: r.rol_name, name: r.rol_name }))
+      const roles: RoleOption[] = response.data.roles.map((r: any) => ({
+        id: r.rol_name,
+        name: r.rol_name.charAt(0).toUpperCase() + r.rol_name.slice(1)
+      }))
       setRolesListDataLack(roles)
     } catch (err) {
       return null
@@ -204,31 +254,58 @@ const CreateCampaign = () => {
     fetchDataLack()
   }, [])
 
-  const fetchFilterDataLack = async () => {
-    setisLoading(true)
-    try {
-      const select = selectedLabelsDataLack.map((val: any) => val.id)
+const fetchFilterDataLack = async () => { 
+  setisLoading(true) 
+  try { 
+    const select = selectedLabelsDataLack.map((val: any) => val.id) 
 
-      const body = {
-        roles: select
+    const body = { 
+      roles: select 
+    } 
+
+    const res = await api.post(`${endPointApi.postfilterDataLack}`, body) 
+    if (res.data.status === 'success') { 
+      const filters = res.data.filters;
+      const allFilters: RoleOption[] = [];
+      
+      if (filters.parent && Array.isArray(filters.parent)) {
+        const parentFilters = filters.parent.map((item: any) => ({
+          id: item.column_name,
+          name: item.filter_name,
+          rol_name: 'parent',
+          filter_values: item.filter_values
+        }));
+        allFilters.push(...parentFilters);
       }
-
-      const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
-
-      if (res.data.status === 'success') {
-        const filterData: RoleOption[] = res.data.filters.map((r: any) => ({
-          id: r.column_name,
-          name: r.filter_name,
-          rol_name: r.rol_name
-        }))
-        setFilterWishDataLack(filterData)
+      
+      if (filters.student && Array.isArray(filters.student)) {
+        const studentFilters = filters.student.map((item: any) => ({
+          id: item.column_name,
+          name: item.filter_name,
+          rol_name: 'student',
+          filter_values: item.filter_values
+        }));
+        allFilters.push(...studentFilters);
       }
-    } catch (err) {
-      console.error('Error fetching filter data:', err)
-    } finally {
-      setisLoading(false)
-    }
-  }
+      
+      if (filters.teacher && Array.isArray(filters.teacher)) {
+        const teacherFilters = filters.teacher.map((item: any) => ({
+          id: item.column_name,
+          name: item.filter_name,
+          rol_name: 'teacher',
+          filter_values: item.filter_values
+        }));
+        allFilters.push(...teacherFilters);
+      }
+      
+      setFilterWishDataLack(allFilters);
+    } 
+  } catch (err) { 
+    console.error('Error fetching filter data:', err) 
+  } finally { 
+    setisLoading(false) 
+  } 
+}
 
   useEffect(() => {
     if (selectedLabelsDataLack.length > 0) {
@@ -274,7 +351,7 @@ const CreateCampaign = () => {
           setSelectedLabels(selected)
           setSelectedLabelsDataLack(selected)
         }
-        const formatted = res.data.column_name.split(',').map(val => ({
+        const formatted = res.data.column_name.split(',').map((val: any) => ({
           id: val,
           name: val
         }))
@@ -545,15 +622,6 @@ const CreateCampaign = () => {
     }
   }, [])
 
-  const groupedData = filterWishDataLack.reduce((acc: any, item) => {
-    if (!acc[item.rol_name]) acc[item.rol_name] = []
-    acc[item.rol_name].push(item)
-    return acc
-  }, {})
-
-  const handleSelect = (id: number) => {
-    setFilterWishSelectedLabelsDataLack(prev => (prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]))
-  }
   return (
     <>
       {isLoading && <Loader />}
@@ -582,136 +650,6 @@ const CreateCampaign = () => {
         )}
       </p>
 
-      {/* <Card>
-        <Box p={3} display='flex' justifyContent='space-between' alignItems='center'>
-          <Typography variant='h6' fontWeight={600}>
-            Launch Campaign
-          </Typography>
-          {ids && (
-            <Button variant='contained' onClick={() => setOpenDialog(true)}>
-              View Log
-            </Button>
-          )}
-        </Box>
-      </Card> */}
-
-      <Card sx={{ mt: 4 }}>
-        <Box p={6}>
-          {/* Audience Selection */}
-          <Typography variant='h6' fontWeight={600} mb={3}>
-            Filter
-          </Typography>
-          {loadingDataLack ? (
-            <Grid container spacing={2}>
-              <Grid item>
-                <Skeleton variant='rectangular' width={300} height={56} className='rounded-md' />
-              </Grid>
-              <Grid item>
-                <Skeleton variant='rectangular' width={300} height={56} className='rounded-md' />
-              </Grid>
-              <Grid item>
-                <Skeleton variant='rectangular' height={40} width={80} className='rounded-md mt-2' />
-              </Grid>
-            </Grid>
-          ) : connectDataLack ? (
-            <>
-              <Grid item xs={12} md={12}>
-                <Stack spacing={3}>
-                  {/* Top Row: Role Select + Go Button */}
-                  <Stack direction='row' spacing={2} alignItems='center'>
-                    <Autocomplete
-                      multiple
-                      disableCloseOnSelect
-                      options={rolesListDataLack}
-                      getOptionLabel={option => option.name}
-                      isOptionEqualToValue={(option, value) => option.id === value.id}
-                      value={selectedLabelsDataLack}
-                      onChange={(event, newValue) => handleFilterChangeDataLack(newValue)}
-                      sx={{ width: 600 }}
-                      renderInput={params => <TextField {...params} label='Select Roles' />}
-                    />
-
-                    <Button variant='contained' onClick={goFilterData} sx={{ height: 52 }}>
-                      Go
-                    </Button>
-                  </Stack>
-
-                  {/* Role-wise Filters */}
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 4,
-                      p: 2,
-                      border: '1px solid #e0e0e0',
-                      borderRadius: 2,
-                      backgroundColor: '#fafafa'
-                    }}
-                  >
-                    {Object.keys(groupedData).map(role => {
-                      // agar role ka data empty hai to skip karo
-                      if (!groupedData[role] || groupedData[role].length === 0) {
-                        return null
-                      }
-
-                      return (
-                        <Box key={role}>
-                          <Typography variant='h6' sx={{ mb: 1, fontWeight: 'bold', color: 'text.primary', ml: 2 }}>
-                            {role.toUpperCase()}
-                          </Typography>
-
-                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            {groupedData[role].map((item: any) => (
-                              <Button
-                                key={item.id}
-                                variant={filterWishSelectedLabelsDataLack.includes(item.id) ? 'contained' : 'outlined'}
-                                size='small'
-                                color={filterWishSelectedLabelsDataLack.includes(item.id) ? 'error' : 'inherit'}
-                                sx={{
-                                  borderRadius: '20px',
-                                  textTransform: 'none',
-                                  borderColor: filterWishSelectedLabelsDataLack.includes(item.id) ? '#1f5634' : 'gray',
-                                  backgroundColor: filterWishSelectedLabelsDataLack.includes(item.id)
-                                    ? '#1f5634'
-                                    : 'transparent',
-                                  color: filterWishSelectedLabelsDataLack.includes(item.id) ? 'white' : 'inherit',
-                                  '&:hover': {
-                                    borderColor: '#1f5634',
-                                    backgroundColor: filterWishSelectedLabelsDataLack.includes(item.id)
-                                      ? '#144327'
-                                      : 'rgba(31, 86, 52, 0.08)'
-                                  }
-                                }}
-                                onClick={() => handleSelect(item.id)}
-                              >
-                                {item.name}
-                              </Button>
-                            ))}
-                          </Box>
-                        </Box>
-                      )
-                    })}
-                  </Box>
-                </Stack>
-              </Grid>
-            </>
-          ) : (
-            <Grid container spacing={2} mb={4}>
-              <Autocomplete
-                multiple
-                disableCloseOnSelect
-                options={rolesList}
-                getOptionLabel={option => option.name}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                value={selectedLabels}
-                onChange={(event, newValue) => handleFilterChange(newValue)}
-                sx={{ width: 400, marginBottom: 2 }}
-                renderInput={params => <TextField {...params} label='Select Roles' />}
-              />
-            </Grid>
-          )}
-        </Box>
-      </Card>
       <Card sx={{ mt: 4 }}>
         <Box p={6} position='relative'>
           {loadingDataLack ? (
@@ -722,8 +660,8 @@ const CreateCampaign = () => {
             </Grid>
           ) : (
             <TextField
-              label='Note'
-              placeholder='Note.....'
+              label='Campaign title'
+              placeholder='Campaign title.....'
               value={note}
               onChange={e => {
                 if (e.target.value?.length <= 100) {
@@ -732,7 +670,7 @@ const CreateCampaign = () => {
               }}
               fullWidth
               multiline
-              minRows={2}
+              minRows={1}
               error={note?.length > 100}
               helperText={`${note?.length || 0}/100 characters`}
             />
@@ -760,6 +698,32 @@ const CreateCampaign = () => {
         </Box>
       </Card>
 
+      <FilterCampaign
+        loadingDataLack={loadingDataLack}
+        connectDataLack={connectDataLack}
+        rolesListDataLack={rolesListDataLack}
+        selectedLabelsDataLack={selectedLabelsDataLack}
+        commanColumnFilter={commanColumnFilter}
+        setCommanColumnFilter={setCommanColumnFilter}
+        rolesList={rolesList}
+        selectedLabels={selectedLabels}
+        parentForm={parentForm}
+        teacherForm={teacherForm}
+        studentForm={studentForm}
+        setParentForm={setParentForm}
+        setTeacherForm={setTeacherForm}
+        setStudentForm={setStudentForm}
+        filterWishDataLack={filterWishDataLack}
+        filterWishSelectedLabelsDataLack={filterWishSelectedLabelsDataLack}
+        filterWishCommonColumn={filterWishCommonColumn}
+        setFilterWishCommonColumn={setFilterWishCommonColumn}
+        setFilterWishSelectedLabelsDataLack={setFilterWishSelectedLabelsDataLack}
+        setSelectedLabelsDataLack={setSelectedLabelsDataLack}
+        selectedData={selectedData}
+        goFilterData={goFilterData}
+        setSelectedData={setSelectedData}
+        setSelectedLabels={setSelectedLabels}
+      />
       <Card sx={{ mt: 4 }}>
         <Box p={6}>
           {/* <Button variant='contained'>
@@ -773,22 +737,6 @@ const CreateCampaign = () => {
       <Card sx={{ mt: 4, overflow: 'visible' }}>
         <Box p={6}>
           <Grid container spacing={4}>
-            {/* <Grid item xs={12} md={4}>
-              <TextField
-                label='Campaign Status'
-                select
-                fullWidth
-                value={status}
-                onChange={e => setStatus(e.target.value)}
-              >
-                {campaignStatusType.map((option, index) => (
-                  <MenuItem key={index} value={option.value}>
-                    {option.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid> */}
-
             {/* Publishing Mode */}
             <Grid item xs={12} md={4}>
               <TextField
@@ -1099,41 +1047,49 @@ const CreateCampaign = () => {
           {/* Action Buttons */}
           <Box display='flex' alignItems='center' gap={2} width='100%'>
             {/* Left-side buttons */}
-            <Button
-              // variant='contained'
-              onClick={() => launchCampaign('draft')}
-              disabled={status === 'stop' || status === 'in_progress' || status === 'done'}
-              style={{ backgroundColor: '#8d8d8dff', color: 'white' }}
-            >
-              Save as Draft
-            </Button>
-            <Button
-              variant='contained'
-              onClick={() => launchCampaign('in_progress')}
-              disabled={status === 'stop' || status === 'in_progress' || status === 'done'}
-            >
-              Ready to publish
-            </Button>
-            {ids && (
-              <Button
-                variant='contained'
-                onClick={() => launchCampaign(status === 'stop' ? 'in_progress' : 'stop')}
-                disabled={status === 'done'}
-                sx={{
-                  backgroundColor: status !== 'stop' ? '#c40c0c' : '#1f5634',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: status !== 'stop' ? '#a80808' : '#144d28'
-                  },
-                  '&.Mui-disabled': {
-                    backgroundColor: '#e0e0e0',
-                    color: '#a0a0a0'
-                  }
-                }}
-              >
-                {status === 'stop' ? 'Continue' : 'Stop'}
-              </Button>
-            )}
+            {status !== 'done' ? (
+              <>
+                {!ids && (
+                  <>
+                    <Button
+                      onClick={() => launchCampaign('draft')}
+                      disabled={status === 'stop' || status === 'in_progress'}
+                      style={{ backgroundColor: '#8d8d8dff', color: 'white' }}
+                    >
+                      Save as Draft
+                    </Button>
+
+                    <Button
+                      variant='contained'
+                      onClick={() => launchCampaign('in_progress')}
+                      disabled={status === 'stop' || status === 'in_progress'}
+                    >
+                      Launch Campaign
+                    </Button>
+                  </>
+                )}
+                {ids && (
+                  <Button
+                    variant='contained'
+                    onClick={() => launchCampaign(status === 'stop' ? 'in_progress' : 'stop')}
+                    sx={{
+                      backgroundColor: status !== 'stop' ? '#c40c0c' : '#1f5634',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: status !== 'stop' ? '#a80808' : '#144d28'
+                      },
+                      '&.Mui-disabled': {
+                        backgroundColor: '#e0e0e0',
+                        color: '#a0a0a0'
+                      }
+                    }}
+                  >
+                    {status === 'stop' ? 'Continue' : 'Stop'}
+                  </Button>
+                )}
+              </>
+            ) : null}
+
             <Button
               variant='outlined'
               onClick={() =>

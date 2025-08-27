@@ -134,9 +134,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
 
           return (
             <Tooltip title={text} arrow placement='bottom-start'>
-              <Typography noWrap className='text-gray-800 font-medium'>
-                {truncated}
-              </Typography>
+              <Typography noWrap>{truncated}</Typography>
             </Tooltip>
           )
         }
@@ -196,9 +194,7 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       columnHelper.accessor('created_by', {
         header: 'Created By',
         cell: ({ row }: any) => (
-          <Typography className='text-gray-800 font-medium'>
-            {row.original.created_by ? row.original.created_by.name : '-'}
-          </Typography>
+          <Typography className=''>{row.original.created_by ? row.original.created_by.name : '-'}</Typography>
         )
       }),
 
@@ -243,9 +239,10 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   <i className='ri-multi-image-line text-blue-600' />
                 </IconButton>
               </Tooltip>
-              {console.log('row.original.status', row.original.status)}
 
-              <Tooltip title={Number(row.original.status) == 1 ? 'Cannot launch — campaign is still a draft' : 'Campaign'}>
+              <Tooltip
+                title={Number(row.original.status) == 1 ? 'Cannot launch — campaign is still a draft' : 'Campaign'}
+              >
                 <span className='cursor-pointer'>
                   <IconButton
                     size='small'
@@ -266,12 +263,20 @@ const AnnouncementListPage = ({ tableData }: { tableData?: UsersType[] }) => {
                   </IconButton>
                 </span>
               </Tooltip>
-              <Tooltip title={Number(row.original.status) == 3 ? 'Cannot delete published item' : 'Delete'}>
+              <Tooltip
+                title={
+                  Number(row.original.status) === 3
+                    ? 'Cannot delete published item'
+                    : (row.original.total_campaigns ?? 0) > 0
+                      ? 'Deletion not allowed: announcement is attached to a campaign'
+                      : 'Delete'
+                }
+              >
                 <span className='cursor-pointer'>
                   <IconButton
                     size='small'
                     onClick={() => handleDeleteClick(Number(row.original.id))}
-                    disabled={Number(row.original.status) == 3}
+                    disabled={Number(row.original.status) == 3 || row.original.total_campaigns > 0}
                   >
                     <i className='ri-delete-bin-7-line text-red-600' />
                   </IconButton>

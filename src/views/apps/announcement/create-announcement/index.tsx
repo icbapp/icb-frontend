@@ -1,7 +1,7 @@
 'use client'
 
 // pages/announcements/index.tsx
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Typography, Grid, TextField, Card, Skeleton, Box, Autocomplete, CardContent } from '@mui/material'
 // import Icon from 'src/@core/components/icon'
 import { useSelector } from 'react-redux'
@@ -80,47 +80,47 @@ const AnnouncementCreatePage = () => {
     setAnnouncementForm({ ...announcementForm, [field]: value })
   }
 
-  const handleSubmit = async () => {
+  const submittingRef = useRef(false)
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault()
+
+    if (submittingRef.current) return // prevent double submit
+    submittingRef.current = true
     setLoadings(true)
 
-    const formData = new FormData()
-
-    formData.append('id', editId ? String(editId) : '0')
-    formData.append('school_id', adminStore.school_id.toString())
-    formData.append('tenant_id', adminStore.tenant_id)
-    formData.append('title', announcementForm.title)
-    formData.append('description', description)
-    formData.append('location', announcementForm.location)
-    formData.append('status', announcementForm.status)
-
-    if (Array.isArray(files) && files.length > 0) {
-      files.forEach((fileWrapper, i) => {
-        if (fileWrapper.file instanceof File) {
-          formData.append(`attachments[${i}]`, fileWrapper.file)
-        } else if (fileWrapper instanceof File) {
-          formData.append(`attachments[${i}]`, fileWrapper)
-        }
-      })
-    }
-
     try {
-      const res = await api.post(`${endPointApi.addAnnouncements}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
-      if (res) {
-        setLoadings(false)
+      const formData = new FormData()
+      formData.append('id', editId ? String(editId) : '0')
+      formData.append('school_id', String(adminStore.school_id))
+      formData.append('tenant_id', adminStore.tenant_id)
+      formData.append('title', announcementForm.title ?? '')
+      formData.append('description', description ?? '')
+      formData.append('location', announcementForm.location ?? '')
+      formData.append('status', announcementForm.status ?? '')
+
+      if (Array.isArray(files) && files.length > 0) {
+        files.forEach((fileWrapper, i) => {
+          if (fileWrapper.file instanceof File) {
+            formData.append(`attachments[${i}]`, fileWrapper.file)
+          } else if (fileWrapper instanceof File) {
+            formData.append(`attachments[${i}]`, fileWrapper)
+          }
+        })
+      }
+      const res = await api.post(endPointApi.addAnnouncements, formData)
+
+      if (res?.data?.status === 200) {
         ShowSuccessToast(res.data.message || 'Announcement created successfully!')
         router.replace(getLocalizedUrl('/apps/announcement', locale as Locale))
+      } else {
+        ShowInfoToast(res?.data?.message || 'Something went wrong!')
       }
     } catch (error: any) {
+      ShowInfoToast(error?.response?.data?.message || 'Something went wrong!')
+    } finally {
       setLoadings(false)
-      // if (error.response.data.message === 'It will send the updated announcement to the remaining audience.') {
-      ShowInfoToast(error.response.data.message || 'Something went wrong!')
-      // } else {
-      //   ShowInfoToast(error.response.data.message || 'Something went wrong!')
-      // }
+      submittingRef.current = false
     }
   }
 
