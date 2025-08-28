@@ -342,15 +342,16 @@ const CreateCampaign = () => {
           campaign_id: ids
         }
       })
+
       if (res.data.status === 200) {
-        if (Array.isArray(res?.data?.role_only)) {
-          const selected = res.data.role_only.map((item: any) => ({
-            id: item.role_id,
-            name: item.role_name
-          }))
-          setSelectedLabels(selected)
-          setSelectedLabelsDataLack(selected)
-        }
+        // if (Array.isArray(res?.data?.role_only)) {
+        //   const selected = res.data.role_only.map((item: any) => ({
+        //     id: item.role_id,
+        //     name: item.role_name
+        //   }))
+        //   setSelectedLabels(selected)
+        //   setSelectedLabelsDataLack(selected)
+        // }
         const formatted = res.data.column_name.split(',').map((val: any) => ({
           id: val,
           name: val
@@ -379,92 +380,6 @@ const CreateCampaign = () => {
   useEffect(() => {
     fetchEditCampign()
   }, [ids])
-
-  const launchCampaign = async (status: string) => {
-    try {
-      const repeatNum = Number(recurringCount)
-
-      if (mode === 'recurring') {
-        if (!recurringCount || isNaN(repeatNum) || repeatNum < 2 || repeatNum > 99) {
-          setError('Please enter a number between 2 and 99')
-          return
-        }
-      }
-
-      if (!selectedIds || selectedIds.length === 0) {
-        ShowErrorToast('Please select at least one user to launch the campaign.')
-        return
-      }
-
-      if (mode === '') {
-        ShowErrorToast('Please select publishing mode.')
-        return
-      }
-      if (selectedChannel.length == 0 || !selectedChannel || selectedChannel == undefined) {
-        ShowErrorToast('The Communication Channels required.')
-        return
-      }
-      let date = ''
-      let time = ''
-      let timeampm = ''
-
-      if (dayjs(startDateTime).isValid()) {
-        const formatted = dayjs(startDateTime).format('YYYY-MM-DD hh:mm A')
-        const [datePart, timePart, ampm] = formatted.split(' ')
-        date = datePart || ''
-        time = timePart || ''
-        timeampm = ampm || ''
-      } else {
-        const formatted = dayjs().format('YYYY-MM-DD hh:mm A')
-        const [datePart, timePart, ampm] = formatted.split(' ')
-        date = datePart || ''
-        time = timePart || ''
-        timeampm = ampm || ''
-      }
-      const selectedFilter = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
-      const body = {
-        id: ids ? Number(ids) : 0,
-        note: note || '',
-        announcements_id: localStorage.getItem('announcementId'),
-        tenant_id: adminStore.tenant_id,
-        school_id: adminStore.school_id,
-        user_ids: selectedIds,
-        channels: ids ? [selectedChannel] : selectedChannel,
-        frequency_type: recurringType || '',
-        campaign_status: status,
-        publish_mode: mode,
-        schedule: scheduleType || '',
-        frequency_count: mode == 'one_time' ? 1 : recurringCount,
-        campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
-        campaign_time: time,
-        campaign_ampm: timeampm,
-        role_ids: '1',
-        column_name: selectedFilter
-      }
-      setisLoading(true)
-      const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
-      if (response.data.status === 200) {
-        ShowSuccessToast(response.data.message)
-        if (announcementId) {
-          router.replace(
-            getLocalizedUrl(
-              `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId))}`,
-              locale as Locale
-            )
-          )
-        } else {
-          ShowErrorToast('Invalid announcementId')
-          setisLoading(false)
-        }
-      }
-    } catch (error: any) {
-      setisLoading(false)
-      if (error.response?.status === 500) {
-        ShowErrorToast('Internal Server Error.')
-        setisLoading(false)
-      }
-    }
-  }
 
   const statuses = ['Draft', 'Ready', 'In Progress', 'Stopped', 'Done'] as const
   type StatusType = (typeof statuses)[number]
@@ -580,8 +495,33 @@ const CreateCampaign = () => {
     getfetchData()
   }, [])
 
-  console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack);
-console.log("filterWishCommonColumn",filterWishCommonColumn);
+  //filter
+  function transformRoleData(role: string, data: Record<string, any>) {
+    const result: Record<string, any> = {}
+
+    Object.entries(data).forEach(([key, value]) => {
+      // skip empty values
+      if (value === '' || value === null || (Array.isArray(value) && value.length === 0)) {
+        return
+      }
+
+      // store array values as is
+      if (Array.isArray(value)) {
+        result[key] = value
+      } else {
+        // wrap non-empty scalars into string or array based on your need
+        result[key] = value
+      }
+    })
+
+    return { [role]: result }
+  }
+
+  const student = transformRoleData('student', studentForm)
+  const parent = transformRoleData('parent', parentForm)
+  const teacher = transformRoleData('teacher', teacherForm)
+
+  const filters = { ...student, ...parent, ...teacher }
 
   const goFilterData = async () => {
     setisLoading(true)
@@ -590,10 +530,29 @@ console.log("filterWishCommonColumn",filterWishCommonColumn);
       const select = selectedLabelsDataLack.map((val: any) => val.id)
       const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
 
+      //column
+      type Item = { id: string; role: string }
+
+      const groupByRole = (items: Item[]) =>
+        items.reduce<Record<string, string[]>>((acc, { id, role }) => {
+          if (!acc[role]) acc[role] = []
+          if (!acc[role].includes(id)) acc[role].push(id)
+          return acc
+        }, {})
+
+      const grouped = groupByRole(filterWishSelectedLabelsDataLack)
+
+      // 👉 Always prepend defaults
+      const defaults = ['first_name', 'last_name',]
+
+      Object.keys(grouped).forEach(role => {
+        grouped[role] = [...defaults, ...grouped[role].filter(id => !defaults.includes(id))]
+      })
+
       const body = {
         roles: select,
-        filters: {},
-        column_name: filterWishSelectedLabelsDataLack,
+        filters: filters,
+        column_name: grouped,
         campaign_id: 0,
         announcement_id: 0,
         tenant_id: adminStore.tenant_id,
@@ -602,19 +561,17 @@ console.log("filterWishCommonColumn",filterWishCommonColumn);
         per_page: 10
       }
 
-      console.log("body", body);
-      
-      // const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
+      const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
 
-      // if (res.data.status === 'success') {
-        // setSelectedData(res.data.data)
-      // } else {
-        // console.warn('Unexpected response:', res.data)
-        // setFilterWishSelectedLabelsDataLack([])
-        // setFilterWishDataLack([])
+      if (res.data.status === 'success') {
+        setSelectedData(res.data.data)
+      } else {
+        console.warn('Unexpected response:', res.data)
+        setFilterWishSelectedLabelsDataLack([])
+        setFilterWishDataLack([])
 
         // Optionally: ShowErrorToast(res.data.message)
-      // }
+      }
     } catch (err: any) {
       console.error('Error fetching data:', err)
     } finally {
@@ -629,6 +586,95 @@ console.log("filterWishCommonColumn",filterWishCommonColumn);
       goFilterData()
     }
   }, [])
+
+  const launchCampaign = async (status: string) => {
+    try {
+      const repeatNum = Number(recurringCount)
+
+      if (mode === 'recurring') {
+        if (!recurringCount || isNaN(repeatNum) || repeatNum < 2 || repeatNum > 99) {
+          setError('Please enter a number between 2 and 99')
+          return
+        }
+      }
+
+      if (!selectedIds || selectedIds.length === 0) {
+        ShowErrorToast('Please select at least one user to launch the campaign.')
+        return
+      }
+
+      if (mode === '') {
+        ShowErrorToast('Please select publishing mode.')
+        return
+      }
+      if (selectedChannel.length == 0 || !selectedChannel || selectedChannel == undefined) {
+        ShowErrorToast('The Communication Channels required.')
+        return
+      }
+      let date = ''
+      let time = ''
+      let timeampm = ''
+
+      if (dayjs(startDateTime).isValid()) {
+        const formatted = dayjs(startDateTime).format('YYYY-MM-DD hh:mm A')
+        const [datePart, timePart, ampm] = formatted.split(' ')
+        date = datePart || ''
+        time = timePart || ''
+        timeampm = ampm || ''
+      } else {
+        const formatted = dayjs().format('YYYY-MM-DD hh:mm A')
+        const [datePart, timePart, ampm] = formatted.split(' ')
+        date = datePart || ''
+        time = timePart || ''
+        timeampm = ampm || ''
+      }
+      const selectedFilter = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
+
+      const body = {
+        id: ids ? Number(ids) : 0,
+        note: note || '',
+        announcements_id: localStorage.getItem('announcementId'),
+        tenant_id: adminStore.tenant_id,
+        school_id: adminStore.school_id,
+        user_ids: selectedIds,
+        channels: ids ? [selectedChannel] : selectedChannel,
+        frequency_type: recurringType || '',
+        campaign_status: status,
+        publish_mode: mode,
+        schedule: scheduleType || '',
+        frequency_count: mode == 'one_time' ? 1 : recurringCount,
+        campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
+        campaign_time: time,
+        campaign_ampm: timeampm,
+        role_ids: '1',
+        column_name: selectedFilter,
+        filters: filters
+      }
+      setisLoading(true)
+      const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
+      if (response.data.status === 200) {
+        ShowSuccessToast(response.data.message)
+        if (announcementId) {
+          router.replace(
+            getLocalizedUrl(
+              `/apps/announcement/campaign?campaignId=${encodeURIComponent(btoa(announcementId))}`,
+              locale as Locale
+            )
+          )
+        } else {
+          ShowErrorToast('Invalid announcementId')
+          setisLoading(false)
+        }
+      }
+    } catch (error: any) {
+      setisLoading(false)
+      if (error.response?.status === 500) {
+        ShowErrorToast('Internal Server Error.')
+        setisLoading(false)
+      }
+    }
+  }
+
   return (
     <>
       {isLoading && <Loader />}

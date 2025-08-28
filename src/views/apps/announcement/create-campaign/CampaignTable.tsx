@@ -172,7 +172,7 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
       columnHelper.accessor('note', {
-        header: 'note',
+        header: 'Title',
         // cell: ({ row }) => <Typography>{row.original.note}</Typography>
         cell: ({ row }) => {
           const htmlToText = (html: string): string => {

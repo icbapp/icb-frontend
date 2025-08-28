@@ -95,11 +95,21 @@ const FilterCampaign = ({
       prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
     )
   }
-  const handleSelect = (id: number) => {
-    setFilterWishSelectedLabelsDataLack((prev: any) =>
-      prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
-    )
-  }
+  // const handleSelect = (id: number, name: any) => {
+  //   setFilterWishSelectedLabelsDataLack((prev: any) =>
+  //     prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
+  //   )
+  // }
+
+  const handleSelect = (id: number, roleName: string) => {
+  setFilterWishSelectedLabelsDataLack((prev) => {
+    const exists = prev.find((x) => x.id === id)
+    if (exists) {
+      return prev.filter((x) => x.id !== id)
+    }
+    return [...prev, { id, role: roleName }]
+  })
+}
 
   const handleChangeColumnFilter = (field: string, value: string) => {
     setCommanColumnFilter((prev: any) => ({
@@ -145,8 +155,8 @@ const FilterCampaign = ({
   const array = [
     { id: 'f_name', name: 'First Name' },
     { id: 'l_name', name: 'Last Name' },
-    { id: 'email', name: 'Email' },
-    { id: 'phone', name: 'Phone' },
+    // { id: 'email', name: 'Email' },
+    // { id: 'phone', name: 'Phone' },
     { id: 'gender', name: 'Gender' }
   ]
 
@@ -156,9 +166,14 @@ const FilterCampaign = ({
     return acc
   }, {})
 
-  const excludedIds = ['email', 'last_name', 'mobile_phone', 'first_name', 'gender']
+  const excludedIds = ['last_name', 'first_name', 'gender']
 
-  // const filteredData = filterWishDataLack.filter(item => !excludedIds.includes(item.id))
+  const filteredData = filterWishDataLack.filter(item => !excludedIds.includes(item.id))
+  const groupedDataRoleWise = filteredData?.reduce((acc: any, item: any) => {
+    if (!acc[item.rol_name]) acc[item.rol_name] = []
+    acc[item.rol_name].push(item)
+    return acc
+  }, {})
   const groupedData = filterWishDataLack?.reduce((acc: any, item: any) => {
     if (!acc[item.rol_name]) acc[item.rol_name] = []
     acc[item.rol_name].push(item)
@@ -517,8 +532,8 @@ const FilterCampaign = ({
                   )
                 })}
 
-                {Object.keys(groupedData).map(role => {
-                  if (!groupedData[role] || groupedData[role].length === 0) {
+                {Object.keys(groupedDataRoleWise).map(role => {
+                  if (!groupedDataRoleWise[role] || groupedDataRoleWise[role].length === 0) {
                     return null
                   }
 
@@ -543,15 +558,17 @@ const FilterCampaign = ({
 
                       {/* Chips */}
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-                        {groupedData[role].map((item: any) => {
-                          const isSelected = filterWishSelectedLabelsDataLack.includes(item.id)
-                          const roleColor = roleChipColors[role.toLowerCase()] || '#1f5634'
+                        {groupedDataRoleWise[role].map((item: any) => {
+                          // const isSelected = filterWishSelectedLabelsDataLack.includes(item.id)
+                          const isSelected = filterWishSelectedLabelsDataLack.some((x) => x.id === item.id)
 
+                          const roleColor = roleChipColors[role.toLowerCase()] || '#1f5634'
+                          
                           return (
                             <Chip
                               key={item.id}
                               label={item.name}
-                              onClick={() => handleSelect(item.id)}
+                              onClick={() => handleSelect(item.id, item.rol_name)}
                               clickable
                               variant={isSelected ? 'filled' : 'outlined'}
                               sx={{
