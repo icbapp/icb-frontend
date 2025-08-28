@@ -55,7 +55,7 @@ export type Config = {
 
 const themeConfig: Config = {
   templateName: 'ICBrisbane',
-  homePageUrl: '/dashboards/academy',
+  homePageUrl: '/dashboards',
   settingsCookieName: 'ICBrisbane-mui-next-demo-1',
   mode: 'light', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'

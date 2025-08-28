@@ -33,7 +33,7 @@ const data: SearchData[] = [
   {
     id: '4',
     name: 'Academy Dashboard',
-    url: '/dashboards/academy',
+    url: '/dashboards',
     icon: 'ri-book-open-line',
     section: 'Dashboards'
   },

@@ -89,7 +89,7 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           renderExpandedMenuItemIcon: { icon: <i className='ri-circle-fill' /> }
         }}
       >
-        <MenuItem href={`/${locale}/dashboards/academy`} icon={<i className='ri-home-smile-line' />}>
+        <MenuItem href={`/${locale}/dashboards`} icon={<i className='ri-home-smile-line' />}>
           {dictionary['navigation'].dashboards}
         </MenuItem>
         <MenuItem href={`/${locale}/apps/user/list`} icon={<i className='ri-user-line' />}>

@@ -27,7 +27,7 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
       },
       {
         label: dictionary['navigation'].academy,
-        href: '/dashboards/academy'
+        href: '/dashboards'
       },
       {
         label: dictionary['navigation'].logistics,

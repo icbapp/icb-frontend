@@ -207,7 +207,7 @@ const SchoolAccountDetails = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       if (response.data.success) {
-        // router.push(getLocalizedUrl('/dashboards/academy/', locale as Locale));
+        // router.push(getLocalizedUrl('/dashboards', locale as Locale));
         dispatch(setAdminInfo(response.data.data))
         toast.success(response?.data?.message)
       }

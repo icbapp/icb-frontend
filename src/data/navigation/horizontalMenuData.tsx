@@ -27,7 +27,7 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
       {
         label: dictionary['navigation'].academy,
         icon: 'ri-graduation-cap-line',
-        href: '/dashboards/academy'
+        href: '/dashboards'
       },
       {
         label: dictionary['navigation'].logistics,

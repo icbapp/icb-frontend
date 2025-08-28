@@ -158,7 +158,7 @@ const AccountDetails = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       if (response.status === 200) {
-        router.push(getLocalizedUrl('/dashboards/academy/', locale as Locale));
+        router.push(getLocalizedUrl('/dashboards', locale as Locale));
         toast.success('Profile updated successfully')
       }
       // if (response.data?.success === true) {
@@ -360,7 +360,7 @@ const AccountDetails = () => {
             <Grid size={{ xs: 12 }} className='flex gap-4 flex-wrap pbs-6'>
               <SaveButton name={'Save'}  type='submit' disabled={false} />
               <CancelButtons name='Cancel' onClick={() => {
-                const url = getLocalizedUrl('/dashboards/academy/', locale as Locale);
+                const url = getLocalizedUrl('/dashboards', locale as Locale);
                 router.push(url);
               }}/>
             </Grid>

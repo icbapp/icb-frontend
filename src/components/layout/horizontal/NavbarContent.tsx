@@ -127,7 +127,7 @@ const NavbarContent = () => {
         <NavToggle />
         {/* Hide Logo on Smaller screens */}
         {!isBreakpointReached && (
-          <Link href={getLocalizedUrl('/dashboards/academy/', locale as Locale)}>
+          <Link href={getLocalizedUrl('/dashboards', locale as Locale)}>
             <Logo />
           </Link>
         )}

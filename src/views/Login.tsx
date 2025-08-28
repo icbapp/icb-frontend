@@ -145,7 +145,7 @@ const Login = ({ mode }: { mode: Mode }) => {
           // toast.success(`${showMsg.login}`);
           dispatch(setLoginInfo(response.data.data));
 
-          const redirectURL = searchParams.get('redirectTo') ?? '/dashboards/academy';
+          const redirectURL = searchParams.get('redirectTo') ?? '/dashboards';
           router.replace(getLocalizedUrl(redirectURL, locale as Locale));
 
           // Fetch permission after login

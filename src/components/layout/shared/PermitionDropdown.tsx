@@ -101,7 +101,7 @@ const PermitionDropdown = () => {
                         if (newValue) {
                             setSelectedRole(newValue);
                             dispatch(setUserSelectedRoleInfo(newValue));
-                            router.replace(getLocalizedUrl('/dashboards/academy/', locale));
+                            router.replace(getLocalizedUrl('/dashboards', locale));
                         }
                     }}
                     sx={{ width: 300 }}

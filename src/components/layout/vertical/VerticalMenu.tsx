@@ -232,10 +232,10 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               <>
                 {hasMenuPermission('dashboard') && (
                   <MenuItem
-                    href={`/${locale}/dashboards/academy`}
+                    href={`/${locale}/dashboards`}
                     icon={<i className='ri-home-smile-line' />}
                     exactMatch={false}
-                    activeUrl='/dashboards/academy'
+                    activeUrl='/dashboards'
                   >
                     {dictionary['navigation'].dashboards}
                   </MenuItem>
@@ -280,10 +280,10 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
                       return (
                         <MenuItem
                           key={item.menu_id}
-                          href={`/${locale}/dashboards/academy`}
+                          href={`/${locale}/dashboards`}
                           icon={<i className='ri-home-smile-line' />}
                           exactMatch={false}
-                          activeUrl='/dashboards/academy'
+                          activeUrl='/dashboards'
                         >
                           {dictionary['navigation'].dashboards}
                         </MenuItem>
