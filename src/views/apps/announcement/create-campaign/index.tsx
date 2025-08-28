@@ -254,58 +254,58 @@ const CreateCampaign = () => {
     fetchDataLack()
   }, [])
 
-const fetchFilterDataLack = async () => { 
-  setisLoading(true) 
-  try { 
-    const select = selectedLabelsDataLack.map((val: any) => val.id) 
+  const fetchFilterDataLack = async () => {
+    setisLoading(true)
+    try {
+      const select = selectedLabelsDataLack.map((val: any) => val.id)
 
-    const body = { 
-      roles: select 
-    } 
+      const body = {
+        roles: select
+      }
 
-    const res = await api.post(`${endPointApi.postfilterDataLack}`, body) 
-    if (res.data.status === 'success') { 
-      const filters = res.data.filters;
-      const allFilters: RoleOption[] = [];
-      
-      if (filters.parent && Array.isArray(filters.parent)) {
-        const parentFilters = filters.parent.map((item: any) => ({
-          id: item.column_name,
-          name: item.filter_name,
-          rol_name: 'parent',
-          filter_values: item.filter_values
-        }));
-        allFilters.push(...parentFilters);
+      const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
+      if (res.data.status === 'success') {
+        const filters = res.data.filters
+        const allFilters: RoleOption[] = []
+
+        if (filters.parent && Array.isArray(filters.parent)) {
+          const parentFilters = filters.parent.map((item: any) => ({
+            id: item.column_name,
+            name: item.filter_name,
+            rol_name: 'parent',
+            filter_values: item.filter_values
+          }))
+          allFilters.push(...parentFilters)
+        }
+
+        if (filters.student && Array.isArray(filters.student)) {
+          const studentFilters = filters.student.map((item: any) => ({
+            id: item.column_name,
+            name: item.filter_name,
+            rol_name: 'student',
+            filter_values: item.filter_values
+          }))
+          allFilters.push(...studentFilters)
+        }
+
+        if (filters.teacher && Array.isArray(filters.teacher)) {
+          const teacherFilters = filters.teacher.map((item: any) => ({
+            id: item.column_name,
+            name: item.filter_name,
+            rol_name: 'teacher',
+            filter_values: item.filter_values
+          }))
+          allFilters.push(...teacherFilters)
+        }
+
+        setFilterWishDataLack(allFilters)
       }
-      
-      if (filters.student && Array.isArray(filters.student)) {
-        const studentFilters = filters.student.map((item: any) => ({
-          id: item.column_name,
-          name: item.filter_name,
-          rol_name: 'student',
-          filter_values: item.filter_values
-        }));
-        allFilters.push(...studentFilters);
-      }
-      
-      if (filters.teacher && Array.isArray(filters.teacher)) {
-        const teacherFilters = filters.teacher.map((item: any) => ({
-          id: item.column_name,
-          name: item.filter_name,
-          rol_name: 'teacher',
-          filter_values: item.filter_values
-        }));
-        allFilters.push(...teacherFilters);
-      }
-      
-      setFilterWishDataLack(allFilters);
-    } 
-  } catch (err) { 
-    console.error('Error fetching filter data:', err) 
-  } finally { 
-    setisLoading(false) 
-  } 
-}
+    } catch (err) {
+      console.error('Error fetching filter data:', err)
+    } finally {
+      setisLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (selectedLabelsDataLack.length > 0) {
@@ -580,6 +580,9 @@ const fetchFilterDataLack = async () => {
     getfetchData()
   }, [])
 
+  console.log("filterWishSelectedLabelsDataLack",filterWishSelectedLabelsDataLack);
+console.log("filterWishCommonColumn",filterWishCommonColumn);
+
   const goFilterData = async () => {
     setisLoading(true)
 
@@ -589,24 +592,29 @@ const fetchFilterDataLack = async () => {
 
       const body = {
         roles: select,
+        filters: {},
         column_name: filterWishSelectedLabelsDataLack,
+        campaign_id: 0,
+        announcement_id: 0,
         tenant_id: adminStore.tenant_id,
         school_id: adminStore.school_id.toString(),
         page: 1,
         per_page: 10
       }
 
-      const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
+      console.log("body", body);
+      
+      // const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
 
-      if (res.data.status === 'success') {
-        setSelectedData(res.data.data)
-      } else {
-        console.warn('Unexpected response:', res.data)
+      // if (res.data.status === 'success') {
+        // setSelectedData(res.data.data)
+      // } else {
+        // console.warn('Unexpected response:', res.data)
         // setFilterWishSelectedLabelsDataLack([])
         // setFilterWishDataLack([])
 
         // Optionally: ShowErrorToast(res.data.message)
-      }
+      // }
     } catch (err: any) {
       console.error('Error fetching data:', err)
     } finally {
@@ -621,7 +629,6 @@ const fetchFilterDataLack = async () => {
       goFilterData()
     }
   }, [])
-
   return (
     <>
       {isLoading && <Loader />}
@@ -730,7 +737,12 @@ const fetchFilterDataLack = async () => {
               Bulk Delete
             </Button> */}
           {/* Grid */}
-          <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} connectDataLack={connectDataLack} />
+          <AudienceGrid
+            selectedData={selectedData}
+            setSelectedIds={setSelectedIds}
+            connectDataLack={connectDataLack}
+            selectedLabelsDataLack={selectedLabelsDataLack}
+          />
           {/* <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} /> */}
         </Box>
       </Card>

@@ -11,7 +11,13 @@ import {
   themeQuartz,
   ColDef
 } from 'ag-grid-community'
-import { ColumnMenuModule, ColumnsToolPanelModule, ContextMenuModule, RowGroupingModule,SetFilterModule } from 'ag-grid-enterprise'
+import {
+  ColumnMenuModule,
+  ColumnsToolPanelModule,
+  ContextMenuModule,
+  RowGroupingModule,
+  SetFilterModule
+} from 'ag-grid-enterprise'
 import { ModuleRegistry } from 'ag-grid-community'
 import { RowApiModule } from 'ag-grid-community'
 import { IconButton, Tooltip } from '@mui/material'
@@ -35,6 +41,7 @@ export interface Props {
   setSelectedIds: any
   selectedData: any
   connectDataLack: any
+  selectedLabelsDataLack: any
 }
 
 const theme = themeQuartz
@@ -55,7 +62,7 @@ const theme = themeQuartz
     'dark-red'
   )
 
-const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack }: Props) => {
+const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack, selectedLabelsDataLack }: Props) => {
   const [column, setColumn] = useState<ColDef[]>([])
 
   // const gridRef = useRef(null)
@@ -74,7 +81,16 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack }: Props) 
   useEffect(() => {
     if (selectedData && selectedData.length > 0) {
       const dynamicCols: ColDef[] = Object.keys(selectedData[0])
-        .filter((key: string) => key !== 'user_id' && key !== 'role_name' && key !== 'check' && key !== 'id' && key !== 'school_id' && key !== 'role_id' && key !== 'tenant_id')
+        .filter(
+          (key: string) =>
+            key !== 'user_id' &&
+            key !== 'role_name' &&
+            key !== 'check' &&
+            key !== 'id' &&
+            key !== 'school_id' &&
+            key !== 'role_id' &&
+            key !== 'tenant_id'
+        )
         .map(key => ({
           field: key,
           headerName: key.replace(/_/g, ' ').toUpperCase()
@@ -145,37 +161,41 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack }: Props) 
       }
     })
   }, [])
-
   return (
     <>
-      <div style={containerStyle}>
-        <div className='example-wrapper'>
-          <div style={gridStyle}>
-            <AgGridReact
-              theme={theme}
-              ref={gridRef}
-              rowData={selectedData}
-              columnDefs={connectDataLack ? column : columnDefs}
-              defaultColDef={defaultColDef}
-              autoGroupColumnDef={autoGroupColumnDef}
-              rowSelection='multiple'
-              groupSelectsChildren={true}
-              groupSelects='descendants'
-              animateRows={true}
-              suppressAggFuncInHeader={true}
-              suppressRowClickSelection={true}
-              pagination={pagination}
-              paginationPageSize={paginationPageSize}
-              paginationPageSizeSelector={paginationPageSizeSelector}
-              onSelectionChanged={handleSelectionChanged}
-              groupIncludeFooter={true}
-              onFirstDataRendered={onFirstDataRendered}
-              onRowDataUpdated={onRowDataUpdated}
-              overlayNoRowsTemplate={'<span >Choose filters to display data</span>'}
-            />
+      {selectedLabelsDataLack.map(val => (
+        <div style={containerStyle} key={val.id}>
+          <h5 style={{ marginBottom: '8px' }}>
+            {val.id.charAt(0).toUpperCase() + val.id.slice(1)}
+          </h5>
+          <div className='example-wrapper'>
+            <div style={gridStyle}>
+              <AgGridReact
+                theme={theme}
+                ref={gridRef}
+                rowData={selectedData[val.id] || []}
+                columnDefs={connectDataLack ? column : columnDefs}
+                defaultColDef={defaultColDef}
+                autoGroupColumnDef={autoGroupColumnDef}
+                rowSelection='multiple'
+                groupSelectsChildren={true}
+                groupSelects='descendants'
+                animateRows={true}
+                suppressAggFuncInHeader={true}
+                suppressRowClickSelection={true}
+                pagination={pagination}
+                paginationPageSize={paginationPageSize}
+                paginationPageSizeSelector={paginationPageSizeSelector}
+                onSelectionChanged={handleSelectionChanged}
+                groupIncludeFooter={true}
+                onFirstDataRendered={onFirstDataRendered}
+                onRowDataUpdated={onRowDataUpdated}
+                overlayNoRowsTemplate={'<span>Choose filters to display data</span>'}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      ))}
     </>
   )
 }
