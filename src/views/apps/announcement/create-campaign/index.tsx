@@ -336,6 +336,57 @@ const CreateCampaign = () => {
   const fetchEditCampign = async () => {
     setloaderMain(true)
     try {
+      // const body = {
+      //   roles: ['student', 'parent'],
+      //   announcement_id: localStorage.getItem('announcementId'),
+      //   campaign_id: ids
+      // }
+      // const resFilter = await api.post(`${endPointApi.postfilterDataLack}`, body)
+      // const selected = resFilter.data.roles.map((item: any) => ({
+      //   id: item,
+      //   name: item.charAt(0).toUpperCase() + item.slice(1)
+      // }))
+// console.log("resFilter.data.filters",resFilter.data);
+
+      // if (resFilter.data.status === 'success') {
+        // setSelectedLabelsDataLack(selected)
+        // const filters = resFilter.data.filters
+        // const allFilters: RoleOption[] = []
+
+        // if (filters.parent && Array.isArray(filters.parent)) {
+        //   const parentFilters = filters.parent.map((item: any) => ({
+        //     id: item.column_name,
+        //     name: item.filter_name,
+        //     rol_name: 'parent',
+        //     filter_values: item.filter_values
+        //   }))
+        //   allFilters.push(...parentFilters)
+        // }
+
+        // if (filters.student && Array.isArray(filters.student)) {
+        //   const studentFilters = filters.student.map((item: any) => ({
+        //     id: item.column_name,
+        //     name: item.filter_name,
+        //     rol_name: 'student',
+        //     filter_values: item.filter_values
+        //   }))
+        //   allFilters.push(...studentFilters)
+        // }
+
+        // if (filters.teacher && Array.isArray(filters.teacher)) {
+        //   const teacherFilters = filters.teacher.map((item: any) => ({
+        //     id: item.column_name,
+        //     name: item.filter_name,
+        //     rol_name: 'teacher',
+        //     filter_values: item.filter_values
+        //   }))
+        //   allFilters.push(...teacherFilters)
+        // }
+        // console.log("allFilters",allFilters);
+
+        // setFilterWishDataLack(allFilters)
+        // setSelectedData(resFilter.data.filters)
+      // }
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
           announcement_id: localStorage.getItem('announcementId'),
@@ -523,14 +574,8 @@ const CreateCampaign = () => {
 
   const filters = { ...student, ...parent, ...teacher }
 
-  const goFilterData = async () => {
-    setisLoading(true)
 
-    try {
-      const select = selectedLabelsDataLack.map((val: any) => val.id)
-      const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
-
-      //column
+    //column
       type Item = { id: string; role: string }
 
       const groupByRole = (items: Item[]) =>
@@ -543,11 +588,18 @@ const CreateCampaign = () => {
       const grouped = groupByRole(filterWishSelectedLabelsDataLack)
 
       // 👉 Always prepend defaults
-      const defaults = ['first_name', 'last_name',]
+      const defaults = ['first_name', 'last_name']
 
       Object.keys(grouped).forEach(role => {
         grouped[role] = [...defaults, ...grouped[role].filter(id => !defaults.includes(id))]
       })
+
+  const goFilterData = async () => {
+    setisLoading(true)
+
+    try {
+      const select = selectedLabelsDataLack.map((val: any) => val.id)
+      const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
 
       const body = {
         roles: select,
@@ -586,7 +638,7 @@ const CreateCampaign = () => {
       goFilterData()
     }
   }, [])
-
+  
   const launchCampaign = async (status: string) => {
     try {
       const repeatNum = Number(recurringCount)
@@ -648,7 +700,8 @@ const CreateCampaign = () => {
         campaign_ampm: timeampm,
         role_ids: '1',
         column_name: selectedFilter,
-        filters: filters
+        filters: filters,
+        db_selected_column: grouped,
       }
       setisLoading(true)
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)

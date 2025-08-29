@@ -102,14 +102,14 @@ const FilterCampaign = ({
   // }
 
   const handleSelect = (id: number, roleName: string) => {
-  setFilterWishSelectedLabelsDataLack((prev) => {
-    const exists = prev.find((x) => x.id === id)
-    if (exists) {
-      return prev.filter((x) => x.id !== id)
-    }
-    return [...prev, { id, role: roleName }]
-  })
-}
+    setFilterWishSelectedLabelsDataLack(prev => {
+      const exists = prev.find(x => x.id === id)
+      if (exists) {
+        return prev.filter(x => x.id !== id)
+      }
+      return [...prev, { id, role: roleName }]
+    })
+  }
 
   const handleChangeColumnFilter = (field: string, value: string) => {
     setCommanColumnFilter((prev: any) => ({
@@ -310,6 +310,55 @@ const FilterCampaign = ({
               <Typography variant='h6' fontWeight={600} sx={{ mb: 2 }}>
                 Role-wise Filters
               </Typography>
+              {selectedLabelsDataLack.some((val: any) => val.id === 'student') && (
+                <>
+                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2 }}>
+                    Students
+                  </Typography>
+                  <Grid container spacing={1}>
+                    {(groupedData?.student || []).map((field: any, index: number) => (
+                      <Grid item xs={12} md={2} key={index}>
+                        {field.filter_values !== null ? (
+                          <TextField
+                            label={field.name}
+                            select
+                            fullWidth
+                            value={studentForm?.[field.id] || []}
+                            onChange={e => handleChangeStudentForm(field.id, e.target.value)}
+                            SelectProps={{
+                              multiple: true,
+                              renderValue: (selected: any) => selected.join(', ')
+                            }}
+                          >
+                            {field.filter_values.split(',').map((option: string, i: number) => (
+                              <MenuItem key={i} value={option.trim()}>
+                                {option.trim()}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        ) : (
+                          <TextField
+                            label={field.name}
+                            fullWidth
+                            type={
+                              field.id === 'dob' || field.id === 'entry_date' || field.id === 'exit_date'
+                                ? 'date'
+                                : 'text'
+                            }
+                            value={studentForm?.[field.id] || ''}
+                            onChange={e => handleChangeStudentForm(field.id, e.target.value)}
+                            InputLabelProps={
+                              field.id === 'dob' || field.id === 'entry_date' || field.id === 'exit_date'
+                                ? { shrink: true }
+                                : {}
+                            }
+                          />
+                        )}
+                      </Grid>
+                    ))}
+                  </Grid>
+                </>
+              )}
               {selectedLabelsDataLack.some((val: any) => val.id === 'parent') && (
                 <>
                   <Typography variant='h6' fontWeight={600} sx={{ mt: 2 }}>
@@ -390,55 +439,6 @@ const FilterCampaign = ({
                             onChange={e => handleChangeTeacherForm(field.id, e.target.value)}
                             InputLabelProps={
                               field.id === 'dob' || field.id === 'start_date' || field.id === 'end_date'
-                                ? { shrink: true }
-                                : {}
-                            }
-                          />
-                        )}
-                      </Grid>
-                    ))}
-                  </Grid>
-                </>
-              )}
-              {selectedLabelsDataLack.some((val: any) => val.id === 'student') && (
-                <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2 }}>
-                    Students
-                  </Typography>
-                  <Grid container spacing={1}>
-                    {(groupedData?.student || []).map((field: any, index: number) => (
-                      <Grid item xs={12} md={2} key={index}>
-                        {field.filter_values !== null ? (
-                          <TextField
-                            label={field.name}
-                            select
-                            fullWidth
-                            value={studentForm?.[field.id] || []}
-                            onChange={e => handleChangeStudentForm(field.id, e.target.value)}
-                            SelectProps={{
-                              multiple: true,
-                              renderValue: (selected: any) => selected.join(', ')
-                            }}
-                          >
-                            {field.filter_values.split(',').map((option: string, i: number) => (
-                              <MenuItem key={i} value={option.trim()}>
-                                {option.trim()}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                        ) : (
-                          <TextField
-                            label={field.name}
-                            fullWidth
-                            type={
-                              field.id === 'dob' || field.id === 'entry_date' || field.id === 'exit_date'
-                                ? 'date'
-                                : 'text'
-                            }
-                            value={studentForm?.[field.id] || ''}
-                            onChange={e => handleChangeStudentForm(field.id, e.target.value)}
-                            InputLabelProps={
-                              field.id === 'dob' || field.id === 'entry_date' || field.id === 'exit_date'
                                 ? { shrink: true }
                                 : {}
                             }
@@ -560,10 +560,10 @@ const FilterCampaign = ({
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
                         {groupedDataRoleWise[role].map((item: any) => {
                           // const isSelected = filterWishSelectedLabelsDataLack.includes(item.id)
-                          const isSelected = filterWishSelectedLabelsDataLack.some((x) => x.id === item.id)
+                          const isSelected = filterWishSelectedLabelsDataLack.some(x => x.id === item.id)
 
                           const roleColor = roleChipColors[role.toLowerCase()] || '#1f5634'
-                          
+
                           return (
                             <Chip
                               key={item.id}
