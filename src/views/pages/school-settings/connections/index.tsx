@@ -16,11 +16,12 @@ import CustomIconButton from '@core/components/mui/IconButton'
 import { api } from '@/utils/axiosInstance'
 import Loader from '@/components/Loader'
 import { toast } from 'react-toastify'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
 import { Skeleton } from '@mui/material'
 import ConfirmDialog from '@/comman/dialog/ConfirmDialog'
 import endPointApi from '@/utils/endPointApi'
+import { setConnectDataLack } from '@/redux-store/slices/dataLack'
 
 type ConnectedAccountsType = {
   title: string
@@ -105,6 +106,7 @@ const socialAccountsArr: SocialAccountsType[] = [
 const Connections = () => {
   const loginStore = useSelector((state: RootState) => state.login)
   const adminStore = useSelector((state: RootState) => state.admin)
+  const dispatch = useDispatch()
 
   const [statuConnected, setStatusConnected] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -181,6 +183,8 @@ const Connections = () => {
     fetchData()
   }, [])
 
+    const connection = useSelector((state: RootState) => state.dataLack)
+  
   useEffect(() => {
     api.get('/ms-auth-token/school-token-valide').then(response => {
       setStatusConnected(response.data.satus)
@@ -196,7 +200,6 @@ const Connections = () => {
 
     try {
       const response = await api.post(`${endPointApi.postConnectionView}`, formData)
-
       if (response?.data?.success) {
         getfetchData()
         toast.success(response?.data?.message)
@@ -208,14 +211,19 @@ const Connections = () => {
     }
   }
 
-  const getfetchData = async () =>{
+  const getfetchData = async () => {
+    try {
       const res = await api.get(`${endPointApi.getConnectionView}`)
       setChecked(res.data.data[0].status_view)
+      dispatch(setConnectDataLack(res.data.data[0].status_view))
+    } catch (err) {
+      console.error('Error fetching status_view:', err)
+    }
   }
 
-  useEffect(() =>{
+  useEffect(() => {
     getfetchData()
-  },[])
+  }, [])
   return (
     <>
       <Card>

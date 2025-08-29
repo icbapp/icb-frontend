@@ -32,7 +32,7 @@ import {
 } from '@/comman/dropdownOptions/DropdownOptions'
 
 export interface Props {
-  loadingDataLack: boolean
+  roleLoading: boolean
   connectDataLack: string | null
   rolesListDataLack: any
   selectedLabelsDataLack: any
@@ -58,7 +58,7 @@ export interface Props {
   filterWishCommonColumn?: any
 }
 const FilterCampaign = ({
-  loadingDataLack,
+  roleLoading,
   connectDataLack,
   rolesListDataLack,
   selectedLabelsDataLack,
@@ -192,16 +192,10 @@ const FilterCampaign = ({
           <Typography variant='h6' fontWeight={600} mb={3}>
             Select Roles
           </Typography>
-          {loadingDataLack ? (
+          {roleLoading ? (
             <Grid container spacing={2}>
               <Grid item>
-                <Skeleton variant='rectangular' width={300} height={56} className='rounded-md' />
-              </Grid>
-              <Grid item>
-                <Skeleton variant='rectangular' width={300} height={56} className='rounded-md' />
-              </Grid>
-              <Grid item>
-                <Skeleton variant='rectangular' height={40} width={80} className='rounded-md mt-2' />
+                <Skeleton variant='rectangular' width={600} height={56} className='rounded-md' />
               </Grid>
             </Grid>
           ) : connectDataLack ? (

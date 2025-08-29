@@ -48,6 +48,8 @@ const CreateCampaign = () => {
   const router = useRouter()
   const { lang: locale } = useParams()
   const { settings } = useSettings()
+  const connection = useSelector((state: RootState) => state.dataLack)
+
   const announcementId = localStorage.getItem('announcementId')
   const searchParams = useSearchParams()
   const ids = atob(decodeURIComponent(searchParams.get('id') || ''))
@@ -95,7 +97,7 @@ const CreateCampaign = () => {
   const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
   const [connectDataLack, setConnectDataLack] = useState('')
-  const [loadingDataLack, setloadingDataLack] = useState(false)
+  const [roleLoading, setroleLoading] = useState(false)
   const [isLoading, setisLoading] = useState(false)
   const [loaderMain, setloaderMain] = useState(false)
 
@@ -239,14 +241,19 @@ const CreateCampaign = () => {
 
   const fetchDataLack = async () => {
     try {
+      setroleLoading(true)
       const response = await api.get(`${endPointApi.getAllRolesDataLack}`)
-      const roles: RoleOption[] = response.data.roles.map((r: any) => ({
-        id: r.rol_name,
-        name: r.rol_name.charAt(0).toUpperCase() + r.rol_name.slice(1)
-      }))
-      setRolesListDataLack(roles)
+      if (response.data.status === 'success') {
+        const roles: RoleOption[] = response.data.roles.map((r: any) => ({
+          id: r.rol_name,
+          name: r.rol_name.charAt(0).toUpperCase() + r.rol_name.slice(1)
+        }))
+        setRolesListDataLack(roles)
+        setroleLoading(false)
+      }
     } catch (err) {
       return null
+      setroleLoading(false)
     }
   }
 
@@ -346,46 +353,46 @@ const CreateCampaign = () => {
       //   id: item,
       //   name: item.charAt(0).toUpperCase() + item.slice(1)
       // }))
-// console.log("resFilter.data.filters",resFilter.data);
+      // console.log("resFilter.data.filters",resFilter.data);
 
       // if (resFilter.data.status === 'success') {
-        // setSelectedLabelsDataLack(selected)
-        // const filters = resFilter.data.filters
-        // const allFilters: RoleOption[] = []
+      // setSelectedLabelsDataLack(selected)
+      // const filters = resFilter.data.filters
+      // const allFilters: RoleOption[] = []
 
-        // if (filters.parent && Array.isArray(filters.parent)) {
-        //   const parentFilters = filters.parent.map((item: any) => ({
-        //     id: item.column_name,
-        //     name: item.filter_name,
-        //     rol_name: 'parent',
-        //     filter_values: item.filter_values
-        //   }))
-        //   allFilters.push(...parentFilters)
-        // }
+      // if (filters.parent && Array.isArray(filters.parent)) {
+      //   const parentFilters = filters.parent.map((item: any) => ({
+      //     id: item.column_name,
+      //     name: item.filter_name,
+      //     rol_name: 'parent',
+      //     filter_values: item.filter_values
+      //   }))
+      //   allFilters.push(...parentFilters)
+      // }
 
-        // if (filters.student && Array.isArray(filters.student)) {
-        //   const studentFilters = filters.student.map((item: any) => ({
-        //     id: item.column_name,
-        //     name: item.filter_name,
-        //     rol_name: 'student',
-        //     filter_values: item.filter_values
-        //   }))
-        //   allFilters.push(...studentFilters)
-        // }
+      // if (filters.student && Array.isArray(filters.student)) {
+      //   const studentFilters = filters.student.map((item: any) => ({
+      //     id: item.column_name,
+      //     name: item.filter_name,
+      //     rol_name: 'student',
+      //     filter_values: item.filter_values
+      //   }))
+      //   allFilters.push(...studentFilters)
+      // }
 
-        // if (filters.teacher && Array.isArray(filters.teacher)) {
-        //   const teacherFilters = filters.teacher.map((item: any) => ({
-        //     id: item.column_name,
-        //     name: item.filter_name,
-        //     rol_name: 'teacher',
-        //     filter_values: item.filter_values
-        //   }))
-        //   allFilters.push(...teacherFilters)
-        // }
-        // console.log("allFilters",allFilters);
+      // if (filters.teacher && Array.isArray(filters.teacher)) {
+      //   const teacherFilters = filters.teacher.map((item: any) => ({
+      //     id: item.column_name,
+      //     name: item.filter_name,
+      //     rol_name: 'teacher',
+      //     filter_values: item.filter_values
+      //   }))
+      //   allFilters.push(...teacherFilters)
+      // }
+      // console.log("allFilters",allFilters);
 
-        // setFilterWishDataLack(allFilters)
-        // setSelectedData(resFilter.data.filters)
+      // setFilterWishDataLack(allFilters)
+      // setSelectedData(resFilter.data.filters)
       // }
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
@@ -527,23 +534,8 @@ const CreateCampaign = () => {
     getNotificationViewLog()
   }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
 
-  const getfetchData = async () => {
-    try {
-      setloadingDataLack(true)
-      const res = await api.get(endPointApi.getConnectionView)
-
-      if (res.data.status === 200) {
-        setConnectDataLack(res.data.data[0].status_view)
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    } finally {
-      setloadingDataLack(false)
-    }
-  }
-
   useEffect(() => {
-    getfetchData()
+    setConnectDataLack(connection?.connectDataLack)
   }, [])
 
   //filter
@@ -574,25 +566,24 @@ const CreateCampaign = () => {
 
   const filters = { ...student, ...parent, ...teacher }
 
+  //column
+  type Item = { id: string; role: string }
 
-    //column
-      type Item = { id: string; role: string }
+  const groupByRole = (items: Item[]) =>
+    items.reduce<Record<string, string[]>>((acc, { id, role }) => {
+      if (!acc[role]) acc[role] = []
+      if (!acc[role].includes(id)) acc[role].push(id)
+      return acc
+    }, {})
 
-      const groupByRole = (items: Item[]) =>
-        items.reduce<Record<string, string[]>>((acc, { id, role }) => {
-          if (!acc[role]) acc[role] = []
-          if (!acc[role].includes(id)) acc[role].push(id)
-          return acc
-        }, {})
+  const grouped = groupByRole(filterWishSelectedLabelsDataLack)
 
-      const grouped = groupByRole(filterWishSelectedLabelsDataLack)
+  // 👉 Always prepend defaults
+  const defaults = ['first_name', 'last_name']
 
-      // 👉 Always prepend defaults
-      const defaults = ['first_name', 'last_name']
-
-      Object.keys(grouped).forEach(role => {
-        grouped[role] = [...defaults, ...grouped[role].filter(id => !defaults.includes(id))]
-      })
+  Object.keys(grouped).forEach(role => {
+    grouped[role] = [...defaults, ...grouped[role].filter(id => !defaults.includes(id))]
+  })
 
   const goFilterData = async () => {
     setisLoading(true)
@@ -638,7 +629,7 @@ const CreateCampaign = () => {
       goFilterData()
     }
   }, [])
-  
+
   const launchCampaign = async (status: string) => {
     try {
       const repeatNum = Number(recurringCount)
@@ -701,7 +692,7 @@ const CreateCampaign = () => {
         role_ids: '1',
         column_name: selectedFilter,
         filters: filters,
-        db_selected_column: grouped,
+        db_selected_column: grouped
       }
       setisLoading(true)
       const response = await api.post(`${endPointApi.postLaunchCampaign}`, body)
@@ -758,13 +749,13 @@ const CreateCampaign = () => {
 
       <Card sx={{ mt: 4 }}>
         <Box p={6} position='relative'>
-          {loadingDataLack ? (
+          {/* {loadingDataLack ? (
             <Grid container spacing={2}>
               <Grid item>
                 <Skeleton variant='rectangular' width={1340} height={60} className='rounded-md' />
               </Grid>
             </Grid>
-          ) : (
+          ) : ( */}
             <TextField
               label='Campaign title'
               placeholder='Campaign title.....'
@@ -780,7 +771,7 @@ const CreateCampaign = () => {
               error={note?.length > 100}
               helperText={`${note?.length || 0}/100 characters`}
             />
-          )}
+          {/* )} */}
           {/* Icon positioned at bottom right */}
           <Box
             position='absolute'
@@ -805,7 +796,7 @@ const CreateCampaign = () => {
       </Card>
 
       <FilterCampaign
-        loadingDataLack={loadingDataLack}
+        roleLoading={roleLoading}
         connectDataLack={connectDataLack}
         rolesListDataLack={rolesListDataLack}
         selectedLabelsDataLack={selectedLabelsDataLack}
