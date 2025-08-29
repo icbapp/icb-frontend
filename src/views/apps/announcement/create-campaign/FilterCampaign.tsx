@@ -95,17 +95,16 @@ const FilterCampaign = ({
       prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
     )
   }
-  // const handleSelect = (id: number, name: any) => {
-  //   setFilterWishSelectedLabelsDataLack((prev: any) =>
-  //     prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
-  //   )
-  // }
 
+  // type of selection state
+  type SelectedItem = { id: number; role: string }
+
+  // toggle selection scoped by BOTH id and role
   const handleSelect = (id: number, roleName: string) => {
     setFilterWishSelectedLabelsDataLack(prev => {
-      const exists = prev.find(x => x.id === id)
-      if (exists) {
-        return prev.filter(x => x.id !== id)
+      const idx = prev.findIndex(x => x.id === id && x.role === roleName)
+      if (idx !== -1) {
+        return prev.filter((_, i) => i !== idx) // remove only that role's chip
       }
       return [...prev, { id, role: roleName }]
     })
@@ -559,14 +558,15 @@ const FilterCampaign = ({
                       {/* Chips */}
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
                         {groupedDataRoleWise[role].map((item: any) => {
-                          // const isSelected = filterWishSelectedLabelsDataLack.includes(item.id)
-                          const isSelected = filterWishSelectedLabelsDataLack.some(x => x.id === item.id)
-
                           const roleColor = roleChipColors[role.toLowerCase()] || '#1f5634'
+                          // role-aware selection check
+                          const isSelected = filterWishSelectedLabelsDataLack.some(
+                            x => x.id === item.id && x.role === item.rol_name
+                          )
 
                           return (
                             <Chip
-                              key={item.id}
+                              key={`${item.rol_name}-${item.id}`} // unique per role + id
                               label={item.name}
                               onClick={() => handleSelect(item.id, item.rol_name)}
                               clickable
@@ -577,11 +577,11 @@ const FilterCampaign = ({
                                 py: 0.5,
                                 fontSize: '0.85rem',
                                 fontWeight: 500,
-                                borderColor: isSelected ? roleColor : roleColor,
+                                borderColor: roleColor,
                                 backgroundColor: isSelected ? roleColor : 'transparent',
                                 color: isSelected ? '#5c5a5aff' : '#696767ff',
                                 '&:hover': {
-                                  backgroundColor: isSelected ? roleColor : `${roleColor}20` // lighter tint when not selected
+                                  backgroundColor: isSelected ? roleColor : `${roleColor}20`
                                 }
                               }}
                             />
