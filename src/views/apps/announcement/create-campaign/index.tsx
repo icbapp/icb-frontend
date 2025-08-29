@@ -821,8 +821,8 @@ const CreateCampaign = () => {
         setSelectedData={setSelectedData}
         setSelectedLabels={setSelectedLabels}
       />
-      <Card sx={{ mt: 4 }}>
-        <Box p={6}>
+      {/* <Card sx={{ mt: 4 }}> */}
+        <Box mt={4}>
           {/* <Button variant='contained'>
               Bulk Delete
             </Button> */}
@@ -835,7 +835,7 @@ const CreateCampaign = () => {
           />
           {/* <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} /> */}
         </Box>
-      </Card>
+      {/* </Card> */}
       <Card sx={{ mt: 4, overflow: 'visible' }}>
         <Box p={6}>
           <Grid container spacing={4}>

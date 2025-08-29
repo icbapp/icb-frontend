@@ -238,12 +238,12 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack, selectedL
       </div>
       </div> */}
 
-      {Object.entries(selectedData).map(([role, rows]) =>
+      {Object?.entries(selectedData).map(([role, rows]) =>
         Array.isArray(rows) && rows.length > 0 ? (
-          <div key={role} className='rounded-lg border bg-white shadow-sm'>
+          <div key={role} className='rounded-lg border bg-white shadow-sm mb-4'>
             <div className='px-4 py-3 border-b'>
               <h3 className='text-base font-semibold'>{toTitle(role)}</h3>
-              <p className='text-xs text-gray-500'>{rows.length} records</p>
+              {/* <p className='text-xs text-gray-500'>{rows.length} records</p> */}
             </div>
             <div className='p-4'>
               <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>

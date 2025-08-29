@@ -358,38 +358,64 @@ const FilterCampaign = ({
                     Parents
                   </Typography>
                   <Grid container spacing={1}>
-                    {(groupedData?.parent || []).map((field: any, index: number) => (
-                      <Grid item xs={12} md={2} key={index}>
-                        {field.filter_values &&
-                        field.filter_values !== null &&
-                        typeof field.filter_values === 'string' ? (
-                          <TextField
-                            label={field.name}
-                            select
-                            fullWidth
-                            value={parentForm?.[field.id] || []}
-                            onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
-                            SelectProps={{
-                              multiple: true,
-                              renderValue: (selected: any) => selected.join(', ')
-                            }}
-                          >
-                            {field.filter_values.split(',').map((option: string, i: number) => (
-                              <MenuItem key={i} value={option.trim()}>
-                                {option.trim()}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                        ) : (
-                          <TextField
-                            label={field.name}
-                            fullWidth
-                            value={parentForm?.[field.id] || ''}
-                            onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
-                          />
-                        )}
-                      </Grid>
-                    ))}
+                    {(groupedData?.parent ?? []).map((field: any) => {
+                      // Normalize options (stringified JSON or array)
+                      const contactOptions: { contact_type: string; contact_desc: string }[] = Array.isArray(
+                        field?.filter_values
+                      )
+                        ? field.filter_values
+                        : (() => {
+                            try {
+                              return JSON.parse(field?.filter_values || '[]')
+                            } catch {
+                              return []
+                            }
+                          })()
+
+                      // Is this a contact-type multi-select?
+                      const isContactSelect =
+                        Array.isArray(contactOptions) &&
+                        contactOptions.length > 0 &&
+                        contactOptions[0]?.contact_type !== undefined
+
+                      // Value: array for multi-select, string otherwise
+                      const value = parentForm?.[field.id] ?? (isContactSelect ? [] : '')
+
+                      // Build a quick lookup map (no hooks)
+                      const byType = new Map(contactOptions.map(o => [String(o.contact_type), o.contact_desc]))
+
+                      return (
+                        <Grid item xs={12} md={2} key={field.id ?? field.name}>
+                          {isContactSelect ? (
+                            <TextField
+                              label={field.name}
+                              select
+                              fullWidth
+                              value={value} // array of contact_type strings
+                              onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
+                              SelectProps={{
+                                multiple: true,
+                                renderValue: (selected: string[]) =>
+                                  (selected ?? []).map(v => byType.get(String(v)) ?? v).join(', ')
+                              }}
+                            >
+                              {contactOptions.map(opt => (
+                                <MenuItem key={opt.contact_type} value={String(opt.contact_type)}>
+                                  {opt.contact_desc}
+                                </MenuItem>
+                              ))}
+                            </TextField>
+                          ) : (
+                            <TextField
+                              label={field.name}
+                              fullWidth
+                              value={value}
+                              onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
+                            />
+                          )}
+                        </Grid>
+                      )
+                    })}
                   </Grid>
                 </>
               )}
