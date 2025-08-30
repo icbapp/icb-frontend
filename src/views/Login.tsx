@@ -186,44 +186,44 @@ const Login = ({ mode }: { mode: Mode }) => {
     }
   }, [adminStore])
 
-  const firstApiCall = async () => {
-    // try {
-    // setLoading(true);
-    const hostNameParts = window.location.hostname.split('.')
-    const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool'
+  // const firstApiCall = async () => {
+  //   // try {
+  //   // setLoading(true);
+  //   const hostNameParts = window.location.hostname.split('.')
+  //   const hostNameData = hostNameParts.length > 2 ? hostNameParts[0] : 'icbmyschool'
 
-    const baseURL = process.env.NEXT_PUBLIC_APP_URL
+  //   const baseURL = process.env.NEXT_PUBLIC_APP_URL
 
-    if (!baseURL) {
-      throw new Error('')
-    }
+  //   if (!baseURL) {
+  //     throw new Error('')
+  //   }
 
-    const formData = new URLSearchParams()
-    formData.append('type', hostNameData)
+  //   const formData = new URLSearchParams()
+  //   formData.append('type', hostNameData)
 
-    try {
-      const res = await fetch(baseURL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData.toString()
-      })
+  //   try {
+  //     const res = await fetch(baseURL, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/x-www-form-urlencoded'
+  //       },
+  //       body: formData.toString()
+  //     })
 
-      const data = await res.json()
+  //     const data = await res.json()
 
-      if (data.status === 200) {
-        dispatch(setAdminInfo(data.data))
-        //   setLoading(false);
-      }
-    } catch (error) {
-      console.error('Error calling API', error)
-    }
-  }
+  //     if (data.status === 200) {
+  //       dispatch(setAdminInfo(data.data))
+  //       //   setLoading(false);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error calling API', error)
+  //   }
+  // }
 
-  useEffect(() => {
-    firstApiCall()
-  }, [])
+  // useEffect(() => {
+  //   firstApiCall()
+  // }, [])
 
   return (
     <div className='flex bs-full justify-center'>
