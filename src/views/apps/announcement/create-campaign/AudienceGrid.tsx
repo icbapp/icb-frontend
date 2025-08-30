@@ -43,6 +43,8 @@ export interface Props {
   selectedData: any
   connectDataLack: any
   selectedLabelsDataLack: any
+  setSelectRowId: any
+  selectRowId: any
 }
 
 const theme = themeQuartz
@@ -63,7 +65,14 @@ const theme = themeQuartz
     'dark-red'
   )
 
-const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack, selectedLabelsDataLack }: Props) => {
+const AudienceGrid = ({
+  setSelectedIds,
+  selectedData,
+  connectDataLack,
+  selectedLabelsDataLack,
+  setSelectRowId,
+  selectRowId
+}: Props) => {
   const [column, setColumn] = useState<ColDef[]>([])
 
   const gridRef = useRef(null)
@@ -195,6 +204,13 @@ const AudienceGrid = ({ setSelectedIds, selectedData, connectDataLack, selectedL
     if (gridRef.current) {
       const selectedNodes = gridRef.current.api.getSelectedNodes()
       setSelectedIds(selectedNodes.map((node: any) => (node.data.id ? node.data.id : node.data.user_id)))
+      const ids = selectedNodes.map((node: any) => node.data.id ?? node.data.user_id)
+
+      // setSelectRowId(prev => {
+      //   const merged = [...prev, ...ids]
+      //   return Array.from(new Set(merged))
+      // })
+       setSelectRowId(ids)
     }
   }
   return (

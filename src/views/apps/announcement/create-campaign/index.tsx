@@ -80,7 +80,8 @@ const CreateCampaign = () => {
   const [viewEmailLog, setViewEmailLog] = useState([])
   const [viewNotificationLog, setViewNotificationLog] = useState([])
   const [error, setError] = useState('')
-  const [errorMode, setErrorMode] = useState('')
+  const [selectRowId, setSelectRowId] = useState([])
+  
   //   const [error, setError] = useState({
   //   message: '',
   //   mode: ''
@@ -253,7 +254,6 @@ const CreateCampaign = () => {
       }
     } catch (err) {
       return null
-      setroleLoading(false)
     }
   }
 
@@ -832,6 +832,8 @@ const CreateCampaign = () => {
             setSelectedIds={setSelectedIds}
             connectDataLack={connectDataLack}
             selectedLabelsDataLack={selectedLabelsDataLack}
+            setSelectRowId={setSelectRowId}
+            selectRowId={selectRowId}
           />
           {/* <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} /> */}
         </Box>
