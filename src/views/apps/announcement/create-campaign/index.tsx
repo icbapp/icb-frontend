@@ -43,6 +43,7 @@ import { ShowErrorToast, ShowSuccessToast } from '@/comman/toastsCustom/Toast'
 import Loader from '@/components/Loader'
 import FilterCampaign from './FilterCampaign'
 import { email } from 'valibot'
+import LocalAudienceGrid from './LocalAudienceGrid'
 
 const CreateCampaign = () => {
   const router = useRouter()
@@ -81,7 +82,7 @@ const CreateCampaign = () => {
   const [viewNotificationLog, setViewNotificationLog] = useState([])
   const [error, setError] = useState('')
   const [selectRowId, setSelectRowId] = useState([])
-  
+
   //   const [error, setError] = useState({
   //   message: '',
   //   mode: ''
@@ -756,21 +757,21 @@ const CreateCampaign = () => {
               </Grid>
             </Grid>
           ) : ( */}
-            <TextField
-              label='Campaign title'
-              placeholder='Campaign title.....'
-              value={note}
-              onChange={e => {
-                if (e.target.value?.length <= 100) {
-                  setNote(e.target.value)
-                }
-              }}
-              fullWidth
-              multiline
-              minRows={1}
-              error={note?.length > 100}
-              helperText={`${note?.length || 0}/100 characters`}
-            />
+          <TextField
+            label='Campaign title'
+            placeholder='Campaign title.....'
+            value={note}
+            onChange={e => {
+              if (e.target.value?.length <= 100) {
+                setNote(e.target.value)
+              }
+            }}
+            fullWidth
+            multiline
+            minRows={1}
+            error={note?.length > 100}
+            helperText={`${note?.length || 0}/100 characters`}
+          />
           {/* )} */}
           {/* Icon positioned at bottom right */}
           <Box
@@ -822,11 +823,13 @@ const CreateCampaign = () => {
         setSelectedLabels={setSelectedLabels}
       />
       {/* <Card sx={{ mt: 4 }}> */}
-        <Box mt={4}>
-          {/* <Button variant='contained'>
-              Bulk Delete
-            </Button> */}
-          {/* Grid */}
+      <Box mt={4}>
+        {connectDataLack === 0 ? (
+          <LocalAudienceGrid
+            selectedData={selectedData}
+            setSelectedIds={setSelectedIds}
+          />
+        ) : (
           <AudienceGrid
             selectedData={selectedData}
             setSelectedIds={setSelectedIds}
@@ -835,8 +838,8 @@ const CreateCampaign = () => {
             setSelectRowId={setSelectRowId}
             selectRowId={selectRowId}
           />
-          {/* <AudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} /> */}
-        </Box>
+        )}
+      </Box>
       {/* </Card> */}
       <Card sx={{ mt: 4, overflow: 'visible' }}>
         <Box p={6}>

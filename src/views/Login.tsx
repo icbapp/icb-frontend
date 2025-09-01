@@ -143,8 +143,9 @@ const Login = ({ mode }: { mode: Mode }) => {
         // toast.success(`${showMsg.login}`);
         dispatch(setLoginInfo(response.data.data))
 
-        const redirectURL = searchParams.get('redirectTo') ?? '/dashboards'
-        router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+        // const redirectURL = searchParams.get('redirectTo') ?? '/dashboards'
+        // router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+        router.replace(getLocalizedUrl('/dashboards', locale as Locale))
 
         // Fetch permission after login
         if (response.data.data.username !== response.data.data.tenant_id) {

@@ -38,13 +38,13 @@ const [activeTab, setActiveTab] = useState(() => {
               iconPosition='start'
               value='email'
             />
-            <Tab
+            {/* <Tab
               label='Notifications'
               icon={<i className='ri-notification-4-line' />}
               iconPosition='start'
               value='notifications'
             />
-            <Tab label='Sms' icon={<i className='ri-message-line' />} iconPosition='start' value='sms' />
+            <Tab label='Sms' icon={<i className='ri-message-line' />} iconPosition='start' value='sms' /> */}
             <Tab label='Connections' icon={<i className='ri-link-m' />} iconPosition='start' value='connections' />
           </CustomTabList>
         </Grid>

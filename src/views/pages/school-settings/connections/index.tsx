@@ -42,9 +42,9 @@ type SocialAccountsType = {
 const connectedAccountsArr: ConnectedAccountsType[] = [
   {
     checked: true,
-    title: 'Google',
+    title: 'Datalake',
     logo: '/images/avatars/1.png',
-    subtitle: 'Calendar and Contacts'
+    subtitle: 'Sync with external tools'
   }
   // {
   //   checked: false,
@@ -314,7 +314,7 @@ const Connections = () => {
             </CardContent>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <CardHeader title='Connecte' subheader='Display content from your connected accounts on your site' />
+            <CardHeader title='Connect' subheader='Display content from your connected accounts on your site' />
             <CardContent className='flex flex-col gap-4'>
               {connectedAccountsArr.map((item, index) => (
                 <div key={index} className='flex items-center justify-between gap-4'>
