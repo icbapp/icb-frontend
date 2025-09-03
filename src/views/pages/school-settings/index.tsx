@@ -32,12 +32,12 @@ const [activeTab, setActiveTab] = useState(() => {
           <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
             <Tab label='Edit School' icon={<i className='ri-group-line' />} iconPosition='start' value='account' />
             <Tab label='Security' icon={<i className='ri-lock-2-line' />} iconPosition='start' value='security' />
-            <Tab
+            {/* <Tab
               label='Email'
               icon={<i className="ri-mail-line" />}
               iconPosition='start'
               value='email'
-            />
+            /> */}
             {/* <Tab
               label='Notifications'
               icon={<i className='ri-notification-4-line' />}
