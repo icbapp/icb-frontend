@@ -89,7 +89,7 @@ const Login = ({ mode }: { mode: Mode }) => {
     if (token) {
       const homeUrl = getLocalizedUrl('dashboards/', locale as Locale)
       router.replace(homeUrl)
-    } 
+    }
   }, [])
 
   const {
@@ -143,7 +143,7 @@ const Login = ({ mode }: { mode: Mode }) => {
         //DataLack Connection
         const res = await api.get(`${endPointApi.getConnectionView}`)
         dispatch(setConnectDataLack(res.data.data[0].status_view))
-        // setLoader(false)
+        setLoader(false)
         // } else {
         //   const message = response?.data?.message || 'Login failed';
         //   toast.error(message);
@@ -152,15 +152,18 @@ const Login = ({ mode }: { mode: Mode }) => {
       })
       .catch(error => {
         const message = error?.response?.data?.message || 'Username or Password is incorrect'
+        setLoader(false)
 
         if (error?.response?.status === 404) {
           toast.error(message)
           setDisableBtn(false)
           setLoading(false)
+          setLoader(false)
         } else {
           toast.error(message)
           setDisableBtn(false)
           setLoading(false)
+          setLoader(false)
         }
       })
       .finally(() => {
@@ -329,9 +332,9 @@ const Login = ({ mode }: { mode: Mode }) => {
                 <div className='flex justify-start items-center flex-wrap gap-x-3 gap-y-1'>
                   <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me ' />
                 </div>
-                <Button disabled={disableBtn  || loader} fullWidth variant='contained' type='submit'>
+                <Button disabled={disableBtn || loader} fullWidth variant='contained' type='submit'>
                   {/* Log In */}
-                   {loader ? <CircularProgress size={24} color="inherit" /> : "Log In"}
+                  {loader ? <CircularProgress size={24} color='inherit' /> : 'Log In'}
                 </Button>
 
                 <div className='flex justify-between items-center flex-wrap gap-2'>

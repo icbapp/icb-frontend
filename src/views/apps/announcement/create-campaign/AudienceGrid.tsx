@@ -21,7 +21,7 @@ import {
 } from 'ag-grid-enterprise'
 import { ModuleRegistry } from 'ag-grid-community'
 import { RowApiModule } from 'ag-grid-community'
-import { IconButton, Tooltip } from '@mui/material'
+import { IconButton, Switch, Tooltip } from '@mui/material'
 import { useSettings } from '@/@core/hooks/useSettings'
 // Register required AG Grid modules
 ModuleRegistry.registerModules([
@@ -74,19 +74,15 @@ const AudienceGrid = ({
   selectRowId
 }: Props) => {
   const [column, setColumn] = useState<ColDef[]>([])
+  const [selectedRole, setSelectedRole] = useState('student') // default one checked
+
+  const handleChange = role => {
+    setSelectedRole(role) // always replace, so only one is true
+  }
 
   const gridRef = useRef(null)
   // const gridRef = useRef<AgGridReact<any>>(null)
   const { settings } = useSettings()
-
-  // const containerStyle = useMemo(() => ({ width: '100%', height: '50vh' }), [])
-  // const gridStyle = useMemo(() => ({ height: '100%', width: '100%' }), [])
-  // const [columnDefs] = useState([
-  //   { field: 'role_name', rowGroup: true, hide: true },
-  //   { field: 'full_name', headerName: 'Full Name' },
-  //   { field: 'email' },
-  //   { field: 'username', headerName: 'User Name' }
-  // ])
 
   useEffect(() => {
     if (!selectedData) return
@@ -210,7 +206,7 @@ const AudienceGrid = ({
       //   const merged = [...prev, ...ids]
       //   return Array.from(new Set(merged))
       // })
-       setSelectRowId(ids)
+      setSelectRowId(ids)
     }
   }
   return (
@@ -257,10 +253,29 @@ const AudienceGrid = ({
       {Object?.entries(selectedData).map(([role, rows]) =>
         Array.isArray(rows) && rows.length > 0 ? (
           <div key={role} className='rounded-lg border bg-white shadow-sm mb-4'>
-            <div className='px-4 py-3 border-b'>
+            <div className='px-4 py-3 border-b flex items-center justify-between'>
               <h3 className='text-base font-semibold'>{toTitle(role)}</h3>
-              {/* <p className='text-xs text-gray-500'>{rows.length} records</p> */}
+
+              {/* {role === 'student' && (
+                <div className='flex items-center gap-4'>
+                  <label className='flex items-center gap-1'>
+                    <Switch checked={selectedRole === 'student'} onChange={() => handleChange('student')} />
+                    <span>Student</span>
+                  </label>
+
+                  <label className='flex items-center gap-1'>
+                    <Switch checked={selectedRole === 'parent'} onChange={() => handleChange('parent')} />
+                    <span>Parent</span>
+                  </label>
+
+                  <label className='flex items-center gap-1'>
+                    <Switch checked={selectedRole === 'both'} onChange={() => handleChange('both')} />
+                    <span>Student & Parent both</span>
+                  </label>
+                </div>
+              )} */}
             </div>
+
             <div className='p-4'>
               <div className='ag-theme-quartz' style={{ width: '100%', height: 420 }}>
                 <AgGridReact
