@@ -104,7 +104,7 @@ const FilterCampaign = ({
     setFilterWishSelectedLabelsDataLack(prev => {
       const idx = prev.findIndex(x => x.id === id && x.role === roleName)
       if (idx !== -1) {
-        return prev.filter((_, i) => i !== idx) // remove only that role's chip
+        return prev.filter((_, i) => i !== idx)
       }
       return [...prev, { id, role: roleName }]
     })
@@ -145,9 +145,9 @@ const FilterCampaign = ({
   const handleFilterChangeDataLack = (newValues: any) => {
     setSelectedLabelsDataLack(newValues)
 
-    if (newValues && newValues.length > 0) {
-    } else {
-      setSelectedData([]) // or show all
+    // optional: if nothing is selected → reset all
+    if (!newValues || newValues.length === 0) {
+      setSelectedData([]) // or reset all forms
     }
   }
 
@@ -217,63 +217,6 @@ const FilterCampaign = ({
                     />
                   </Stack>
 
-                  {/* <Typography variant='h6' fontWeight={600}>
-                    Comman Columns
-                  </Typography>
-                  <Grid container spacing={1}>
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='First name'
-                        fullWidth
-                        value={commanColumnFilter.first_name}
-                        onChange={e => handleChangeColumnFilter('first_name', e.target.value)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='Last name'
-                        fullWidth
-                        value={commanColumnFilter.last_name}
-                        onChange={e => handleChangeColumnFilter('last_name', e.target.value)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='Email'
-                        fullWidth
-                        value={commanColumnFilter.email}
-                        onChange={e => handleChangeColumnFilter('email', e.target.value)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='Phone'
-                        fullWidth
-                        value={commanColumnFilter.phone}
-                        onChange={e => handleChangeColumnFilter('phone', e.target.value)}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={2}>
-                      <TextField
-                        label='Gender'
-                        select
-                        fullWidth
-                        value={commanColumnFilter.gender}
-                        onChange={e => handleChangeColumnFilter('gender', e.target.value)}
-                      >
-                        {genderDropDown.map((option, index) => (
-                          <MenuItem key={index} value={option.value}>
-                            {option.name}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </Grid>
-                  </Grid> */}
-
                   {/* Role-wise Filters */}
                 </Stack>
               </Grid>
@@ -289,7 +232,7 @@ const FilterCampaign = ({
                 value={selectedLabels}
                 onChange={(event, newValue) => handleFilterChange(newValue)}
                 sx={{ width: 400, marginBottom: 2 }}
-                renderInput={params => <TextField {...params} label='Select Roles' />}
+                renderInput={params => <TextField {...params} />}
               />
             </Grid>
           )}

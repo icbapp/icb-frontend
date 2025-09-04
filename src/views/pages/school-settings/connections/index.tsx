@@ -158,6 +158,9 @@ const Connections = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!code || !state || !sessionState) {
+        return
+      }
       try {
         setLoading(true)
         // Make the GET request with query parameters
@@ -183,8 +186,8 @@ const Connections = () => {
     fetchData()
   }, [])
 
-    const connection = useSelector((state: RootState) => state.dataLack)
-  
+  const connection = useSelector((state: RootState) => state.dataLack)
+
   useEffect(() => {
     api.get('/ms-auth-token/school-token-valide').then(response => {
       setStatusConnected(response.data.satus)

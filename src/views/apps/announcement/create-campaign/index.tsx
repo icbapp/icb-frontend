@@ -403,14 +403,14 @@ const CreateCampaign = () => {
       })
 
       if (res.data.status === 200) {
-        // if (Array.isArray(res?.data?.role_only)) {
-        //   const selected = res.data.role_only.map((item: any) => ({
-        //     id: item.role_id,
-        //     name: item.role_name
-        //   }))
-        //   setSelectedLabels(selected)
-        //   setSelectedLabelsDataLack(selected)
-        // }
+        if (Array.isArray(res?.data?.role_only)) {
+          const selected = res.data.role_only.map((item: any) => ({
+            id: item.role_id,
+            name: item.role_name
+          }))
+          setSelectedLabels(selected)
+          // setSelectedLabelsDataLack(selected)
+        }
         const formatted = res.data.column_name.split(',').map((val: any) => ({
           id: val,
           name: val
@@ -437,7 +437,9 @@ const CreateCampaign = () => {
   }
 
   useEffect(() => {
-    fetchEditCampign()
+    if (ids) {
+      fetchEditCampign()
+    }
   }, [ids])
 
   const statuses = ['Draft', 'Ready', 'In Progress', 'Stopped', 'Done'] as const
@@ -570,6 +572,7 @@ const CreateCampaign = () => {
   //column
   type Item = { id: string; role: string }
 
+  // Group items by role
   const groupByRole = (items: Item[]) =>
     items.reduce<Record<string, string[]>>((acc, { id, role }) => {
       if (!acc[role]) acc[role] = []
@@ -579,11 +582,16 @@ const CreateCampaign = () => {
 
   const grouped = groupByRole(filterWishSelectedLabelsDataLack)
 
-  // 👉 Always prepend defaults
+  // 👉 Always prepend defaults, but only for roles that exist in selectedLabelsDataLack
   const defaults = ['first_name', 'last_name']
 
-  Object.keys(grouped).forEach(role => {
-    grouped[role] = [...defaults, ...grouped[role].filter(id => !defaults.includes(id))]
+  selectedLabelsDataLack.forEach(sel => {
+    const role = sel.id
+    if (!grouped[role]) {
+      grouped[role] = [...defaults]
+    } else {
+      grouped[role] = [...defaults, ...grouped[role].filter(id => !defaults.includes(id))]
+    }
   })
 
   const goFilterData = async () => {
@@ -642,9 +650,11 @@ const CreateCampaign = () => {
         }
       }
 
-      if (!selectedIds || selectedIds.length === 0) {
-        ShowErrorToast('Please select at least one user to launch the campaign.')
-        return
+      if (connectDataLack == 1) {
+        if (!selectedIds || selectedIds.length === 0) {
+          ShowErrorToast('Please select at least one user to launch the campaign.')
+          return
+        }
       }
 
       if (mode === '') {
@@ -660,13 +670,13 @@ const CreateCampaign = () => {
       let timeampm = ''
 
       if (dayjs(startDateTime).isValid()) {
-        const formatted = dayjs(startDateTime).format('YYYY-MM-DD hh:mm A')
+        const formatted = dayjs(startDateTime).format('YYYY-MM-DD HH:mm')
         const [datePart, timePart, ampm] = formatted.split(' ')
         date = datePart || ''
         time = timePart || ''
         timeampm = ampm || ''
       } else {
-        const formatted = dayjs().format('YYYY-MM-DD hh:mm A')
+        const formatted = dayjs().format('YYYY-MM-DD HH:mm')
         const [datePart, timePart, ampm] = formatted.split(' ')
         date = datePart || ''
         time = timePart || ''
@@ -689,7 +699,7 @@ const CreateCampaign = () => {
         frequency_count: mode == 'one_time' ? 1 : recurringCount,
         campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
         campaign_time: time,
-        campaign_ampm: timeampm,
+        // campaign_ampm: "am",
         role_ids: '1',
         column_name: selectedFilter,
         filters: filters,
@@ -824,11 +834,8 @@ const CreateCampaign = () => {
       />
       {/* <Card sx={{ mt: 4 }}> */}
       <Box mt={4}>
-        {connectDataLack === 0 ? (
-          <LocalAudienceGrid
-            selectedData={selectedData}
-            setSelectedIds={setSelectedIds}
-          />
+        {connectDataLack == 0 ? (
+          <LocalAudienceGrid selectedData={selectedData} setSelectedIds={setSelectedIds} />
         ) : (
           <AudienceGrid
             selectedData={selectedData}
@@ -889,7 +896,8 @@ const CreateCampaign = () => {
                       label='Start Date Time'
                       value={startDateTime}
                       onChange={newValue => setStartDateTime(newValue)}
-                      format='DD-MM-YYYY hh:mm A'
+                      format='DD-MM-YYYY HH:mm'
+                      ampm={false}      
                       minDateTime={dayjs()}
                       slotProps={{
                         textField: {
