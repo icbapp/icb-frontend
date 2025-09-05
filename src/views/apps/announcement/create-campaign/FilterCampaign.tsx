@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   Button,
   TextField,
@@ -56,6 +56,7 @@ export interface Props {
   setSelectedLabels?: any
   setFilterWishCommonColumn?: any
   filterWishCommonColumn?: any
+  columnSelectedEdit?: any 
 }
 const FilterCampaign = ({
   roleLoading,
@@ -81,7 +82,8 @@ const FilterCampaign = ({
   setSelectedData,
   setSelectedLabels,
   filterWishCommonColumn,
-  setFilterWishCommonColumn
+  setFilterWishCommonColumn,
+  columnSelectedEdit
 }: Props) => {
   //Comman Column Filter
   // const handleSelectCommonColumn = (id: number) => {
@@ -89,6 +91,7 @@ const FilterCampaign = ({
   //     prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
   //   )
   // }
+  console.log("columnSelectedEdit",columnSelectedEdit);
 
   const handleSelectCommonColumn = (id: string) => {
     setFilterWishCommonColumn((prev: any) =>
@@ -164,15 +167,74 @@ const FilterCampaign = ({
     acc[item.rol_name].push(item)
     return acc
   }, {})
-
-  const excludedIds = ['last_name', 'first_name', 'gender']
-
-  const filteredData = filterWishDataLack.filter(item => !excludedIds.includes(item.id))
-  const groupedDataRoleWise = filteredData?.reduce((acc: any, item: any) => {
+  
+  //Default Parent, student, teacher selected
+  const groupedDataRoleWise = filterWishDataLack?.reduce((acc: any, item: any) => {
     if (!acc[item.rol_name]) acc[item.rol_name] = []
     acc[item.rol_name].push(item)
     return acc
   }, {})
+
+  /** Normalize helpers */
+  const toKey = (s: any) =>
+    String(s ?? '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+
+  const sameKey = (a: any, b: any) => toKey(a) === toKey(b)
+
+  /** Role-wise default field keys (add synonyms you use) */
+  const defaultRoleSelections: Record<string, string[]> = {
+    parent: ['email', 'm_phone1', 'mobile_1', 'm_phone2', 'mobile_2', 'phone_2', 'par_name'],
+    student: ['first_name', 'last_name', 'email', 'gender', 'mobile_phone'],
+    teacher: ['first_name', 'gender','p_mobile', 'other_name', 'p_email']
+  }
+
+  /** Track which roles have already been seeded (so each role seeds once) */
+  const seededRolesRef = useRef<Set<string>>(new Set())
+
+  useEffect(() => {
+    if (!groupedDataRoleWise || Object.keys(groupedDataRoleWise).length === 0) return
+
+    Object.entries(groupedDataRoleWise).forEach(([roleKey, items]: [string, any[]]) => {
+      if (!items || items.length === 0) return
+
+      const roleNorm = toKey(roleKey)
+      if (seededRolesRef.current.has(roleNorm)) return // already seeded this role
+
+      const wanted =  defaultRoleSelections[roleNorm]
+      if (!wanted || wanted.length === 0) {
+        // No defaults defined for this role: mark as seeded to avoid rechecking forever
+        seededRolesRef.current.add(roleNorm)
+        return
+      }
+
+      let didSeedForThisRole = false
+
+      items.forEach(item => {
+        const itemFieldKey = toKey(item?.name ?? item?.label ?? item?.key)
+        if (!wanted.includes(itemFieldKey)) return
+
+        const itemRole = item?.rol_name ?? roleKey // ensure same value you store in state
+        const alreadySelected = filterWishSelectedLabelsDataLack?.some(
+          (x: any) => x.id === item.id && sameKey(x.role, itemRole)
+        )
+
+        if (!alreadySelected) {
+          handleSelect(item.id, itemRole) // your toggler should add when not selected
+          didSeedForThisRole = true
+        }
+      })
+
+      // Mark this role as seeded regardless (prevents repeated seeding loops)
+      seededRolesRef.current.add(roleNorm)
+    })
+  }, [groupedDataRoleWise, filterWishSelectedLabelsDataLack]) // runs when roles/items/state change
+
+  console.log("filterWishDataLack",filterWishDataLack);
+  
   const groupedData = filterWishDataLack?.reduce((acc: any, item: any) => {
     if (!acc[item.rol_name]) acc[item.rol_name] = []
     acc[item.rol_name].push(item)
@@ -423,7 +485,8 @@ const FilterCampaign = ({
                   gap: 3
                 }}
               >
-                {Object.keys(commonColumnData).map(role => {
+                {/* Common Column Start */}
+                {/* {Object.keys(commonColumnData).map(role => {
                   if (!commonColumnData[role] || commonColumnData[role].length === 0) {
                     return null
                   }
@@ -440,7 +503,6 @@ const FilterCampaign = ({
                         // backgroundColor: 'background.paper'
                       }}
                     >
-                      {/* Section Title */}
                       <Typography
                         variant='subtitle1'
                         sx={{
@@ -457,7 +519,6 @@ const FilterCampaign = ({
                         Common Column
                       </Typography>
 
-                      {/* Chips */}
                       <Box
                         sx={{
                           display: 'flex',
@@ -492,16 +553,15 @@ const FilterCampaign = ({
                       </Box>
                     </Paper>
                   )
-                })}
-
-                {Object.keys(groupedDataRoleWise).map(role => {
+                })} */}
+                {/* Common Column End  */}
+                {/* {Object.keys(groupedDataRoleWise).map(role => {
                   if (!groupedDataRoleWise[role] || groupedDataRoleWise[role].length === 0) {
                     return null
                   }
 
                   return (
                     <Paper key={role} elevation={2} sx={{ p: 3 }}>
-                      {/* Section Title */}
                       <Typography
                         variant='subtitle1'
                         sx={{
@@ -518,7 +578,6 @@ const FilterCampaign = ({
                         {role}
                       </Typography>
 
-                      {/* Chips */}
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
                         {groupedDataRoleWise[role].map((item: any) => {
                           const roleColor = roleChipColors[role.toLowerCase()] || '#1f5634'
@@ -532,6 +591,68 @@ const FilterCampaign = ({
                               key={`${item.rol_name}-${item.id}`} // unique per role + id
                               label={item.name}
                               onClick={() => handleSelect(item.id, item.rol_name)}
+                              clickable
+                              variant={isSelected ? 'filled' : 'outlined'}
+                              sx={{
+                                borderRadius: '20px',
+                                px: 1.5,
+                                py: 0.5,
+                                fontSize: '0.85rem',
+                                fontWeight: 500,
+                                borderColor: roleColor,
+                                backgroundColor: isSelected ? roleColor : 'transparent',
+                                color: isSelected ? '#5c5a5aff' : '#696767ff',
+                                '&:hover': {
+                                  backgroundColor: isSelected ? roleColor : `${roleColor}20`
+                                }
+                              }}
+                            />
+                          )
+                        })}
+                      </Box>
+                    </Paper>
+                  )
+                })} */}
+
+                {Object.keys(groupedDataRoleWise).map(roleKey => {
+                  const items = groupedDataRoleWise[roleKey]
+                  if (!items || items.length === 0) return null
+
+                  const roleLower = toKey(roleKey)
+                  const roleColor = roleChipColors[roleLower] || '#1f5634'
+
+                  return (
+                    <Paper key={roleKey} elevation={2} sx={{ p: 3 }}>
+                      <Typography
+                        variant='subtitle1'
+                        sx={{
+                          mb: 2,
+                          fontWeight: 700,
+                          color: 'text.primary',
+                          borderBottom: '2px solid #bfc4c1ff',
+                          display: 'inline-block',
+                          pb: 0.5,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5
+                        }}
+                      >
+                        {roleKey}
+                      </Typography>
+
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                        {items.map((item: any) => {
+                          const chipRole = item?.rol_name ?? roleKey
+
+                          // ✅ selected purely from current state -> click toggles off too
+                          const isSelected = filterWishSelectedLabelsDataLack?.some(
+                            (x: any) => x.id === item.id && sameKey(x.role, chipRole)
+                          )
+
+                          return (
+                            <Chip
+                              key={`${chipRole}-${item.id}`}
+                              label={item.name}
+                              onClick={() => handleSelect(item.id, chipRole)}
                               clickable
                               variant={isSelected ? 'filled' : 'outlined'}
                               sx={{
