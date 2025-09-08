@@ -59,6 +59,7 @@ const CreateCampaign = () => {
   const [selectedChannel, setSelectedChannel] = useState<string[]>([])
   const [rolesList, setRolesList] = useState<RoleOption[]>([])
   const [selectedData, setSelectedData] = useState([])
+  // const [selectedData, setSelectedData] = useState<any[]>([])
   const [startDateTime, setStartDateTime] = useState<Dayjs | null>(dayjs())
   //dataLack
   const [rolesListDataLack, setRolesListDataLack] = useState<RoleOption[]>([])
@@ -83,18 +84,14 @@ const CreateCampaign = () => {
   const [error, setError] = useState('')
   const [selectRowId, setSelectRowId] = useState([])
 
-  //   const [error, setError] = useState({
-  //   message: '',
-  //   mode: ''
-  // })
+  //filterEdittime
+  const [filterWishSelectedRole, setFilterWishSelectedRole] = useState<RoleOption[]>([])
+
   const [paginationInfoLog, setPaginationInfoLog] = useState({
     page: 0,
     perPage: 10
   })
 
-  const [paginationInfo, setPaginationInfo] = useState()
-  console.log("paginationInfo",paginationInfo);
-  
   // Email
   const [paginationEmail, setPaginationEmail] = useState({ page: 0, perPage: 10 })
   const [totalRowsEmail, setTotalRowsEmail] = useState(0)
@@ -173,6 +170,33 @@ const CreateCampaign = () => {
     house: ''
   })
 
+  const [paginationDatalack, setPaginationDatalack] = useState(100)
+  const data12 = [
+    {
+      id: 'email',
+      role: 'parent'
+    },
+    {
+      id: 'email',
+      role: 'student'
+    },
+    {
+      id: 'first_name',
+      role: 'student'
+    },
+    {
+      id: 'gender',
+      role: 'student'
+    },
+    {
+      id: 'last_name',
+      role: 'student'
+    },
+    {
+      id: 'mobile_phone',
+      role: 'student'
+    }
+  ]
   const isRecurring = mode === 'recurring'
 
   const channels = [
@@ -222,7 +246,7 @@ const CreateCampaign = () => {
   }
 
   const handleFilterRoleUserChangeDataLack = (newValues: any) => {
-    setFilterWishSelectedLabelsDataLack(newValues)
+    // setFilterWishSelectedLabelsDataLack(newValues)
 
     if (newValues && newValues.length > 0) {
     } else {
@@ -349,394 +373,167 @@ const CreateCampaign = () => {
     }
   }, [selectedLabels, ids])
 
-  const resFilter = {
-    status: 'success',
-    mode: 'edit',
-    roles: ['student', 'parent'],
-    filters: {
-      parent: [
-        {
-          column_name: 'addr1',
-          filter_name: 'Address 1',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: 'testing'
-        },
-        {
-          column_name: 'addr2',
-          filter_name: 'Address 2',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: 'data demo'
-        },
-        {
-          column_name: 'contact_type',
-          filter_name: 'Contact Type',
-          filter_values:
-            '[{"contact_type":"1","contact_desc":"Correspondence"},{"contact_type":"2","contact_desc":"Residential"},{"contact_type":"3","contact_desc":"Billing Address"},{"contact_type":"4","contact_desc":"Mother"},{"contact_type":"5","contact_desc":"Father"},{"contact_type":"6","contact_desc":"Mother Residential"},{"contact_type":"7","contact_desc":"Father Residential"},{"contact_type":"8","contact_desc":"Emergency Contact"}]',
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'email',
-          filter_name: 'Email',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'home_phone',
-          filter_name: 'Home Phone',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'update_on',
-          filter_name: 'Last Update',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'm_phone1',
-          filter_name: 'Mobile Phone 1',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'm_phone2',
-          filter_name: 'Mobile Phone 2',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'par_code',
-          filter_name: 'Parent Code',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'par_name',
-          filter_name: 'Parent Name',
-          filter_values: null,
-          update_value: true,
-          newfilter_column: '"RASHA ABU-BAKRA & MOSTAFA ABUSHAABAN"'
-        },
-        {
-          column_name: 'post_code',
-          filter_name: 'Postal Code',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'state_code',
-          filter_name: 'State Code',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'town_sub',
-          filter_name: 'Town Suburb',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        }
-      ],
-      student: [
-        {
-          column_name: 'class_code',
-          filter_name: 'Class Code',
-          filter_values: 'A,B,C,D,E,F,G,H,J,K,M,N,P,R,T',
-          update_value: true,
-          newfilter_column: '"A"'
-        },
-        {
-          column_name: 'dob',
-          filter_name: 'Date of Birth',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'email',
-          filter_name: 'Email',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: 'meet@gmail.com'
-        },
-        {
-          column_name: 'entry_date',
-          filter_name: 'Entry Date',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'exit_date',
-          filter_name: 'Exit Date',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'first_name',
-          filter_name: 'First Name',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: 'meet'
-        },
-        {
-          column_name: 'gender',
-          filter_name: 'Gender',
-          filter_values: 'F,M',
-          update_value: false,
-          newfilter_column: 'm'
-        },
-        {
-          column_name: 'house',
-          filter_name: 'House',
-          filter_values: 'BOTTLEBRUSH,EUCALYPTUS,PINE,WATTLE',
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'last_name',
-          filter_name: 'Last Name',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'update_on',
-          filter_name: 'Last Update',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'mobile_phone',
-          filter_name: 'Mobile Phone',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'par_code',
-          filter_name: 'Parent Code',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'preferred_name',
-          filter_name: 'Preferred Name',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'status',
-          filter_name: 'Status',
-          filter_values: 'Active,Inactive',
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'student_code',
-          filter_name: 'Student Code',
-          filter_values: null,
-          update_value: false,
-          newfilter_column: null
-        },
-        {
-          column_name: 'year_group',
-          filter_name: 'Year Group',
-          filter_values: '0,1,2,3,4,5,6,7,8,9,10,11,12',
-          update_value: true,
-          newfilter_column: '"10"'
-        }
-      ]
-    },
-    // savedFilters: {
-    //   student: { year_group: '"10"', class_code: '"A"' },
-    //   parent: { par_name: '"RASHA ABU-BAKRA & MOSTAFA ABUSHAABAN"' }
-    // },
-    savedColumns: [],
-    column_names: [],
-    count: 29
-  }
 
   const fetchEditCampign = async () => {
     setloaderMain(true)
     try {
       const body = {
-        // roles: ['student', 'parent'],
-        // announcement_id: localStorage.getItem('announcementId'),
-        // campaign_id: ids
+        announcement_id: localStorage.getItem('announcementId'),
+        campaign_id: ids
       }
 
-      console.log('res1', resFilter)
+      const resFilter = await api.post(`${endPointApi.postfilterDataLackEdit}`, body)
 
-      // const resFilter = await api.post(`${endPointApi.postfilterDataLack}`, body)
-      const selected = resFilter.roles.map((item: any) => ({
+      // roles → selected labels
+      const rolesArr: any[] = Array.isArray(resFilter?.data?.roles) ? resFilter.data.roles : []
+      const selectedRoles = rolesArr.map((item: any) => ({
         id: item,
-        name: item.charAt(0).toUpperCase() + item.slice(1)
+        name: String(item).charAt(0).toUpperCase() + String(item).slice(1)
       }))
-      if (resFilter.status === 'success') {
-        setSelectedLabelsDataLack(selected)
-        const filters = resFilter.filters
-        const allFilters: RoleOption[] = []
+      console.log('resFilter?.data?.data', resFilter?.data?.data)
 
-        const pickEffectiveValue = (item: any) => {
-          const hasOverride =
-            item?.update_value === true &&
-            item?.newfilter_column !== null &&
-            item?.newfilter_column !== undefined &&
-            String(item.newfilter_column).trim() !== ''
-          const raw = hasOverride ? item.newfilter_column : item.filter_values
-
-          // Normalize common server shapes:
-          // - Some values arrive like '"A"' (double-quoted string) → strip wrapping quotes.
-          // - JSON arrays/objects should be left as-is (they'll be strings; handle upstream if needed).
-          if (raw === null || raw === undefined) return raw
-
-          const s = String(raw).trim()
-
-          // Leave JSON-looking strings untouched (e.g., '[{...}]' or '{...}')
-          if ((s.startsWith('[') && s.endsWith(']')) || (s.startsWith('{') && s.endsWith('}'))) {
-            return s
-          }
-
-          // Strip only a single pair of wrapping quotes if present: e.g., '"A"' → A
-          if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-            return s.slice(1, -1)
-          }
-
-          return raw
-        }
-
-        if (Array.isArray(filters?.parent)) {
-          const parentFilters: RoleOption[] = filters.parent.map((item: any) => ({
-            id: item.column_name,
-            name: item.filter_name,
-            rol_name: 'parent',
-            filter_values: pickEffectiveValue(item),
-            update_value: item.update_value ?? false,
-            newfilter_column: item.newfilter_column ?? null
-          }))
-          allFilters.push(...parentFilters)
-        }
-
-        if (Array.isArray(filters?.student)) {
-          const studentFilters: RoleOption[] = filters.student.map((item: any) => ({
-            id: item.column_name,
-            name: item.filter_name,
-            rol_name: 'student',
-            filter_values: pickEffectiveValue(item),
-            update_value: item.update_value ?? false,
-            newfilter_column: item.newfilter_column ?? null
-          }))
-          allFilters.push(...studentFilters)
-        }
-
-        // if (Array.isArray(filters?.teacher)) {
-        //   const teacherFilters = filters?.teacher.map((item: any) => ({
-        //     id: item.column_name,
-        //     name: item.filter_name,
-        //     rol_name: 'teacher',
-        //     filter_values: item.filter_values
-        //   }))
-        //   allFilters.push(...teacherFilters)
-        // }
-        console.log('allFilters', allFilters)
-        setFilterWishDataLack(allFilters)
+      const toArray = (val: any): any[] => {
+        if (Array.isArray(val)) return val
+        if (val && typeof val === 'object') return Object.values(val)
+        return []
       }
-      // console.log('resFilter.data.filters', resFilter)
-      // console.log('column_names', resFilter.column_names)
-      // setColumnSelectedEdit(resFilter.column_names)
-      // if (resFilter.status === 'success') {
-      //   setSelectedLabelsDataLack(selected)
-      //   const filters = resFilter.data.filters
-      //   const allFilters: RoleOption[] = []
+      // const firstUsers = toArray(resFilter?.data?.data)
+      setSelectedData(resFilter?.data?.data)
 
-      //   if (filters.parent && Array.isArray(filters.parent)) {
-      //     const parentFilters = filters.parent.map((item: any) => ({
-      //       id: item.column_name,
-      //       name: item.filter_name,
-      //       rol_name: 'parent',
-      //       filter_values: item.filter_values
-      //     }))
-      //     allFilters.push(...parentFilters)
-      //   }
+      if (resFilter?.data?.status === 'success') {
+        setSelectedLabelsDataLack(selectedRoles)
 
-      //   if (filters.student && Array.isArray(filters.student)) {
-      //     const studentFilters = filters.student.map((item: any) => ({
-      //       id: item.column_name,
-      //       name: item.filter_name,
-      //       rol_name: 'student',
-      //       filter_values: item.filter_values
-      //     }))
-      //     allFilters.push(...studentFilters)
-      //   }
+        const allFilters: RoleOption[] = []
+        const filtersCatalog = resFilter?.data?.filters_catalog
 
-      //   if (filters.teacher && Array.isArray(filters.teacher)) {
-      //     const teacherFilters = filters.teacher.map((item: any) => ({
-      //       id: item.column_name,
-      //       name: item.filter_name,
-      //       rol_name: 'teacher',
-      //       filter_values: item.filter_values
-      //     }))
-      //     allFilters.push(...teacherFilters)
-      //   }
-      //   console.log('allFilters', allFilters)
+        const initialStudentForm: Record<string, any> = {}
+        const initialParentForm: Record<string, any> = {}
+        const initialTeacherForm: Record<string, any> = {}
 
-      //   setFilterWishDataLack(allFilters)
-      //   setSelectedData(resFilter.data.filters)
-      // }
+        const processRoleFilters = (
+          roleFilters: any[] | undefined,
+          roleName: string,
+          initialFormState: Record<string, any>
+        ) => {
+          if (!Array.isArray(roleFilters)) return
+
+          const processed: RoleOption[] = roleFilters.map((item: any) => {
+            if (item?.update_value === true && item?.newfilter_column !== null && item?.column_name) {
+              let value = item.newfilter_column
+
+              if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
+                value = value.slice(1, -1)
+              }
+
+              // dropdowns expect array; text expects string
+              initialFormState[item.column_name] = item.filter_values !== null ? [value] : value
+            }
+
+            return {
+              id: item.column_name,
+              name: item.filter_name,
+              rol_name: roleName,
+              filter_values: item.filter_values,
+              update_value: !!item.update_value,
+              newfilter_column: item.newfilter_column ?? null
+            }
+          })
+
+          allFilters.push(...processed)
+        }
+
+        // fill role filters
+        processRoleFilters(filtersCatalog?.parent, 'parent', initialParentForm)
+        processRoleFilters(filtersCatalog?.student, 'student', initialStudentForm)
+        processRoleFilters(filtersCatalog?.teacher, 'teacher', initialTeacherForm)
+
+        // apply prefilled states
+        if (Object.keys(initialParentForm).length) {
+          setParentForm(prev => ({ ...prev, ...initialParentForm }))
+        }
+        if (Object.keys(initialStudentForm).length) {
+          setStudentForm(prev => ({ ...prev, ...initialStudentForm }))
+        }
+        if (Object.keys(initialTeacherForm).length) {
+          setTeacherForm(prev => ({ ...prev, ...initialTeacherForm }))
+        }
+
+        setFilterWishDataLack(allFilters)
+        setFilterWishSelectedRole(resFilter?.data?.column_names)
+    console.log("11111111",resFilter.data.column_names);
+    
+        const formatted = resFilter?.data?.column_names?.split(',')?.map((val: any) => ({
+          id: val,
+          name: val
+        }))
+        setFilterWishSelectedLabelsDataLack(formatted)
+        console.log("1111110000",formatted);
+        
+      }
+
+      console.log("********");
+      
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
           announcement_id: localStorage.getItem('announcementId'),
           campaign_id: ids
         }
       })
+      console.log('resss', res)
 
-      if (res.data.status === 200) {
+      if (res?.data?.status === 200) {
         if (Array.isArray(res?.data?.role_only)) {
-          const selected = res.data.role_only.map((item: any) => ({
+          const roleOnly = res.data.role_only.map((item: any) => ({
             id: item.role_id,
             name: item.role_name
           }))
-          setSelectedLabels(selected)
-          // setSelectedLabelsDataLack(selected)
+          setSelectedLabels(roleOnly)
         }
-        const formatted = res.data.column_name.split(',').map((val: any) => ({
-          id: val,
-          name: val
-        }))
-        setSelectedData(res.data.users)
-        setNote(res.data.note)
-        setStatus(res.data.campaign_status)
-        setMode(res.data.publish_mode)
-        setScheduleType(res.data.schedule)
-        setRecurringCount(res.data.frequency_count)
-        setRecurringType(res.data.frequency_type)
-        setSelectedChannel(res.data.channels)
-        setStartDateTime(dayjs(res.data.campaign_date + ' ' + res.data.formatted_campaign_time))
-        setAnnouncementTitle(res.data.announcement.title)
-        setFilterWishSelectedLabelsDataLack(formatted)
-        setloaderMain(false)
+
+        // column_name in this response might be string or array; handle both
+        const toIdNameArray2 = (input: any) => {
+          if (Array.isArray(input)) {
+            return input
+              .map((v: any) => {
+                const s = String(v ?? '').trim()
+                return s ? { id: s, name: s } : null
+              })
+              .filter(Boolean)
+          }
+          if (typeof input === 'string') {
+            return input
+              .split(',')
+              .map((s: string) => s.trim())
+              .filter(Boolean)
+              .map((v: string) => ({ id: v, name: v }))
+          }
+          return []
+        }
+
+        // If you need it for anything else later:
+        // const formatted2 = toIdNameArray2(res?.data?.column_name);
+        console.log('res?.data?.users', res?.data?.users)
+
+        // setSelectedData(res?.data?.users)
+        setNote(res?.data?.note)
+        setStatus(res?.data?.campaign_status)
+        setMode(res?.data?.publish_mode)
+        setScheduleType(res?.data?.schedule)
+        setRecurringCount(res?.data?.frequency_count)
+        setRecurringType(res?.data?.frequency_type)
+        setSelectedChannel(res?.data?.channels)
+        setStartDateTime(dayjs(`${res?.data?.campaign_date} ${res?.data?.formatted_campaign_time}`))
+        setAnnouncementTitle(res?.data?.announcement?.title)
       }
     } catch (err: any) {
-      if (err.response?.status === 500) {
+      if (err?.response?.status === 500) {
         toast.error('Internal Server Error.')
-        setloaderMain(false)
+      } else {
+        console.error('fetchEditCampign error:', err)
       }
+    } finally {
+      // Always turn off loader so UI doesn't get stuck
+      setloaderMain(false)
     }
   }
 
@@ -887,26 +684,12 @@ const CreateCampaign = () => {
   // ✅ No defaults injected
   const grouped = groupByRole(filterWishSelectedLabelsDataLack)
 
-  // const updatePaginationInfo = (role, data) => {
-  //   console.log("role***", role, data);
-  //   const updatedRole = role === 'guardian' ? 'parent' : role;
-  //   setPaginationInfo(prevState => ({
-  //     ...prevState,
-  //     [updatedRole]: {
-  //       page: data.page,
-  //       perPage: data.per_page,
-  //       total: data.total,
-  //       totalPages: data.total_pages
-  //     }
-  //   }))
-  // }
-
   const goFilterData = async () => {
     setisLoading(true)
 
     try {
       const select = selectedLabelsDataLack.map((val: any) => val.id)
-      const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
+      // const selectColumn = filterWishSelectedLabelsDataLack.map((val: any) => val.id)
 
       const body = {
         roles: select,
@@ -916,20 +699,19 @@ const CreateCampaign = () => {
         announcement_id: 0,
         tenant_id: adminStore.tenant_id,
         school_id: adminStore.school_id.toString(),
-        page: 1,
-        per_page: 1000,
+        // page: 1,
+        // per_page: 100,
         showOnlyRole: false
       }
 
       const res = await api.post(`${endPointApi.postfilterDataLack}`, body)
-      console.log('res000', res.data)
 
       if (res.data.status === 'success') {
         setSelectedData(res.data.data)
-        // updatePaginationInfo( res.data.roles,res.data.pagination)
+        setPaginationDatalack(res.data.pagination)
       } else {
         console.warn('Unexpected response:', res.data)
-        setFilterWishSelectedLabelsDataLack([])
+        // setFilterWishSelectedLabelsDataLack([])
         setFilterWishDataLack([])
 
         // Optionally: ShowErrorToast(res.data.message)
@@ -938,8 +720,6 @@ const CreateCampaign = () => {
       console.error('Error fetching data:', err)
     } finally {
       setisLoading(false)
-      // setFilterWishSelectedLabelsDataLack([])
-      // setFilterWishDataLack([])
     }
   }
 
@@ -948,9 +728,6 @@ const CreateCampaign = () => {
       goFilterData()
     }
   }, [])
-
-  // console.log("selectedIds",selectedIds);
-  console.log('selectRowId*****', selectRowId)
 
   const launchCampaign = async (status: string) => {
     try {
@@ -962,7 +739,6 @@ const CreateCampaign = () => {
           return
         }
       }
-      console.log('connectDataLack', connectDataLack)
 
       // if (connectDataLack == 0) {
       if (!selectedIds || selectedIds.length === 0) {
@@ -1013,7 +789,7 @@ const CreateCampaign = () => {
         frequency_count: mode == 'one_time' ? 1 : recurringCount,
         campaign_date: scheduleType === 'schedule' ? date : dayjs().format('YYYY-MM-DD'),
         campaign_time: time,
-        // campaign_ampm: 'am',
+        campaign_ampm: 'am',
         // role_ids: '1',
         column_name: selectedFilter,
         filters: filters,
@@ -1030,6 +806,59 @@ const CreateCampaign = () => {
               locale as Locale
             )
           )
+          setStudentForm({
+            first_name: '',
+            gender: '',
+            last_name: '',
+            mobile_phone1: '',
+            email: '',
+            par_code: '',
+            student_code: '',
+            preferred_name: '',
+            year_group: '',
+            class_code: '',
+            dob: '',
+            entry_date: '',
+            exit_date: '',
+            status: '',
+            house: ''
+          })
+          setTeacherForm({
+            first_name: '',
+            gender: '',
+            teacher_code: '',
+            emp_code: '',
+            salutation: '',
+            surname: '',
+            other_name: '',
+            preferred_name: '',
+            dob: '',
+            start_date: '',
+            end_date: '',
+            emp_status: '',
+            award_code: '',
+            award_description: '',
+            rol_code: '',
+            rol_description: '',
+            position_title: '',
+            p_mobile: '',
+            p_email: '',
+            school_email: ''
+          })
+          setParentForm({
+            par_code: '',
+            par_name: '',
+            contact_type: [],
+            email: '',
+            mobile_phone1: '',
+            mobile_phone2: '',
+            addr1: '',
+            addr2: '',
+            town_sub: '',
+            state_code: '',
+            post_code: '',
+            home_phone: ''
+          })
         } else {
           ShowErrorToast('Invalid announcementId')
           setisLoading(false)
@@ -1141,11 +970,12 @@ const CreateCampaign = () => {
         setFilterWishCommonColumn={setFilterWishCommonColumn}
         setFilterWishSelectedLabelsDataLack={setFilterWishSelectedLabelsDataLack}
         setSelectedLabelsDataLack={setSelectedLabelsDataLack}
-        selectedData={selectedData}
         goFilterData={goFilterData}
         setSelectedData={setSelectedData}
         setSelectedLabels={setSelectedLabels}
         columnSelectedEdit={columnSelectedEdit}
+        filterWishSelectedRole={filterWishSelectedRole}
+        ids={ids}
       />
       {/* <Card sx={{ mt: 4 }}> */}
       <Box mt={4}>
@@ -1159,6 +989,7 @@ const CreateCampaign = () => {
             selectedLabelsDataLack={selectedLabelsDataLack}
             setSelectRowId={setSelectRowId}
             selectRowId={selectRowId}
+            paginationDatalack={paginationDatalack}
           />
         )}
       </Box>

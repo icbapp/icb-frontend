@@ -55,6 +55,7 @@ export interface EndPointApi {
     //Datalack
     getAllRolesDataLack :string
     postfilterDataLack :string
+    postfilterDataLackEdit :string
 }
 
 // Define and export the API endpoint object
@@ -113,7 +114,8 @@ const endPointApi: EndPointApi = {
 
     //Datalack
     getAllRolesDataLack : 'db/roles',
-    postfilterDataLack : 'db/filters'
+    postfilterDataLack : 'db/filters',
+    postfilterDataLackEdit: 'db/filters-edit'
 };
 
 export default endPointApi;

@@ -45,6 +45,7 @@ export interface Props {
   selectedLabelsDataLack: any
   setSelectRowId: any
   selectRowId: any
+  paginationDatalack: any
 }
 
 const theme = themeQuartz
@@ -71,7 +72,8 @@ const AudienceGrid = ({
   connectDataLack,
   selectedLabelsDataLack,
   setSelectRowId,
-  selectRowId
+  selectRowId,
+  paginationDatalack
 }: Props) => {
   const [column, setColumn] = useState<ColDef[]>([])
   const [selectedRole, setSelectedRole] = useState('student') // default one checked
@@ -116,10 +118,6 @@ const AudienceGrid = ({
     setColumn(dynamicCols)
   }, [selectedData])
 
-  const pagination = true
-  const paginationPageSize = 25
-  const paginationPageSizeSelector = [25, 50, 100,200, 500]
-
   const handleSelectionChanged = () => {
     if (gridRef.current) {
       const selectedNodes = gridRef.current.api.getSelectedNodes()
@@ -156,7 +154,7 @@ const AudienceGrid = ({
   const toTitle = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
   // build dynamic columns (unchanged)
-  const EXCLUDED = new Set(['guardian_id','student_id','check', 'user_id', 'table_id', 'source_table'])
+  const EXCLUDED = new Set(['guardian_id', 'student_id', 'check', 'user_id', 'table_id', 'source_table'])
   const buildCols = (rows: any[]) => {
     if (!rows?.length) return []
     const keys = Object.keys(rows[0]).filter(k => !EXCLUDED.has(k))
@@ -217,13 +215,13 @@ const AudienceGrid = ({
       ...r,
       __rid: `${role}__${idx}` // unique inside this grid regardless of user_id collisions
     }))
-    
+
   return (
     <>
       {Object?.entries(selectedData).map(([role, rows]) =>
         Array.isArray(rows) && rows.length > 0 ? (
           <div key={role} className='rounded-lg border bg-white shadow-sm mb-4'>
-            
+
             <div className='px-4 py-3 border-b flex items-center justify-between'>
               <h3 className='text-base font-semibold'>{toTitle(role === "guardian" ? "Parent" : role as string)}</h3>
             </div>
@@ -256,7 +254,7 @@ const AudienceGrid = ({
                   overlayNoRowsTemplate={'<span style="padding:10px;">No data</span>'}
                   pagination={true}
                   paginationPageSize={25}
-                  paginationPageSizeSelector={[25, 50, 100,200,500]}
+                  paginationPageSizeSelector={[25, 50, 100, 200, 500]}
                 />
               </div>
             </div>

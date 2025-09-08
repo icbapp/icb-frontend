@@ -56,7 +56,9 @@ export interface Props {
   setSelectedLabels?: any
   setFilterWishCommonColumn?: any
   filterWishCommonColumn?: any
-  columnSelectedEdit?: any 
+  columnSelectedEdit?: any
+  filterWishSelectedRole?: any
+  ids?: any
 }
 const FilterCampaign = ({
   roleLoading,
@@ -83,7 +85,9 @@ const FilterCampaign = ({
   setSelectedLabels,
   filterWishCommonColumn,
   setFilterWishCommonColumn,
-  columnSelectedEdit
+  columnSelectedEdit,
+  filterWishSelectedRole,
+  ids
 }: Props) => {
   //Comman Column Filter
   // const handleSelectCommonColumn = (id: number) => {
@@ -91,7 +95,6 @@ const FilterCampaign = ({
   //     prev.includes(id) ? prev.filter((item: any) => item !== id) : [...prev, id]
   //   )
   // }
-  console.log("columnSelectedEdit",columnSelectedEdit);
 
   const handleSelectCommonColumn = (id: string) => {
     setFilterWishCommonColumn((prev: any) =>
@@ -146,6 +149,8 @@ const FilterCampaign = ({
   }
 
   const handleFilterChangeDataLack = (newValues: any) => {
+    console.log("newValues",newValues);
+    
     setSelectedLabelsDataLack(newValues)
 
     // optional: if nothing is selected → reset all
@@ -167,7 +172,7 @@ const FilterCampaign = ({
     acc[item.rol_name].push(item)
     return acc
   }, {})
-  
+
   //Default Parent, student, teacher selected
   const groupedDataRoleWise = filterWishDataLack?.reduce((acc: any, item: any) => {
     if (!acc[item.rol_name]) acc[item.rol_name] = []
@@ -189,7 +194,7 @@ const FilterCampaign = ({
   const defaultRoleSelections: Record<string, string[]> = {
     parent: ['email', 'm_phone1', 'mobile_1', 'm_phone2', 'mobile_2', 'phone_2', 'par_name'],
     student: ['first_name', 'last_name', 'email', 'gender', 'mobile_phone'],
-    teacher: ['first_name', 'gender','p_mobile', 'other_name', 'p_email']
+    teacher: ['first_name', 'gender', 'p_mobile', 'other_name', 'p_email']
   }
 
   /** Track which roles have already been seeded (so each role seeds once) */
@@ -204,7 +209,8 @@ const FilterCampaign = ({
       const roleNorm = toKey(roleKey)
       if (seededRolesRef.current.has(roleNorm)) return // already seeded this role
 
-      const wanted =  defaultRoleSelections[roleNorm]
+      const wanted = ids ? filterWishSelectedRole[roleNorm] : defaultRoleSelections[roleNorm]
+
       if (!wanted || wanted.length === 0) {
         // No defaults defined for this role: mark as seeded to avoid rechecking forever
         seededRolesRef.current.add(roleNorm)
@@ -231,10 +237,8 @@ const FilterCampaign = ({
       // Mark this role as seeded regardless (prevents repeated seeding loops)
       seededRolesRef.current.add(roleNorm)
     })
-  }, [groupedDataRoleWise, filterWishSelectedLabelsDataLack]) // runs when roles/items/state change
+  }, [groupedDataRoleWise, filterWishSelectedLabelsDataLack, filterWishSelectedRole]) // runs when roles/items/state change
 
-  console.log("filterWishDataLack",filterWishDataLack);
-  
   const groupedData = filterWishDataLack?.reduce((acc: any, item: any) => {
     if (!acc[item.rol_name]) acc[item.rol_name] = []
     acc[item.rol_name].push(item)
@@ -245,6 +249,63 @@ const FilterCampaign = ({
     parent: 'rgb(102 108 255 / 0.32)', // green
     teacher: 'rgb(109 120 141 / 0.32)', // red
     student: 'rgb(255 77 73 / 0.32)' // blue
+  }
+
+  //clear filter
+  const clearAllFilter = () => {
+    setStudentForm({
+      first_name: '',
+      gender: '',
+      last_name: '',
+      mobile_phone1: '',
+      email: '',
+      par_code: '',
+      student_code: '',
+      preferred_name: '',
+      year_group: '',
+      class_code: '',
+      dob: '',
+      entry_date: '',
+      exit_date: '',
+      status: '',
+      house: ''
+    })
+    setTeacherForm({
+      first_name: '',
+      gender: '',
+      teacher_code: '',
+      emp_code: '',
+      salutation: '',
+      surname: '',
+      other_name: '',
+      preferred_name: '',
+      dob: '',
+      start_date: '',
+      end_date: '',
+      emp_status: '',
+      award_code: '',
+      award_description: '',
+      rol_code: '',
+      rol_description: '',
+      position_title: '',
+      p_mobile: '',
+      p_email: '',
+      school_email: ''
+    })
+    setParentForm({
+      par_code: '',
+      par_name: '',
+      contact_type: [],
+      email: '',
+      mobile_phone1: '',
+      mobile_phone2: '',
+      addr1: '',
+      addr2: '',
+      town_sub: '',
+      state_code: '',
+      post_code: '',
+      home_phone: ''
+    })
   }
   return (
     <>
@@ -305,12 +366,17 @@ const FilterCampaign = ({
         <>
           <Card sx={{ mt: 4 }}>
             <Box p={6}>
-              <Typography variant='h6' fontWeight={600} sx={{ mb: 2 }}>
-                Role-wise Filters
-              </Typography>
+              <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
+                <Typography variant='h6' fontWeight={600}>
+                  Role-wise Filters
+                </Typography>
+                <Button variant='contained' onClick={clearAllFilter}>
+                  Clear All Filters
+                </Button>
+              </Box>
               {selectedLabelsDataLack.some((val: any) => val.id === 'student') && (
                 <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2 }}>
+                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
                     Students
                   </Typography>
                   <Grid container spacing={1}>
@@ -359,74 +425,90 @@ const FilterCampaign = ({
               )}
               {selectedLabelsDataLack.some((val: any) => val.id === 'parent') && (
                 <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2 }}>
+                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
                     Parents
                   </Typography>
                   <Grid container spacing={1}>
-                    {(groupedData?.parent ?? []).map((field: any) => {
-                      // Normalize options (stringified JSON or array)
-                      const contactOptions: { contact_type: string; contact_desc: string }[] = Array.isArray(
-                        field?.filter_values
-                      )
-                        ? field.filter_values
-                        : (() => {
-                            try {
-                              return JSON.parse(field?.filter_values || '[]')
-                            } catch {
-                              return []
-                            }
-                          })()
+                    {(groupedData?.parent ?? []).map((field: any, index: number) => (
+                      <Grid item xs={12} md={2} key={index}>
+                        {/* {console.log('field.filter_values', field.filter_values)} */}
 
-                      // Is this a contact-type multi-select?
-                      const isContactSelect =
-                        Array.isArray(contactOptions) &&
-                        contactOptions.length > 0 &&
-                        contactOptions[0]?.contact_type !== undefined
+                        {field.filter_values !== null ? (
+                          <TextField
+                            label={field.name}
+                            select
+                            fullWidth
+                            value={parentForm?.[field.id] || []}
+                            onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
+                            SelectProps={{
+                              multiple: true,
+                              renderValue: (selected: any) => {
+                                // if JSON options → map ids back to labels
+                                try {
+                                  const parsed = JSON.parse(field.filter_values)
+                                  if (Array.isArray(parsed)) {
+                                    return selected
+                                      .map((sel: any) => {
+                                        const match = parsed.find((opt: any) => opt.contact_type === sel)
+                                        return match ? match.contact_desc : sel
+                                      })
+                                      .join(', ')
+                                  }
+                                } catch {
+                                  // fallback for comma-separated values
+                                }
+                                return selected.join(', ')
+                              }
+                            }}
+                          >
+                            {(() => {
+                              let options: any[] = []
+                              try {
+                                const parsed = JSON.parse(field.filter_values)
+                                if (
+                                  Array.isArray(parsed) &&
+                                  parsed.every(opt => opt.contact_type && opt.contact_desc)
+                                ) {
+                                  options = parsed.map((opt: any) => ({
+                                    value: opt.contact_type,
+                                    label: opt.contact_desc
+                                  }))
+                                } else {
+                                  options = field.filter_values.split(',').map((opt: string) => ({
+                                    value: opt.trim(),
+                                    label: opt.trim()
+                                  }))
+                                }
+                              } catch {
+                                options = field.filter_values.split(',').map((opt: string) => ({
+                                  value: opt.trim(),
+                                  label: opt.trim()
+                                }))
+                              }
 
-                      // Value: array for multi-select, string otherwise
-                      const value = parentForm?.[field.id] ?? (isContactSelect ? [] : '')
-
-                      // Build a quick lookup map (no hooks)
-                      const byType = new Map(contactOptions.map(o => [String(o.contact_type), o.contact_desc]))
-
-                      return (
-                        <Grid item xs={12} md={2} key={field.id ?? field.name}>
-                          {isContactSelect ? (
-                            <TextField
-                              label={field.name}
-                              select
-                              fullWidth
-                              value={value} // array of contact_type strings
-                              onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
-                              SelectProps={{
-                                multiple: true,
-                                renderValue: (selected: string[]) =>
-                                  (selected ?? []).map(v => byType.get(String(v)) ?? v).join(', ')
-                              }}
-                            >
-                              {contactOptions.map(opt => (
-                                <MenuItem key={opt.contact_type} value={String(opt.contact_type)}>
-                                  {opt.contact_desc}
+                              return options.map((opt, i) => (
+                                <MenuItem key={i} value={opt.value}>
+                                  {opt.label}
                                 </MenuItem>
-                              ))}
-                            </TextField>
-                          ) : (
-                            <TextField
-                              label={field.name}
-                              fullWidth
-                              value={value}
-                              onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
-                            />
-                          )}
-                        </Grid>
-                      )
-                    })}
+                              ))
+                            })()}
+                          </TextField>
+                        ) : (
+                          <TextField
+                            label={field.name}
+                            fullWidth
+                            value={parentForm?.[field.id] || ''}
+                            onChange={e => handleChangeParentColumnFilter(field.id, e.target.value)}
+                          />
+                        )}
+                      </Grid>
+                    ))}
                   </Grid>
                 </>
               )}
               {selectedLabelsDataLack.some((val: any) => val.id === 'teacher') && (
                 <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2 }}>
+                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
                     Teachers
                   </Typography>
                   <Grid container spacing={1}>
