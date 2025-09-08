@@ -39,6 +39,7 @@ type CampaignDialogProps = {
   setViewEmailLog: any
   viewNotificationLog: any
   viewWhatsappLog: any
+  viewSmsLog: any
 
   totalRowsNotification: any
   paginationEmail: any
@@ -93,6 +94,7 @@ interface UsersTypeWithAction {
   scheduled_at?: string
   error_message?: string
   sid?: string
+  phone?: string
 }
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
@@ -113,6 +115,7 @@ const CampaignViewLogDialog = ({
   viewLogData = [],
   viewNotificationLog = [],
   viewWhatsappLog = [],
+  viewSmsLog = [],
 
   totalRowsEmail = 0,
   paginationEmail = {},
@@ -125,17 +128,16 @@ const CampaignViewLogDialog = ({
   totalRowsSms = 0,
   paginationSms = {},
   setPaginationSms = {},
+  
+  totalRowsWhatsapp = 0,
+  paginationWhatsapp = {},
+  setPaginationWhatsapp = {},
 
   loaderEmailView,
   loaderNotifiView,
   loaderWpView,
   loaderSmsView,
-
-  totalRowsWhatsapp = 0,
-  paginationWhatsapp = {},
-  setPaginationWhatsapp = {}
 }: CampaignDialogProps) => {
-
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
   const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
@@ -348,9 +350,9 @@ const CampaignViewLogDialog = ({
           header: 'Name',
           cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
         }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('phone', {
           header: 'Phone',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.phone ?? '-'}</Typography>
         }),
         // columnHelper.accessor('hours', {
         //   header: 'Message Preview',
@@ -399,7 +401,7 @@ const CampaignViewLogDialog = ({
         }),
         columnHelper.accessor('hours', {
           header: 'Read Time',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.hours ?? '-'}</Typography>
         }),
         columnHelper.accessor('hours', {
           header: 'Delivered Time',
@@ -469,6 +471,43 @@ const CampaignViewLogDialog = ({
     sms: 'SMS'
   }
 
+  // Derive everything strictly from selectedChannel
+  const channelConfig = {
+    email: {
+      data: viewLogData?.data ?? [],
+      count: totalRowsEmail,
+      pagination: paginationEmail,
+      setPagination: setPaginationEmail
+    },
+    push_notification: {
+      data: viewNotificationLog?.data ?? [],
+      count: totalRowsNotification,
+      pagination: paginationNotification,
+      setPagination: setPaginationNotification
+    },
+    wp: {
+      data: viewWhatsappLog?.data ?? [],
+      count: totalRowsWhatsapp,
+      pagination: paginationWhatsapp,
+      setPagination: setPaginationWhatsapp
+    },
+    sms: {
+      data: viewSmsLog?.data ?? [], // if you have SMS logs; else []
+      count: totalRowsSms,
+      pagination: paginationSms,
+      setPagination: setPaginationSms
+    }
+  } as const
+
+  const { data, count, pagination, setPagination } =
+    channelConfig[selectedChannel as keyof typeof channelConfig] ?? channelConfig.email
+
+  // Optional: reset page to 0 whenever channel changes
+  useEffect(() => {
+    setPagination((prev: any) => ({ ...prev, page: 0 }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChannel])
+
   return (
     <Dialog
       fullWidth
@@ -511,64 +550,17 @@ const CampaignViewLogDialog = ({
           </IconButton>
           <div className='flex flex-col overflow-x-auto'>
             <ReactTable
-              data={
-                viewLogData?.data?.length > 0
-                  ? viewLogData?.data
-                  : viewNotificationLog?.data?.length > 0
-                    ? viewNotificationLog?.data
-                    : viewWhatsappLog?.data?.length > 0
-                    ? viewWhatsappLog?.data
-                    : []
-              }
+              key={`${selectedChannel}-${pagination.perPage}`} // force internal reset on channel/size change
+              data={data}
               columns={columns}
-              count={
-                selectedChannel === 'email'
-                  ? totalRowsEmail
-                  : selectedChannel === 'push_notification'
-                    ? totalRowsNotification
-                    : selectedChannel === 'wp'
-                      ? totalRowsWhatsapp
-                      : totalRowsSms
-              }
-              page={
-                selectedChannel === 'email'
-                  ? paginationEmail.page
-                  : selectedChannel === 'push_notification'
-                    ? paginationNotification.page
-                    : selectedChannel === 'wp'
-                      ? paginationWhatsapp.page
-                      : paginationSms.page
-              }
-              rowsPerPage={
-                selectedChannel === 'email'
-                  ? paginationEmail.perPage
-                  : selectedChannel === 'push_notification'
-                    ? paginationNotification.perPage
-                    : selectedChannel === 'wp'
-                      ? paginationWhatsapp.perPage
-                      : paginationSms.perPage
-              }
+              count={count ?? 0}
+              page={pagination.page ?? 0} // ensure 0-based for UI
+              rowsPerPage={pagination.perPage ?? 10}
               onPageChange={(_, newPage) => {
-                if (selectedChannel === 'email') {
-                  setPaginationEmail((prev: any) => ({ ...prev, page: newPage }))
-                } else if (selectedChannel === 'push_notification') {
-                  setPaginationNotification((prev: any) => ({ ...prev, page: newPage }))
-                } else if (selectedChannel === 'wp') {
-                  setPaginationWhatsapp((prev: any) => ({ ...prev, page: newPage }))
-                } else {
-                  setPaginationSms((prev: any) => ({ ...prev, page: newPage }))
-                }
+                setPagination((prev: any) => ({ ...prev, page: newPage }))
               }}
               onRowsPerPageChange={newSize => {
-                if (selectedChannel === 'email') {
-                  setPaginationEmail({ page: 0, perPage: newSize })
-                } else if (selectedChannel === 'push_notification') {
-                  setPaginationNotification({ page: 0, perPage: newSize })
-                } else if (selectedChannel === 'wp') {
-                  setPaginationWhatsapp({ page: 0, perPage: newSize })
-                } else {
-                  setPaginationSms({ page: 0, perPage: newSize })
-                }
+                setPagination({ page: 0, perPage: newSize })
               }}
             />
           </div>

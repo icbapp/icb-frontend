@@ -81,10 +81,12 @@ const CreateCampaign = () => {
   const [openChart, setOpenChart] = useState(false)
 
   const [viewEmailLog, setViewEmailLog] = useState([])
-
+  
   const [viewNotificationLog, setViewNotificationLog] = useState([])
-
+  
   const [viewWhatsappLog, setViewWhatsappLog] = useState([])
+  
+  const [viewSmsLog, setViewSmsLog] = useState([])
 
   const [error, setError] = useState('')
   const [selectRowId, setSelectRowId] = useState([])
@@ -618,7 +620,7 @@ const CreateCampaign = () => {
 
   useEffect(() => {
     getViewLog()
-  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
+  }, [openDialog, paginationEmail.page, paginationEmail.perPage])
 
   const getNotificationViewLog = async () => {
     if (selectedChannel.includes('push_notification')) {
@@ -646,7 +648,7 @@ const CreateCampaign = () => {
 
   useEffect(() => {
     getNotificationViewLog()
-  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
+  }, [openDialog, paginationNotification.page, paginationNotification.perPage])
 
   const getWhatsappViewLog = async () => {
     if (selectedChannel.includes('wp')) {
@@ -674,7 +676,7 @@ const CreateCampaign = () => {
 
   useEffect(() => {
     getWhatsappViewLog()
-  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
+  }, [openDialog, paginationWhatsapp.page, paginationWhatsapp.perPage])
 
   useEffect(() => {
     setConnectDataLack(connection?.connectDataLack)
@@ -932,11 +934,11 @@ const CreateCampaign = () => {
           Announcement / {'Create'} Campaign
         </span>
 
-        {ids && (
+        {/* {ids && (
           <Button variant='contained' onClick={() => setOpenDialog(true)}>
             View Log
           </Button>
-        )}
+        )} */}
       </p>
 
       <Card sx={{ mt: 4 }}>

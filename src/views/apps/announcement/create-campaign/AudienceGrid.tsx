@@ -154,7 +154,7 @@ const AudienceGrid = ({
   const toTitle = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
   // exclude some fields
-  const EXCLUDED = new Set(['guardian_id', 'student_id', 'check', 'user_id', 'table_id', 'source_table'])
+  const EXCLUDED = new Set(['guardian_id', 'student_id', 'check', 'user_id', 'table_id', 'source_table', 'contact_type'])
 
   // mapping for specific field headers
   const HEADER_MAP: Record<string, string> = {
