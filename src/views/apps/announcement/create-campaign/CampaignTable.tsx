@@ -152,6 +152,10 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
 
+  // Whatsapp
+  const [paginationWhatsapp, setPaginationWhatsapp] = useState({ page: 0, perPage: 10 })
+  const [totalRowWhatsapp, setTotalRowsWhatsapp] = useState(0)
+
   // Sms
   const [paginationSms, setPaginationSms] = useState({ page: 0, perPage: 10 })
   const [totalRowsSms, setTotalRowsSms] = useState(0)
@@ -162,8 +166,11 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
   const [channelName, setChannelName] = useState('')
   const [viewLogId, setViewLogId] = useState('')
   const [channelCounts, setChannelCounts] = useState<DataType[]>([])
+
   const [viewEmailLog, setViewEmailLog] = useState<EmailLogType[]>([])
   const [viewNotificationLog, setViewNotificationLog] = useState<EmailLogType[]>([])
+  const [viewWhatsappLog, setViewWhatsappLog] = useState<EmailLogType[]>([])
+
   const [loaderEmailView, setLoaderEmailView] = useState(false)
   const [loaderNotifiView, setLoaderNotifiView] = useState(false)
   const [loaderSmsView, setLoaderSmsView] = useState(false)
@@ -470,6 +477,40 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
       getNotificationViewLog()
     }
   }, [viewLogId, openDialog, paginationNotification.page, paginationNotification.perPage, globalFilter])
+
+  const getWhatsappViewLog = async () => {
+    if (channelName === 'wp') {
+      setLoaderWpView(true)
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', ids || '')
+      formdata.append('campaign_id', viewLogId)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationWhatsapp.perPage.toString())
+      formdata.append('page', (paginationWhatsapp.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postcampaignWhatsappLogGet}`, formdata)
+
+        setViewWhatsappLog(res.data)
+        setTotalRowsWhatsapp(res.data.total)
+        setLoaderWpView(false)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+          setLoaderWpView(false)
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+          setLoaderWpView(false)
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (openDialog) {
+      getWhatsappViewLog()
+    }
+  }, [viewLogId, openDialog, paginationWhatsapp.page, paginationWhatsapp.perPage, globalFilter])
   const getSmsViewLog = async () => {
     if (channelName === 'sms') {
       setLoaderSmsView(true)
@@ -695,9 +736,17 @@ const CampaignListPage = ({ tableData }: { tableData?: UsersType[] }) => {
           paginationEmail={paginationEmail}
           paginationNotification={paginationNotification}
           paginationSms={paginationSms}
+
           loaderEmailView={loaderEmailView}
           loaderNotifiView={loaderNotifiView}
+          loaderWpView={loaderWpView}
           loaderSmsView={loaderSmsView}
+          
+          viewWhatsappLog={viewWhatsappLog}
+          setPaginationWhatsapp={setPaginationWhatsapp}
+          totalRowWhatsapp={totalRowWhatsapp}
+          paginationWhatsapp={paginationWhatsapp}
+          setViewWhatsappLog={setViewWhatsappLog}
         />
       )}
     </>

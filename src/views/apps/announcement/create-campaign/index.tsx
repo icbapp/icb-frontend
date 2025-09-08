@@ -79,8 +79,13 @@ const CreateCampaign = () => {
   const [selectedLabels, setSelectedLabels] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
   const [openChart, setOpenChart] = useState(false)
+
   const [viewEmailLog, setViewEmailLog] = useState([])
+
   const [viewNotificationLog, setViewNotificationLog] = useState([])
+
+  const [viewWhatsappLog, setViewWhatsappLog] = useState([])
+
   const [error, setError] = useState('')
   const [selectRowId, setSelectRowId] = useState([])
 
@@ -99,6 +104,11 @@ const CreateCampaign = () => {
   // Notification
   const [paginationNotification, setPaginationNotification] = useState({ page: 0, perPage: 10 })
   const [totalRowsNotification, setTotalRowsNotification] = useState(0)
+
+  //Whatsapp
+  const [paginationWhatsapp, setPaginationWhatsapp] = useState({ page: 0, perPage: 10 })
+  const [totalRowsWhatsapp, setTotalRowsWhatsapp] = useState(0)
+
   const [connectDataLack, setConnectDataLack] = useState('')
   const [roleLoading, setroleLoading] = useState(false)
   const [isLoading, setisLoading] = useState(false)
@@ -373,13 +383,15 @@ const CreateCampaign = () => {
     }
   }, [selectedLabels, ids])
 
-
   const fetchEditCampign = async () => {
     setloaderMain(true)
     try {
       const body = {
         announcement_id: localStorage.getItem('announcementId'),
-        campaign_id: ids
+        campaign_id: ids,
+        showOnlyRole: true,
+        tenant_id: adminStore.tenant_id,
+        school_id: adminStore.school_id
       }
 
       const resFilter = await api.post(`${endPointApi.postfilterDataLackEdit}`, body)
@@ -460,19 +472,17 @@ const CreateCampaign = () => {
 
         setFilterWishDataLack(allFilters)
         setFilterWishSelectedRole(resFilter?.data?.column_names)
-    console.log("11111111",resFilter.data.column_names);
-    
+        console.log('11111111', resFilter.data.column_names)
+
         const formatted = resFilter?.data?.column_names?.split(',')?.map((val: any) => ({
           id: val,
           name: val
         }))
         setFilterWishSelectedLabelsDataLack(formatted)
-        console.log("1111110000",formatted);
-        
+        console.log('1111110000', formatted)
       }
 
-      console.log("********");
-      
+
       const res = await api.get(`${endPointApi.getCampaignAnnounceWise}`, {
         params: {
           announcement_id: localStorage.getItem('announcementId'),
@@ -636,6 +646,34 @@ const CreateCampaign = () => {
 
   useEffect(() => {
     getNotificationViewLog()
+  }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
+
+  const getWhatsappViewLog = async () => {
+    if (selectedChannel.includes('wp')) {
+      const formdata = new FormData()
+
+      formdata.append('announcement_id', announcementId || '')
+      formdata.append('campaign_id', ids)
+      formdata.append('search', '')
+      formdata.append('per_page', paginationWhatsapp.perPage.toString())
+      formdata.append('page', (paginationWhatsapp.page + 1).toString())
+      try {
+        const res = await api.post(`${endPointApi.postcampaignWhatsappLogGet}`, formdata)
+
+        setViewWhatsappLog(res.data)
+        setTotalRowsWhatsapp(res.data.total)
+      } catch (err: any) {
+        if (err.response?.status === 500) {
+          toast.error('Internal Server Error.')
+        } else {
+          toast.error(err?.response?.data?.message || 'Something went wrong')
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    getWhatsappViewLog()
   }, [openDialog, paginationInfoLog.page, paginationInfoLog.perPage])
 
   useEffect(() => {
@@ -1397,6 +1435,10 @@ const CreateCampaign = () => {
           totalRowsEmail={totalRowsEmail}
           paginationNotification={paginationNotification}
           paginationEmail={paginationEmail}
+          paginationWhatsapp={paginationWhatsapp}
+          setPaginationWhatsapp={setPaginationWhatsapp}
+          totalRowsWhatsapp={totalRowsWhatsapp}
+          viewWhatsappLog={viewWhatsappLog}
         />
       )}
     </>

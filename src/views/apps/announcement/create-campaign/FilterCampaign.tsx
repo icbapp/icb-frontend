@@ -125,6 +125,7 @@ const FilterCampaign = ({
 
   const handleFilterChange = (newValues: any) => {
     setSelectedLabels(newValues)
+    // setParentForm
   }
 
   const handleChangeParentColumnFilter = (field: string, value: string) => {
@@ -149,8 +150,6 @@ const FilterCampaign = ({
   }
 
   const handleFilterChangeDataLack = (newValues: any) => {
-    console.log("newValues",newValues);
-    
     setSelectedLabelsDataLack(newValues)
 
     // optional: if nothing is selected → reset all
@@ -252,7 +251,7 @@ const FilterCampaign = ({
   }
 
   //clear filter
-  const clearAllFilter = () => {
+  const clearStudentFilter = () => {
     setStudentForm({
       first_name: '',
       gender: '',
@@ -270,6 +269,24 @@ const FilterCampaign = ({
       status: '',
       house: ''
     })
+  }
+  const clearParentFilter = () => {
+    setParentForm({
+      par_code: '',
+      par_name: '',
+      contact_type: [],
+      email: '',
+      mobile_phone1: '',
+      mobile_phone2: '',
+      addr1: '',
+      addr2: '',
+      town_sub: '',
+      state_code: '',
+      post_code: '',
+      home_phone: ''
+    })
+  }
+  const clearTeacherFilter = () => {
     setTeacherForm({
       first_name: '',
       gender: '',
@@ -291,20 +308,6 @@ const FilterCampaign = ({
       p_mobile: '',
       p_email: '',
       school_email: ''
-    })
-    setParentForm({
-      par_code: '',
-      par_name: '',
-      contact_type: [],
-      email: '',
-      mobile_phone1: '',
-      mobile_phone2: '',
-      addr1: '',
-      addr2: '',
-      town_sub: '',
-      state_code: '',
-      post_code: '',
-      home_phone: ''
     })
   }
   return (
@@ -370,15 +373,20 @@ const FilterCampaign = ({
                 <Typography variant='h6' fontWeight={600}>
                   Role-wise Filters
                 </Typography>
-                <Button variant='contained' onClick={clearAllFilter}>
+                {/* <Button variant='contained' onClick={clearAllFilter}>
                   Clear All Filters
-                </Button>
+                </Button> */}
               </Box>
               {selectedLabelsDataLack.some((val: any) => val.id === 'student') && (
                 <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
-                    Students
-                  </Typography>
+                  <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
+                    <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
+                      Students
+                    </Typography>
+                    <Button variant='contained' onClick={clearStudentFilter}>
+                      Clear Student Filters
+                    </Button>
+                  </Box>
                   <Grid container spacing={1}>
                     {(groupedData?.student || []).map((field: any, index: number) => (
                       <Grid item xs={12} md={2} key={index}>
@@ -425,9 +433,14 @@ const FilterCampaign = ({
               )}
               {selectedLabelsDataLack.some((val: any) => val.id === 'parent') && (
                 <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
-                    Parents
-                  </Typography>
+                  <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
+                    <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
+                      Parents
+                    </Typography>
+                    <Button variant='contained' onClick={clearParentFilter}>
+                      Clear Parents Filters
+                    </Button>
+                  </Box>
                   <Grid container spacing={1}>
                     {(groupedData?.parent ?? []).map((field: any, index: number) => (
                       <Grid item xs={12} md={2} key={index}>
@@ -508,9 +521,14 @@ const FilterCampaign = ({
               )}
               {selectedLabelsDataLack.some((val: any) => val.id === 'teacher') && (
                 <>
-                  <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
-                    Teachers
-                  </Typography>
+                  <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ mb: 2 }}>
+                    <Typography variant='h6' fontWeight={600} sx={{ mt: 2, mb: 2 }}>
+                      Teachers
+                    </Typography>
+                    <Button variant='contained' onClick={clearTeacherFilter}>
+                      Clear Teachers Filters
+                    </Button>
+                  </Box>
                   <Grid container spacing={1}>
                     {(groupedData?.teacher || []).map((field: any, index: number) => (
                       <Grid item xs={12} md={2} key={index}>

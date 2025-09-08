@@ -51,6 +51,7 @@ export interface EndPointApi {
     postCampaignEmailLogGet: string
     postCampaignPushNotificationslogGet: string
     postcampaignSmsLogGet: string
+    postcampaignWhatsappLogGet: string
 
     //Datalack
     getAllRolesDataLack :string
@@ -111,6 +112,7 @@ const endPointApi: EndPointApi = {
     postCampaignEmailLogGet: 'campaign-email-log', //log
     postCampaignPushNotificationslogGet: 'campaign-push-notifications-log',
     postcampaignSmsLogGet: 'campaign-sms-log',
+    postcampaignWhatsappLogGet: 'campaign-wp-log',
 
     //Datalack
     getAllRolesDataLack : 'db/roles',

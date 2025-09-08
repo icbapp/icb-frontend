@@ -153,29 +153,46 @@ const AudienceGrid = ({
   // helper to Title Case
   const toTitle = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
-  // build dynamic columns (unchanged)
+  // exclude some fields
   const EXCLUDED = new Set(['guardian_id', 'student_id', 'check', 'user_id', 'table_id', 'source_table'])
+
+  // mapping for specific field headers
+  const HEADER_MAP: Record<string, string> = {
+    par_name: 'Parent Name',
+    m_phone1: 'Mobile Phone 1',
+    m_phone2: 'Mobile Phone 2',
+    home_phone: 'Home Phone',
+    contact_type: 'Contact Type',
+    contact_type_value: 'Contact Type Value',
+    par_code: 'Parent Code',
+    dob: 'Date of Birth',
+    addr1: 'Address 1',
+    add2: 'Address 2',
+    tch_code: 'Teacher Code',
+    emp_code: 'Employee Code',
+    emp_status: 'Employee Status'
+  }
+
   const buildCols = (rows: any[]) => {
     if (!rows?.length) return []
     const keys = Object.keys(rows[0]).filter(k => !EXCLUDED.has(k))
     return keys.map(field => ({
       field,
-      headerName: toTitle(field),
+      headerName: HEADER_MAP[field] || toTitle(field), // 👈 use map first, fallback to toTitle
       flex: 1,
       minWidth: 140,
       sortable: true,
       filter: true,
       resizable: true,
       valueGetter: (p: any) => {
-        // handle missing keys gracefully
         if (!p.data || !(field in p.data)) {
-          return '-' // field hi nahi hai → show '-'
+          return '-'
         }
 
         const v = p.data[field]
 
         if (Array.isArray(v)) {
-          return v.length ? v.join(', ') : '-' // array empty ho to bhi show
+          return v.length ? v.join(', ') : '-'
         }
 
         return v === '' || v === null || v === undefined ? '-' : v
@@ -221,9 +238,8 @@ const AudienceGrid = ({
       {Object?.entries(selectedData).map(([role, rows]) =>
         Array.isArray(rows) && rows.length > 0 ? (
           <div key={role} className='rounded-lg border bg-white shadow-sm mb-4'>
-
             <div className='px-4 py-3 border-b flex items-center justify-between'>
-              <h3 className='text-base font-semibold'>{toTitle(role === "guardian" ? "Parent" : role as string)}</h3>
+              <h3 className='text-base font-semibold'>{toTitle(role === 'guardian' ? 'Parent' : (role as string))}</h3>
             </div>
 
             <div className='p-4'>

@@ -29,6 +29,7 @@ import { toast } from 'react-toastify'
 import ReactTable from '@/comman/table/ReactTable'
 import { createColumnHelper } from '@tanstack/react-table'
 import { ColumnDef } from '@tanstack/table-core'
+import dayjs from 'dayjs'
 
 type CampaignDialogProps = {
   open: boolean
@@ -37,6 +38,7 @@ type CampaignDialogProps = {
   viewLogData: any
   setViewEmailLog: any
   viewNotificationLog: any
+  viewWhatsappLog: any
 
   totalRowsNotification: any
   paginationEmail: any
@@ -52,7 +54,12 @@ type CampaignDialogProps = {
 
   loaderEmailView: boolean
   loaderNotifiView?: boolean
+  loaderWpView?: boolean
   loaderSmsView?: boolean
+
+  totalRowsWhatsapp: any
+  paginationWhatsapp: any
+  setPaginationWhatsapp: any
 }
 type ErrorType = {
   message: string[]
@@ -81,6 +88,11 @@ interface UsersTypeWithAction {
   action?: string
   hours?: string
   full_name?: string
+  sent_at?: string
+  opened_at?: string
+  scheduled_at?: string
+  error_message?: string
+  sid?: string
 }
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
@@ -100,6 +112,7 @@ const CampaignViewLogDialog = ({
   setViewNotificationLog,
   viewLogData = [],
   viewNotificationLog = [],
+  viewWhatsappLog = [],
 
   totalRowsEmail = 0,
   paginationEmail = {},
@@ -115,9 +128,13 @@ const CampaignViewLogDialog = ({
 
   loaderEmailView,
   loaderNotifiView,
-  loaderSmsView
+  loaderWpView,
+  loaderSmsView,
+
+  totalRowsWhatsapp = 0,
+  paginationWhatsapp = {},
+  setPaginationWhatsapp = {}
 }: CampaignDialogProps) => {
-  console.log('selectedChannel', selectedChannel)
 
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [roleName, setRoleName] = useState<string>('')
@@ -137,13 +154,13 @@ const CampaignViewLogDialog = ({
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(() => {
     if (selectedChannel === 'email') {
       return [
-        // columnHelper.accessor('hours', {
-        //   header: 'Name',
-        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        // }),
+        columnHelper.accessor('full_name', {
+          header: 'Name',
+          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
+        }),
         columnHelper.accessor('email', {
           header: 'Email',
-          cell: ({ row }) => <Typography>{row.original.email}</Typography>
+          cell: ({ row }) => <Typography>{row.original.email ?? '-'}</Typography>
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -173,22 +190,27 @@ const CampaignViewLogDialog = ({
             )
           }
         }),
-        columnHelper.accessor('sent_date', {
-          header: 'SentDate',
-          cell: ({ row }) => <Typography>{row.original.sent_date}</Typography>
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled At',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
         }),
+        // columnHelper.accessor('sent_time', {
+        //   header: 'SentTime',
+        //   cell: ({ row }) => <Typography>{row.original.sent_time ?? '-'}</Typography>
+        // }),
         columnHelper.accessor('sent_time', {
-          header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
-        }),
-        columnHelper.accessor('delivered_time', {
-          header: 'delivered Time'
-          // cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        }),
-        columnHelper.accessor('read_time', {
-          header: 'Read Time'
-          // cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          header: 'delivered Time',
+          cell: ({ row }) => <Typography>{row.original.sent_time ?? '-'}</Typography>
         })
+        // columnHelper.accessor('opened_at', {
+        //   header: 'Read Time',
+        //   cell: ({ row }) => <Typography>{row.original.opened_at}</Typography>
+        // })
         // columnHelper.accessor('action', {
         //   header: 'Action',
         //   cell: ({ row }) => (
@@ -208,19 +230,24 @@ const CampaignViewLogDialog = ({
       return [
         columnHelper.accessor('full_name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
+          cell: ({ row }) => <Typography>{row.original.full_name ?? '-'}</Typography>
         }),
-        columnHelper.accessor('hours', {
-          header: 'Phone',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        columnHelper.accessor('sid', {
+          header: 'Send Id',
+          cell: ({ row }) => <Typography>{row.original.sid ?? '-'}</Typography>
         }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('error_message', {
           header: 'Message',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.error_message ?? '-'}</Typography>
         }),
-        columnHelper.accessor('sent_time', {
+        columnHelper.accessor('sent_at', {
           header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
+          // cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.sent_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -257,21 +284,30 @@ const CampaignViewLogDialog = ({
       ]
     } else if (selectedChannel === 'push_notification') {
       return [
-        columnHelper.accessor('full_name', {
+        columnHelper.accessor('name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
+          cell: ({ row }) => <Typography>{row.original.name ?? '-'}</Typography>
         }),
         // columnHelper.accessor('hours', {
         //   header: 'Phone',
         //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         // }),
-        columnHelper.accessor('hours', {
-          header: 'Message',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // columnHelper.accessor('hours', {
+        //   header: 'Message',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled Time',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
         }),
-        columnHelper.accessor('sent_time', {
-          header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.sent_time}</Typography>
+        columnHelper.accessor('sent_at', {
+          header: 'Sent',
+          cell: ({ row }) => <Typography>{row.original.sent_at ?? '-'}</Typography>
         }),
         columnHelper.accessor('status', {
           header: 'Status',
@@ -308,29 +344,58 @@ const CampaignViewLogDialog = ({
       ]
     } else {
       return [
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('full_name', {
           header: 'Name',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => <Typography>{row.original.full_name}</Typography>
         }),
         columnHelper.accessor('hours', {
           header: 'Phone',
           cell: ({ row }) => <Typography>{row.original.hours}</Typography>
         }),
-        columnHelper.accessor('hours', {
-          header: 'Message Preview',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // columnHelper.accessor('hours', {
+        //   header: 'Message Preview',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // }),
+        // columnHelper.accessor('hours', {
+        //   header: 'Attachments',
+        //   cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+        // }),
+        columnHelper.accessor('scheduled_at', {
+          header: 'Scheduled At',
+          // cell: ({ row }) => <Typography>{row.original.scheduled_at ?? '-'}</Typography>
+          cell: ({ row }) => {
+            const raw = row.original.scheduled_at
+            const formatted = raw ? dayjs(raw).format('YYYY-MM-DD HH:mm') : '-'
+            return <Typography>{formatted}</Typography>
+          }
         }),
-        columnHelper.accessor('hours', {
-          header: 'Attachments',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        }),
-        columnHelper.accessor('hours', {
-          header: 'SentTime',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
-        }),
-        columnHelper.accessor('hours', {
+        columnHelper.accessor('status', {
           header: 'Status',
-          cell: ({ row }) => <Typography>{row.original.hours}</Typography>
+          cell: ({ row }) => {
+            const status = String(row.original.status || '').toLowerCase()
+
+            const statusMap: Record<StatusType, StatusInfo> = {
+              queued: { icon: 'ri-time-line', color: 'text-yellow-500', label: 'Queued' },
+              sending: { icon: 'ri-send-plane-line', color: 'text-blue-500', label: 'Send' },
+              failed: { icon: 'ri-close-circle-line', color: 'text-red-500', label: 'Failed' },
+              open: { icon: 'ri-mail-open-line', color: 'text-green-500', label: 'Opened' }
+            }
+
+            const { icon, color, label } =
+              status in statusMap
+                ? statusMap[status as StatusType]
+                : { icon: 'ri-question-line', color: 'text-gray-500', label: row.original.status || 'Unknown' }
+
+            return (
+              <div className='flex items-center gap-2'>
+                <Tooltip title={row.original.status}>
+                  <span className={`flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 ${color}`}>
+                    <i className={`${icon} text-lg`} />
+                  </span>
+                </Tooltip>
+              </div>
+            )
+          }
         }),
         columnHelper.accessor('hours', {
           header: 'Read Time',
@@ -414,7 +479,7 @@ const CampaignViewLogDialog = ({
       sx={{ '& .MuiDialog-paper': { width: '100%', maxWidth: '1200px' } }}
     >
       {/* {loading && <Loader />} */}
-      {(loaderEmailView || loaderNotifiView || loaderSmsView) && (
+      {(loaderEmailView || loaderNotifiView || loaderSmsView || loaderWpView) && (
         <div className='absolute inset-0 flex items-center justify-center bg-white/60 z-50'>
           <div className='w-10 h-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin'></div>
         </div>
@@ -451,6 +516,8 @@ const CampaignViewLogDialog = ({
                   ? viewLogData?.data
                   : viewNotificationLog?.data?.length > 0
                     ? viewNotificationLog?.data
+                    : viewWhatsappLog?.data?.length > 0
+                    ? viewWhatsappLog?.data
                     : []
               }
               columns={columns}
@@ -459,27 +526,35 @@ const CampaignViewLogDialog = ({
                   ? totalRowsEmail
                   : selectedChannel === 'push_notification'
                     ? totalRowsNotification
-                    : totalRowsSms
+                    : selectedChannel === 'wp'
+                      ? totalRowsWhatsapp
+                      : totalRowsSms
               }
               page={
                 selectedChannel === 'email'
                   ? paginationEmail.page
                   : selectedChannel === 'push_notification'
                     ? paginationNotification.page
-                    : paginationSms.page
+                    : selectedChannel === 'wp'
+                      ? paginationWhatsapp.page
+                      : paginationSms.page
               }
               rowsPerPage={
                 selectedChannel === 'email'
                   ? paginationEmail.perPage
                   : selectedChannel === 'push_notification'
                     ? paginationNotification.perPage
-                    : paginationSms.perPage
+                    : selectedChannel === 'wp'
+                      ? paginationWhatsapp.perPage
+                      : paginationSms.perPage
               }
               onPageChange={(_, newPage) => {
                 if (selectedChannel === 'email') {
                   setPaginationEmail((prev: any) => ({ ...prev, page: newPage }))
                 } else if (selectedChannel === 'push_notification') {
                   setPaginationNotification((prev: any) => ({ ...prev, page: newPage }))
+                } else if (selectedChannel === 'wp') {
+                  setPaginationWhatsapp((prev: any) => ({ ...prev, page: newPage }))
                 } else {
                   setPaginationSms((prev: any) => ({ ...prev, page: newPage }))
                 }
@@ -489,6 +564,8 @@ const CampaignViewLogDialog = ({
                   setPaginationEmail({ page: 0, perPage: newSize })
                 } else if (selectedChannel === 'push_notification') {
                   setPaginationNotification({ page: 0, perPage: newSize })
+                } else if (selectedChannel === 'wp') {
+                  setPaginationWhatsapp({ page: 0, perPage: newSize })
                 } else {
                   setPaginationSms({ page: 0, perPage: newSize })
                 }
